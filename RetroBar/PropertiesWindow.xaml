@@ -442,6 +442,19 @@
                     </GroupBox>
                     <GroupBox Header="{DynamicResource clock_heading}">
                         <StackPanel Orientation="Vertical">
+                            <!-- UXUI-Extreme (UX-008): hide clock lines that don't fit -->
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboClockLines}">
+                                    <AccessText Text="{DynamicResource uxui_clock_lines}" />
+                                </Label>
+                                <ComboBox x:Name="cboClockLines"
+                                          Width="193"
+                                          HorizontalAlignment="Right"
+                                          ItemsSource="{DynamicResource uxui_clock_lines_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockLines, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}"
+                                          SelectionChanged="CboClockLines_SelectionChanged" />
+                            </DockPanel>
                             <CheckBox x:Name="cbShowClock"
                                       IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowClock, UpdateSourceTrigger=PropertyChanged}">
                                 <Label Content="{DynamicResource show_clock}" />

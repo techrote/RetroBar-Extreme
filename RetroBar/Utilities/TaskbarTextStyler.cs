@@ -52,6 +52,7 @@ namespace RetroBar.Utilities
             nameof(Settings.FontOverrideItalic),
             nameof(Settings.ScalingMode),
             nameof(Settings.FontOverrideLineSpacing),
+            nameof(Settings.ClockLines),
         };
 
         // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
@@ -107,6 +108,25 @@ namespace RetroBar.Utilities
             if (sender is TextBlock textBlock)
             {
                 Apply(textBlock);
+                ApplyClock(textBlock); // UX-008
+            }
+        }
+
+        // UX-008: clock lines and steady clock width (ClockFitter), for taskbar clocks only.
+        private static void ApplyClock(TextBlock textBlock)
+        {
+            if (!ClockFitter.IsClockLine(textBlock))
+            {
+                return;
+            }
+
+            if (IsOnTaskbar(textBlock))
+            {
+                ClockFitter.Apply(textBlock);
+            }
+            else
+            {
+                ClockFitter.Restore(textBlock);
             }
         }
 
@@ -420,6 +440,7 @@ namespace RetroBar.Utilities
             foreach (TextBlock textBlock in textBlocks)
             {
                 Restore(textBlock);
+                ClockFitter.Restore(textBlock); // UX-008
             }
 
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
@@ -429,6 +450,7 @@ namespace RetroBar.Utilities
                     if (textBlock.IsLoaded)
                     {
                         Apply(textBlock);
+                        ApplyClock(textBlock); // UX-008
                     }
                 }
             }));

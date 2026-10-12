@@ -41,6 +41,12 @@
     </x:Array>
     <!-- UXUI-Extreme (UX-008) -->
     <s:String x:Key="uxui_line_spacing">_Line spacing:</s:String>
+    <s:String x:Key="uxui_clock_lines">Clock _lines:</s:String>
+    <x:Array x:Key="uxui_clock_lines_values" Type="s:String">
+        <s:String>Theme default</s:String>
+        <s:String>Time and weekday</s:String>
+        <s:String>Time only</s:String>
+    </x:Array>
     <!-- UXUI-Extreme (UX-007) -->
     <s:String x:Key="uxui_taskbar_size">Taskbar size</s:String>
     <s:String x:Key="uxui_row_height_adjust">Row _height adjust:</s:String>

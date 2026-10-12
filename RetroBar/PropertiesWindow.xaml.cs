@@ -403,6 +403,15 @@ namespace RetroBar
             }
         }
 
+        // UXUI-Extreme (UX-008): keep a selection when the language (item list) changes
+        private void CboClockLines_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cboClockLines.SelectedItem == null)
+            {
+                cboClockLines.SelectedValue = cboClockLines.Items[(int)Settings.Instance.ClockLines];
+            }
+        }
+
         // UXUI-Extreme (UX-006): keep a selection when the language (item list) changes
         private void CboScalingMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
