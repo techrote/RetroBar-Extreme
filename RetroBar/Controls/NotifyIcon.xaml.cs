@@ -32,33 +32,42 @@ namespace RetroBar.Controls
             InitializeComponent();
         }
 
+        // UXUI-Extreme (UX-001): work out whether this icon should be inverted, then set OR clear
+        // the effect. Upstream returned early in the "don't invert" cases, so an effect applied
+        // earlier was never removed and icons stayed inverted after settings changed.
         private void applyEffects()
         {
-            if (TrayIcon == null || Settings.Instance.InvertIconsMode == InvertIconsOption.Never)
+            if (TrayIcon == null)
             {
                 return;
             }
 
-            if (!TrayIcon.CanInvert())
+            bool performInvert = false;
+
+            if (Settings.Instance.InvertIconsMode != InvertIconsOption.Never && TrayIcon.CanInvert())
             {
-                return;
+                bool invertByTheme = Application.Current.TryFindResource("InvertSystemNotifyIcons") as bool? ?? false;
+                performInvert = invertByTheme || Settings.Instance.InvertIconsMode == InvertIconsOption.Always;
             }
 
-            bool invertByTheme = Application.Current.FindResource("InvertSystemNotifyIcons") as bool? ?? false;
-            bool performInvert = invertByTheme || Settings.Instance.InvertIconsMode == InvertIconsOption.Always;
+            bool isInverted = NotifyIconImage.Effect != null;
 
-            if (NotifyIconImage.Effect == null != performInvert)
+            if (isInverted != performInvert)
             {
-                return;
+                NotifyIconImage.Effect = performInvert ? new InvertEffect() : null;
             }
+        }
 
-            if (performInvert)
+        // UXUI-Extreme (UX-001): re-evaluate inversion live when any input to it changes.
+        private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Settings.InvertIconsMode) ||
+                e.PropertyName == nameof(Settings.InvertNotifyIcons) ||
+                e.PropertyName == nameof(Settings.Theme))
             {
-                NotifyIconImage.Effect = new InvertEffect();
-            }
-            else
-            {
-                NotifyIconImage.Effect = null;
+                // Queue rather than run now, so a theme switch has finished loading its
+                // resources before we read InvertSystemNotifyIcons.
+                Dispatcher.BeginInvoke(new Action(applyEffects));
             }
         }
 
@@ -74,6 +83,7 @@ namespace RetroBar.Controls
                 }
 
                 applyEffects();
+                Settings.Instance.PropertyChanged += Settings_PropertyChanged; // UXUI-Extreme (UX-001)
 
                 TrayIcon.NotificationBalloonShown += TrayIcon_NotificationBalloonShown;
 
@@ -92,6 +102,8 @@ namespace RetroBar.Controls
 
         private void NotifyIcon_OnUnloaded(object sender, RoutedEventArgs e)
         {
+            Settings.Instance.PropertyChanged -= Settings_PropertyChanged; // UXUI-Extreme (UX-001)
+
             if (TrayIcon != null)
             {
                 TrayIcon.NotificationBalloonShown -= TrayIcon_NotificationBalloonShown;
