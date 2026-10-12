@@ -412,6 +412,15 @@ namespace RetroBar
             }
         }
 
+        // UXUI-Extreme (UX-008): keep a selection when the language (item list) changes
+        private void CboClockTimeAlignment_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cboClockTimeAlignment.SelectedItem == null)
+            {
+                cboClockTimeAlignment.SelectedValue = cboClockTimeAlignment.Items[(int)Settings.Instance.ClockTimeAlignment];
+            }
+        }
+
         // UXUI-Extreme (UX-006): keep a selection when the language (item list) changes
         private void CboScalingMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {

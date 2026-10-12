@@ -455,6 +455,24 @@
                                           SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockLines, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}"
                                           SelectionChanged="CboClockLines_SelectionChanged" />
                             </DockPanel>
+                            <!-- UXUI-Extreme (UX-008): centred or anchored time -->
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboClockTimeAlignment}">
+                                    <AccessText Text="{DynamicResource uxui_clock_time_alignment}" />
+                                </Label>
+                                <ComboBox x:Name="cboClockTimeAlignment"
+                                          Width="193"
+                                          HorizontalAlignment="Right"
+                                          ItemsSource="{DynamicResource uxui_clock_time_alignment_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockTimeAlignment, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}"
+                                          SelectionChanged="CboClockTimeAlignment_SelectionChanged" />
+                            </DockPanel>
+                            <!-- UXUI-Extreme (UX-008): squeeze stacked lines to fit -->
+                            <CheckBox x:Name="cbClockFitLines"
+                                      IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockFitLines, UpdateSourceTrigger=PropertyChanged}">
+                                <Label Content="{DynamicResource uxui_clock_fit_lines}" />
+                            </CheckBox>
                             <CheckBox x:Name="cbShowClock"
                                       IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowClock, UpdateSourceTrigger=PropertyChanged}">
                                 <Label Content="{DynamicResource show_clock}" />

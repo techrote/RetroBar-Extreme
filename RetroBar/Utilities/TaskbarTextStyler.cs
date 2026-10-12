@@ -53,6 +53,10 @@ namespace RetroBar.Utilities
             nameof(Settings.ScalingMode),
             nameof(Settings.FontOverrideLineSpacing),
             nameof(Settings.ClockLines),
+            nameof(Settings.ClockFitLines),
+            nameof(Settings.ClockTimeAlignment),
+            nameof(Settings.RowCount), // themes change clock margins/lines per row count
+            nameof(Settings.Edge),
         };
 
         // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
