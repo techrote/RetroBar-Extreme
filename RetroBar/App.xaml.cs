@@ -59,7 +59,7 @@ namespace RetroBar
 
             _dictionaryManager.SetLanguageFromSettings();
             loadTheme();
-            PixelTextScaler.Initialize(); // UXUI-Extreme (UX-002)
+            TaskbarTextStyler.Initialize(); // UXUI-Extreme (UX-002, UX-005)
             _windowManager = new WindowManager(_dictionaryManager, _explorerMonitor, _shellManager, _startMenuMonitor, _updater, _hotkeyManager);
         }
 

@@ -33,6 +33,28 @@
         <s:String>Native size, whole pixels</s:String>
         <s:String>Native size, exact</s:String>
     </x:Array>
+    <!-- UXUI-Extreme (UX-005) -->
+    <s:String x:Key="uxui_style_tab">Style</s:String>
+    <s:String x:Key="uxui_taskbar_font">Taskbar font</s:String>
+    <s:String x:Key="uxui_font_family">_Font:</s:String>
+    <s:String x:Key="uxui_font_weight">_Weight:</s:String>
+    <s:String x:Key="uxui_font_size">Si_ze (at 100%):</s:String>
+    <s:String x:Key="uxui_font_italic">_Italic</s:String>
+    <s:String x:Key="uxui_font_reset">_Reset to theme</s:String>
+    <s:String x:Key="uxui_theme_default">Theme default</s:String>
+    <s:String x:Key="uxui_font_note">Applies to taskbar text on every theme. Fonts only have the weights they ship with; Windows fakes the rest, usually as plain bold. Text the theme makes bold stays bold.</s:String>
+    <x:Array x:Key="uxui_font_weight_values" Type="s:String">
+        <s:String>Theme default</s:String>
+        <s:String>Thin (100)</s:String>
+        <s:String>Extra light (200)</s:String>
+        <s:String>Light (300)</s:String>
+        <s:String>Regular (400)</s:String>
+        <s:String>Medium (500)</s:String>
+        <s:String>Semibold (600)</s:String>
+        <s:String>Bold (700)</s:String>
+        <s:String>Extra bold (800)</s:String>
+        <s:String>Black (900)</s:String>
+    </x:Array>
     <s:String x:Key="allow_font_smoothing_menu">_Allow font smoothing in menus</s:String>
     <s:String x:Key="collapse_tray_icons">Collapse _notification area icons</s:String>
     <s:String x:Key="customize">_Customize...</s:String>

@@ -397,6 +397,35 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _pixelTextMode, value);
         }
 
+        // UXUI-Extreme (UX-005): taskbar font over any theme. Empty/0/false = theme decides.
+        private string _fontOverrideFamily = "";
+        public string FontOverrideFamily
+        {
+            get => _fontOverrideFamily;
+            set => Set(ref _fontOverrideFamily, value ?? "");
+        }
+
+        private double _fontOverrideSize = 0; // px at 100% scale
+        public double FontOverrideSize
+        {
+            get => _fontOverrideSize;
+            set => Set(ref _fontOverrideSize, value);
+        }
+
+        private int _fontOverrideWeight = 0; // OpenType weight 100-900
+        public int FontOverrideWeight
+        {
+            get => _fontOverrideWeight;
+            set => Set(ref _fontOverrideWeight, value);
+        }
+
+        private bool _fontOverrideItalic = false;
+        public bool FontOverrideItalic
+        {
+            get => _fontOverrideItalic;
+            set => Set(ref _fontOverrideItalic, value);
+        }
+
         private bool _showTaskBadges = true;
         public bool ShowTaskBadges
         {

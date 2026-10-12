@@ -503,6 +503,70 @@
                     </GroupBox>
                 </StackPanel>
             </TabItem>
+            <!-- UXUI-Extreme (UX-005): Style tab. Colour controls (UX-003/UX-004) will join here. -->
+            <TabItem Header="{DynamicResource uxui_style_tab}">
+                <StackPanel Orientation="Vertical"
+                            Margin="10">
+                    <GroupBox Header="{DynamicResource uxui_taskbar_font}">
+                        <StackPanel Orientation="Vertical">
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboFontFamily}">
+                                    <AccessText Text="{DynamicResource uxui_font_family}" />
+                                </Label>
+                                <ComboBox x:Name="cboFontFamily"
+                                          Width="193"
+                                          HorizontalAlignment="Right"
+                                          SelectionChanged="CboFontFamily_SelectionChanged" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboFontWeight}">
+                                    <AccessText Text="{DynamicResource uxui_font_weight}" />
+                                </Label>
+                                <ComboBox x:Name="cboFontWeight"
+                                          Width="193"
+                                          HorizontalAlignment="Right"
+                                          ItemsSource="{DynamicResource uxui_font_weight_values}"
+                                          SelectionChanged="CboFontWeight_SelectionChanged" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=sldFontSize}">
+                                    <AccessText Text="{DynamicResource uxui_font_size}" />
+                                </Label>
+                                <TextBlock x:Name="txtFontSize"
+                                           DockPanel.Dock="Right"
+                                           Width="90"
+                                           VerticalAlignment="Center" />
+                                <Slider x:Name="sldFontSize"
+                                        Orientation="Horizontal"
+                                        Minimum="0"
+                                        Maximum="24"
+                                        TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        TickPlacement="BottomRight"
+                                        Width="103"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,4,0,3"
+                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=FontOverrideSize, UpdateSourceTrigger=PropertyChanged}"
+                                        ValueChanged="SldFontSize_ValueChanged" />
+                            </DockPanel>
+                            <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=FontOverrideItalic, UpdateSourceTrigger=PropertyChanged}">
+                                <Label Content="{DynamicResource uxui_font_italic}" />
+                            </CheckBox>
+                            <Button HorizontalAlignment="Right"
+                                    Margin="0,4,0,4"
+                                    Content="{DynamicResource uxui_font_reset}"
+                                    Click="ResetFont_OnClick" />
+                            <TextBlock TextWrapping="Wrap"
+                                       MaxWidth="360"
+                                       Margin="4,2,4,2"
+                                       Text="{DynamicResource uxui_font_note}" />
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
             <TabItem Header="{DynamicResource advanced_tab}">
                 <DockPanel Margin="10"
                            Height="{Binding ElementName=FirstTabContent, Path=ActualHeight}">
