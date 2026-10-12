@@ -28,11 +28,13 @@ namespace RetroBar.Utilities
         private class Original
         {
             public object FontFamilyLocal, FontSizeLocal, FontWeightLocal, FontStyleLocal, LayoutTransformLocal;
+            public object LineHeightLocal, LineStackingLocal; // UX-008
             public double BaseFontSize;
             public bool ThemeBold;
             public bool SymbolFont; // UX-007: icon/symbol fonts keep their family, weight and style
             // Which properties we currently override, so we only restore what we changed.
             public bool FamilySet, SizeSet, WeightSet, StyleSet, TransformSet;
+            public bool LineSpacingSet; // UX-008
         }
 
         private static readonly DependencyProperty OriginalProperty =
@@ -49,6 +51,12 @@ namespace RetroBar.Utilities
             nameof(Settings.FontOverrideWeight),
             nameof(Settings.FontOverrideItalic),
             nameof(Settings.ScalingMode),
+            nameof(Settings.FontOverrideLineSpacing),
+            nameof(Settings.ClockLines),
+            nameof(Settings.ClockFitLines),
+            nameof(Settings.ClockTimeAlignment),
+            nameof(Settings.RowCount), // themes change clock margins/lines per row count
+            nameof(Settings.Edge),
         };
 
         // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
@@ -104,6 +112,25 @@ namespace RetroBar.Utilities
             if (sender is TextBlock textBlock)
             {
                 Apply(textBlock);
+                ApplyClock(textBlock); // UX-008
+            }
+        }
+
+        // UX-008: clock lines and steady clock width (ClockFitter), for taskbar clocks only.
+        private static void ApplyClock(TextBlock textBlock)
+        {
+            if (!ClockFitter.IsClockLine(textBlock))
+            {
+                return;
+            }
+
+            if (IsOnTaskbar(textBlock))
+            {
+                ClockFitter.Apply(textBlock);
+            }
+            else
+            {
+                ClockFitter.Restore(textBlock);
             }
         }
 
@@ -130,7 +157,8 @@ namespace RetroBar.Utilities
             return !string.IsNullOrWhiteSpace(s.FontOverrideFamily) ||
                    s.FontOverrideSize > 0 ||
                    s.FontOverrideWeight > 0 ||
-                   s.FontOverrideItalic;
+                   s.FontOverrideItalic ||
+                   s.FontOverrideLineSpacing > 0;
         }
 
         private static void Apply(TextBlock textBlock)
@@ -167,6 +195,8 @@ namespace RetroBar.Utilities
                     FontWeightLocal = textBlock.ReadLocalValue(TextBlock.FontWeightProperty),
                     FontStyleLocal = textBlock.ReadLocalValue(TextBlock.FontStyleProperty),
                     LayoutTransformLocal = textBlock.ReadLocalValue(FrameworkElement.LayoutTransformProperty),
+                    LineHeightLocal = textBlock.ReadLocalValue(TextBlock.LineHeightProperty),
+                    LineStackingLocal = textBlock.ReadLocalValue(TextBlock.LineStackingStrategyProperty),
                     BaseFontSize = textBlock.FontSize,
                     ThemeBold = textBlock.FontWeight.ToOpenTypeWeight() >= FontWeights.SemiBold.ToOpenTypeWeight(),
                     SymbolFont = IsSymbolFont(textBlock.FontFamily),
@@ -283,6 +313,28 @@ namespace RetroBar.Utilities
                 RestoreValue(textBlock, FrameworkElement.LayoutTransformProperty, original.LayoutTransformLocal);
                 original.TransformSet = false;
             }
+
+            // UX-008: line spacing as a multiple of the (already set) font size. Many web fonts
+            // reserve a big gap above/below the letters, which overflows stacked text such as
+            // the multi-line clock.
+            if (s.FontOverrideLineSpacing > 0 && !original.SymbolFont)
+            {
+                double lineHeight = Math.Max(1.0, Math.Round(textBlock.FontSize * s.FontOverrideLineSpacing));
+                if (!original.LineSpacingSet ||
+                    textBlock.LineStackingStrategy != LineStackingStrategy.BlockLineHeight ||
+                    textBlock.LineHeight != lineHeight)
+                {
+                    textBlock.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                    textBlock.LineHeight = lineHeight;
+                    original.LineSpacingSet = true;
+                }
+            }
+            else if (original.LineSpacingSet)
+            {
+                RestoreValue(textBlock, TextBlock.LineHeightProperty, original.LineHeightLocal);
+                RestoreValue(textBlock, TextBlock.LineStackingStrategyProperty, original.LineStackingLocal);
+                original.LineSpacingSet = false;
+            }
         }
 
         /// <summary>
@@ -312,7 +364,7 @@ namespace RetroBar.Utilities
             var s = Settings.Instance;
             double extra = 0;
 
-            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily) || s.FontOverrideSize > 0)
+            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily) || s.FontOverrideSize > 0 || s.FontOverrideLineSpacing > 0)
             {
                 FontFamily themeFamily = Application.Current.TryFindResource("GlobalFontFamily") as FontFamily ?? SystemFonts.CaptionFontFamily;
                 double themeSize = Application.Current.TryFindResource("GlobalFontSize") as double? ?? 11.0;
@@ -320,7 +372,8 @@ namespace RetroBar.Utilities
                 double size = s.FontOverrideSize > 0 ? s.FontOverrideSize : themeSize;
 
                 double themeLine = themeFamily.LineSpacing * themeSize * s.TaskbarScale;
-                double newLine = family.LineSpacing * OnScreenFontSize(size);
+                double lineSpacing = s.FontOverrideLineSpacing > 0 ? s.FontOverrideLineSpacing : family.LineSpacing; // UX-008
+                double newLine = lineSpacing * OnScreenFontSize(size);
 
                 // UX-007: at theme sizes the task icon (16px at 100%) is the tallest thing in a
                 // button, so text can grow up to the icon's height without the row growing.
@@ -350,6 +403,11 @@ namespace RetroBar.Utilities
             if (original.WeightSet) RestoreValue(textBlock, TextBlock.FontWeightProperty, original.FontWeightLocal);
             if (original.StyleSet) RestoreValue(textBlock, TextBlock.FontStyleProperty, original.FontStyleLocal);
             if (original.TransformSet) RestoreValue(textBlock, FrameworkElement.LayoutTransformProperty, original.LayoutTransformLocal);
+            if (original.LineSpacingSet) // UX-008
+            {
+                RestoreValue(textBlock, TextBlock.LineHeightProperty, original.LineHeightLocal);
+                RestoreValue(textBlock, TextBlock.LineStackingStrategyProperty, original.LineStackingLocal);
+            }
             textBlock.ClearValue(OriginalProperty);
         }
 
@@ -386,6 +444,7 @@ namespace RetroBar.Utilities
             foreach (TextBlock textBlock in textBlocks)
             {
                 Restore(textBlock);
+                ClockFitter.Restore(textBlock); // UX-008
             }
 
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
@@ -395,6 +454,7 @@ namespace RetroBar.Utilities
                     if (textBlock.IsLoaded)
                     {
                         Apply(textBlock);
+                        ApplyClock(textBlock); // UX-008
                     }
                 }
             }));

@@ -39,6 +39,20 @@
         <s:String>Native size (sharp)</s:String>
         <s:String>Stretch (classic)</s:String>
     </x:Array>
+    <!-- UXUI-Extreme (UX-008) -->
+    <s:String x:Key="uxui_line_spacing">_Line spacing:</s:String>
+    <s:String x:Key="uxui_clock_lines">Clock _lines:</s:String>
+    <x:Array x:Key="uxui_clock_lines_values" Type="s:String">
+        <s:String>Theme default</s:String>
+        <s:String>Time and weekday</s:String>
+        <s:String>Time only</s:String>
+    </x:Array>
+    <s:String x:Key="uxui_clock_time_alignment">_Time position:</s:String>
+    <x:Array x:Key="uxui_clock_time_alignment_values" Type="s:String">
+        <s:String>Centred (theme)</s:String>
+        <s:String>Anchored (only digits move)</s:String>
+    </x:Array>
+    <s:String x:Key="uxui_clock_fit_lines">Squeeze clock lines to fit the taskbar</s:String>
     <!-- UXUI-Extreme (UX-007) -->
     <s:String x:Key="uxui_taskbar_size">Taskbar size</s:String>
     <s:String x:Key="uxui_row_height_adjust">Row _height adjust:</s:String>

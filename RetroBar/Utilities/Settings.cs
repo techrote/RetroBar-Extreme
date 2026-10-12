@@ -427,6 +427,38 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideWeight, value);
         }
 
+        // UXUI-Extreme (UX-008): line spacing as a multiple of font size; 0 = the font's own spacing.
+        private double _fontOverrideLineSpacing = 0;
+        public double FontOverrideLineSpacing
+        {
+            get => _fontOverrideLineSpacing;
+            set => Set(ref _fontOverrideLineSpacing, value);
+        }
+
+        // UXUI-Extreme (UX-008): hide clock lines that don't fit (never adds lines)
+        private ClockLinesOption _clockLines = ClockLinesOption.ThemeDefault;
+        public ClockLinesOption ClockLines
+        {
+            get => _clockLines;
+            set => SetEnum(ref _clockLines, value);
+        }
+
+        // UXUI-Extreme (UX-008): squeeze stacked clock lines together when they don't fit
+        private bool _clockFitLines = true;
+        public bool ClockFitLines
+        {
+            get => _clockFitLines;
+            set => Set(ref _clockFitLines, value);
+        }
+
+        // UXUI-Extreme (UX-008): centred time (theme look) or anchored so only changing digits move
+        private ClockTimeAlignmentOption _clockTimeAlignment = ClockTimeAlignmentOption.Centred;
+        public ClockTimeAlignmentOption ClockTimeAlignment
+        {
+            get => _clockTimeAlignment;
+            set => SetEnum(ref _clockTimeAlignment, value);
+        }
+
         // UXUI-Extreme (UX-007): manual row height fine-tuning, px at 100% scale (-10..+20).
         private double _rowHeightAdjust = 0;
         public double RowHeightAdjust
@@ -586,6 +618,21 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-008)
+    public enum ClockLinesOption
+    {
+        ThemeDefault,
+        TimeAndDay,
+        TimeOnly
+    }
+
+    // UXUI-Extreme (UX-008)
+    public enum ClockTimeAlignmentOption
+    {
+        Centred,
+        Anchored
+    }
+
     // UXUI-Extreme (UX-006)
     public enum ScalingModeOption
     {
