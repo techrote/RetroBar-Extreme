@@ -191,6 +191,8 @@ namespace RetroBar
             // UXUI-Extreme (UX-005): font settings change how tall rows must be.
             else if (e.PropertyName == nameof(Settings.FontOverrideFamily) ||
                      e.PropertyName == nameof(Settings.FontOverrideSize) ||
+                     e.PropertyName == nameof(Settings.RowHeightAdjust) ||
+                     e.PropertyName == nameof(Settings.ScalingMode) ||
                      e.PropertyName == nameof(Settings.PixelTextMode) ||
                      e.PropertyName == nameof(Settings.AllowFontSmoothing))
             {
@@ -457,7 +459,9 @@ namespace RetroBar
             _unlockedMargin = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarUnlockedSize") as double? ?? 0);
             // UXUI-Extreme (UX-005): grow rows so a larger chosen font fits instead of overflowing.
             double extraRowHeight = TaskbarTextStyler.ExtraRowHeight();
-            DesiredRowHeight = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarRowHeight") as double? ?? 0) + extraRowHeight;
+            double themeRowHeight = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarRowHeight") as double? ?? 0);
+            extraRowHeight = Math.Max(extraRowHeight, 8 - themeRowHeight); // UX-007: a negative adjust never collapses a row below 8px
+            DesiredRowHeight = themeRowHeight + extraRowHeight;
             double newWidth = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarWidth") as double? ?? 0)) + DesiredRowHeight * (Settings.Instance.TaskbarWidth - 1);
             double newHeight = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarHeight") as double? ?? 0)) + extraRowHeight + DesiredRowHeight * (Rows - 1);
 

@@ -578,6 +578,33 @@
                                        Text="{DynamicResource uxui_font_note}" />
                         </StackPanel>
                     </GroupBox>
+                    <!-- UXUI-Extreme (UX-007): manual row height fine-tuning -->
+                    <GroupBox Header="{DynamicResource uxui_taskbar_size}">
+                        <StackPanel Orientation="Vertical">
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=sldRowHeightAdjust}">
+                                    <AccessText Text="{DynamicResource uxui_row_height_adjust}" />
+                                </Label>
+                                <TextBlock x:Name="txtRowHeightAdjust"
+                                           DockPanel.Dock="Right"
+                                           Width="110"
+                                           VerticalAlignment="Center" />
+                                <Slider x:Name="sldRowHeightAdjust"
+                                        Orientation="Horizontal"
+                                        Minimum="-10"
+                                        Maximum="20"
+                                        TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        TickPlacement="BottomRight"
+                                        Width="83"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,4,0,3"
+                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=RowHeightAdjust, UpdateSourceTrigger=PropertyChanged}"
+                                        ValueChanged="SldRowHeightAdjust_ValueChanged" />
+                            </DockPanel>
+                        </StackPanel>
+                    </GroupBox>
                 </StackPanel>
             </TabItem>
             <TabItem Header="{DynamicResource advanced_tab}">

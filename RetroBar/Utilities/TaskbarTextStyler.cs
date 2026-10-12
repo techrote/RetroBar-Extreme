@@ -30,6 +30,7 @@ namespace RetroBar.Utilities
             public object FontFamilyLocal, FontSizeLocal, FontWeightLocal, FontStyleLocal, LayoutTransformLocal;
             public double BaseFontSize;
             public bool ThemeBold;
+            public bool SymbolFont; // UX-007: icon/symbol fonts keep their family, weight and style
             // Which properties we currently override, so we only restore what we changed.
             public bool FamilySet, SizeSet, WeightSet, StyleSet, TransformSet;
         }
@@ -49,6 +50,34 @@ namespace RetroBar.Utilities
             nameof(Settings.FontOverrideItalic),
             nameof(Settings.ScalingMode),
         };
+
+        // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
+        // glyphs are Marlett "2", "0", "1", "r"). Replacing them turns icons into letters.
+        private static readonly string[] SymbolFontNames =
+        {
+            "Marlett", "Webdings", "Wingdings", "Symbol", "Segoe MDL2 Assets", "Segoe Fluent Icons", "Segoe UI Symbol",
+        };
+
+        private static bool IsSymbolFont(FontFamily family)
+        {
+            string source = family?.Source ?? "";
+            foreach (string name in SymbolFontNames)
+            {
+                if (source.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // UX-007: only text that is actually drawn inside a taskbar window. Context menus and
+        // tooltips are logically parented to taskbar buttons (so Window.GetWindow returns the
+        // taskbar) but live in their own popup windows, which are never stretched.
+        private static bool IsOnTaskbar(TextBlock textBlock)
+        {
+            return PresentationSource.FromVisual(textBlock)?.RootVisual is Taskbar;
+        }
 
         private static bool _initialized;
 
@@ -120,8 +149,12 @@ namespace RetroBar.Utilities
                 return;
             }
 
-            if (Window.GetWindow(textBlock) is not Taskbar)
+            if (!IsOnTaskbar(textBlock))
             {
+                if (original != null)
+                {
+                    Restore(textBlock); // e.g. styled before UX-007 while inside a menu
+                }
                 return;
             }
 
@@ -136,6 +169,7 @@ namespace RetroBar.Utilities
                     LayoutTransformLocal = textBlock.ReadLocalValue(FrameworkElement.LayoutTransformProperty),
                     BaseFontSize = textBlock.FontSize,
                     ThemeBold = textBlock.FontWeight.ToOpenTypeWeight() >= FontWeights.SemiBold.ToOpenTypeWeight(),
+                    SymbolFont = IsSymbolFont(textBlock.FontFamily),
                 };
                 textBlock.SetValue(OriginalProperty, original);
             }
@@ -143,7 +177,7 @@ namespace RetroBar.Utilities
             var s = Settings.Instance;
 
             // Family
-            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily))
+            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily) && !original.SymbolFont)
             {
                 if (!original.FamilySet || textBlock.FontFamily.Source != s.FontOverrideFamily)
                 {
@@ -158,7 +192,7 @@ namespace RetroBar.Utilities
             }
 
             // Weight: text the theme made bold (e.g. "Start") stays at least bold.
-            if (s.FontOverrideWeight > 0)
+            if (s.FontOverrideWeight > 0 && !original.SymbolFont)
             {
                 int weight = Math.Clamp(s.FontOverrideWeight, 1, 999);
                 if (original.ThemeBold)
@@ -179,7 +213,7 @@ namespace RetroBar.Utilities
             }
 
             // Italic
-            if (s.FontOverrideItalic)
+            if (s.FontOverrideItalic && !original.SymbolFont)
             {
                 if (!original.StyleSet || textBlock.FontStyle != FontStyles.Italic)
                 {
@@ -271,27 +305,36 @@ namespace RetroBar.Utilities
         /// <summary>
         /// How much taller each taskbar row must be (in the same units as Taskbar.DesiredRowHeight,
         /// i.e. already including TaskbarScale) so text in the chosen font fits. 0 when the font
-        /// is no taller than the theme's. Only grows; never shrinks a theme's rows.
+        /// is no taller than the theme's, plus the owner's manual Row height adjust (which can be negative).
         /// </summary>
         public static double ExtraRowHeight()
         {
             var s = Settings.Instance;
+            double extra = 0;
 
-            if (string.IsNullOrWhiteSpace(s.FontOverrideFamily) && s.FontOverrideSize <= 0)
+            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily) || s.FontOverrideSize > 0)
             {
-                return 0;
+                FontFamily themeFamily = Application.Current.TryFindResource("GlobalFontFamily") as FontFamily ?? SystemFonts.CaptionFontFamily;
+                double themeSize = Application.Current.TryFindResource("GlobalFontSize") as double? ?? 11.0;
+                FontFamily family = string.IsNullOrWhiteSpace(s.FontOverrideFamily) ? themeFamily : new FontFamily(s.FontOverrideFamily);
+                double size = s.FontOverrideSize > 0 ? s.FontOverrideSize : themeSize;
+
+                double themeLine = themeFamily.LineSpacing * themeSize * s.TaskbarScale;
+                double newLine = family.LineSpacing * OnScreenFontSize(size);
+
+                // UX-007: at theme sizes the task icon (16px at 100%) is the tallest thing in a
+                // button, so text can grow up to the icon's height without the row growing.
+                double iconHeight = TaskIconHeightAt100 * s.TaskbarScale;
+                extra = Math.Max(0, Math.Ceiling(newLine - Math.Max(themeLine, iconHeight)));
             }
 
-            FontFamily themeFamily = Application.Current.TryFindResource("GlobalFontFamily") as FontFamily ?? SystemFonts.CaptionFontFamily;
-            double themeSize = Application.Current.TryFindResource("GlobalFontSize") as double? ?? 11.0;
-            FontFamily family = string.IsNullOrWhiteSpace(s.FontOverrideFamily) ? themeFamily : new FontFamily(s.FontOverrideFamily);
-            double size = s.FontOverrideSize > 0 ? s.FontOverrideSize : themeSize;
+            // UX-007: manual fine-tuning from the Style tab (px at 100%).
+            extra += Math.Round(s.RowHeightAdjust * s.TaskbarScale);
 
-            double themeLine = themeFamily.LineSpacing * themeSize * s.TaskbarScale;
-            double newLine = family.LineSpacing * OnScreenFontSize(size);
-
-            return Math.Max(0, Math.Ceiling(newLine - themeLine));
+            return extra;
         }
+
+        private const double TaskIconHeightAt100 = 16.0;
 
         private static void Restore(TextBlock textBlock)
         {
