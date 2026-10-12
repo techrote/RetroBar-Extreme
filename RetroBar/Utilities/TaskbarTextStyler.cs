@@ -30,6 +30,8 @@ namespace RetroBar.Utilities
             public object FontFamilyLocal, FontSizeLocal, FontWeightLocal, FontStyleLocal, LayoutTransformLocal;
             public double BaseFontSize;
             public bool ThemeBold;
+            // Which properties we currently override, so we only restore what we changed.
+            public bool FamilySet, SizeSet, WeightSet, StyleSet, TransformSet;
         }
 
         private static readonly DependencyProperty OriginalProperty =
@@ -57,11 +59,17 @@ namespace RetroBar.Utilities
             }
 
             _initialized = true;
-            EventManager.RegisterClassHandler(typeof(TextBlock), FrameworkElement.LoadedEvent, new RoutedEventHandler(TextBlock_Loaded));
+
+            // WPF only sends Loaded to elements that registered their own Loaded handler, so a
+            // class handler alone misses text inside newly created task buttons. SizeChanged is
+            // raised for every element on its first layout (and when its text changes size), so
+            // listen to both. Apply() is idempotent, so repeat calls are cheap no-ops.
+            EventManager.RegisterClassHandler(typeof(TextBlock), FrameworkElement.LoadedEvent, new RoutedEventHandler(TextBlock_Event));
+            EventManager.RegisterClassHandler(typeof(TextBlock), FrameworkElement.SizeChangedEvent, new SizeChangedEventHandler(TextBlock_Event));
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
 
-        private static void TextBlock_Loaded(object sender, RoutedEventArgs e)
+        private static void TextBlock_Event(object sender, RoutedEventArgs e)
         {
             if (sender is TextBlock textBlock)
             {
@@ -96,20 +104,22 @@ namespace RetroBar.Utilities
 
         private static void Apply(TextBlock textBlock)
         {
+            bool pixelText = IsPixelTextActive(out double scale);
+            Original original = (Original)textBlock.GetValue(OriginalProperty);
+
+            if (!pixelText && !IsFontOverrideActive())
+            {
+                if (original != null)
+                {
+                    Restore(textBlock);
+                }
+                return;
+            }
+
             if (Window.GetWindow(textBlock) is not Taskbar)
             {
                 return;
             }
-
-            bool pixelText = IsPixelTextActive(out double scale);
-
-            if (!pixelText && !IsFontOverrideActive())
-            {
-                Restore(textBlock);
-                return;
-            }
-
-            Original original = (Original)textBlock.GetValue(OriginalProperty);
 
             if (original == null)
             {
@@ -131,11 +141,16 @@ namespace RetroBar.Utilities
             // Family
             if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily))
             {
-                textBlock.FontFamily = new FontFamily(s.FontOverrideFamily);
+                if (!original.FamilySet || textBlock.FontFamily.Source != s.FontOverrideFamily)
+                {
+                    textBlock.FontFamily = new FontFamily(s.FontOverrideFamily);
+                    original.FamilySet = true;
+                }
             }
-            else
+            else if (original.FamilySet)
             {
                 RestoreValue(textBlock, TextBlock.FontFamilyProperty, original.FontFamilyLocal);
+                original.FamilySet = false;
             }
 
             // Weight: text the theme made bold (e.g. "Start") stays at least bold.
@@ -146,50 +161,83 @@ namespace RetroBar.Utilities
                 {
                     weight = Math.Max(weight, FontWeights.Bold.ToOpenTypeWeight());
                 }
-                textBlock.FontWeight = FontWeight.FromOpenTypeWeight(weight);
+                FontWeight fontWeight = FontWeight.FromOpenTypeWeight(weight);
+                if (!original.WeightSet || textBlock.FontWeight != fontWeight)
+                {
+                    textBlock.FontWeight = fontWeight;
+                    original.WeightSet = true;
+                }
             }
-            else
+            else if (original.WeightSet)
             {
                 RestoreValue(textBlock, TextBlock.FontWeightProperty, original.FontWeightLocal);
+                original.WeightSet = false;
             }
 
             // Italic
             if (s.FontOverrideItalic)
             {
-                textBlock.FontStyle = FontStyles.Italic;
+                if (!original.StyleSet || textBlock.FontStyle != FontStyles.Italic)
+                {
+                    textBlock.FontStyle = FontStyles.Italic;
+                    original.StyleSet = true;
+                }
             }
-            else
+            else if (original.StyleSet)
             {
                 RestoreValue(textBlock, TextBlock.FontStyleProperty, original.FontStyleLocal);
+                original.StyleSet = false;
             }
 
             // Size, and the UX-002 counter-scale
             double baseSize = s.FontOverrideSize > 0 ? s.FontOverrideSize : original.BaseFontSize;
+            double? targetSize = null;
+            double? counterScale = null;
 
             if (pixelText)
             {
-                double targetSize = baseSize * scale;
-
+                double size = baseSize * scale;
                 if (s.PixelTextMode == PixelTextOption.NativeWholePixels)
                 {
-                    targetSize = Math.Max(1.0, Math.Round(targetSize));
+                    size = Math.Max(1.0, Math.Round(size));
                 }
-
-                textBlock.FontSize = targetSize;
-                textBlock.LayoutTransform = new ScaleTransform(1.0 / scale, 1.0 / scale);
+                targetSize = size;
+                counterScale = 1.0 / scale;
             }
-            else
+            else if (s.FontOverrideSize > 0)
             {
-                if (s.FontOverrideSize > 0)
-                {
-                    textBlock.FontSize = baseSize;
-                }
-                else
-                {
-                    RestoreValue(textBlock, TextBlock.FontSizeProperty, original.FontSizeLocal);
-                }
+                targetSize = baseSize;
+            }
 
+            if (targetSize.HasValue)
+            {
+                if (!original.SizeSet || textBlock.FontSize != targetSize.Value)
+                {
+                    textBlock.FontSize = targetSize.Value;
+                    original.SizeSet = true;
+                }
+            }
+            else if (original.SizeSet)
+            {
+                RestoreValue(textBlock, TextBlock.FontSizeProperty, original.FontSizeLocal);
+                original.SizeSet = false;
+            }
+
+            if (counterScale.HasValue)
+            {
+                bool alreadySet = original.TransformSet &&
+                                  textBlock.LayoutTransform is ScaleTransform current &&
+                                  current.ScaleX == counterScale.Value;
+                if (!alreadySet)
+                {
+                    textBlock.LayoutTransform = new ScaleTransform(counterScale.Value, counterScale.Value);
+                    original.TransformSet = true;
+                }
+            }
+            else if (original.TransformSet)
+            {
                 RestoreValue(textBlock, FrameworkElement.LayoutTransformProperty, original.LayoutTransformLocal);
+                original.TransformSet = false;
             }
         }
 
@@ -202,11 +250,11 @@ namespace RetroBar.Utilities
                 return; // never changed by us
             }
 
-            RestoreValue(textBlock, TextBlock.FontFamilyProperty, original.FontFamilyLocal);
-            RestoreValue(textBlock, TextBlock.FontSizeProperty, original.FontSizeLocal);
-            RestoreValue(textBlock, TextBlock.FontWeightProperty, original.FontWeightLocal);
-            RestoreValue(textBlock, TextBlock.FontStyleProperty, original.FontStyleLocal);
-            RestoreValue(textBlock, FrameworkElement.LayoutTransformProperty, original.LayoutTransformLocal);
+            if (original.FamilySet) RestoreValue(textBlock, TextBlock.FontFamilyProperty, original.FontFamilyLocal);
+            if (original.SizeSet) RestoreValue(textBlock, TextBlock.FontSizeProperty, original.FontSizeLocal);
+            if (original.WeightSet) RestoreValue(textBlock, TextBlock.FontWeightProperty, original.FontWeightLocal);
+            if (original.StyleSet) RestoreValue(textBlock, TextBlock.FontStyleProperty, original.FontStyleLocal);
+            if (original.TransformSet) RestoreValue(textBlock, FrameworkElement.LayoutTransformProperty, original.LayoutTransformLocal);
             textBlock.ClearValue(OriginalProperty);
         }
 
