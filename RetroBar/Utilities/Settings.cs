@@ -389,6 +389,14 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _invertIconsMode, value);
         }
 
+        // UXUI-Extreme (UX-002): experimental crisp text when scaled. Off = stock behaviour.
+        private PixelTextOption _pixelTextMode = PixelTextOption.Off;
+        public PixelTextOption PixelTextMode
+        {
+            get => _pixelTextMode;
+            set => SetEnum(ref _pixelTextMode, value);
+        }
+
         private bool _showTaskBadges = true;
         public bool ShowTaskBadges
         {
@@ -533,6 +541,14 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-002)
+    public enum PixelTextOption
+    {
+        Off,
+        NativeWholePixels,
+        NativeExact
+    }
+
     public enum InvertIconsOption
     {
         WhenNeededByTheme,

@@ -402,6 +402,15 @@ namespace RetroBar
             }
         }
 
+        // UXUI-Extreme (UX-002): keep a selection when the language (item list) changes
+        private void CboPixelTextMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cboPixelTextMode.SelectedItem == null)
+            {
+                cboPixelTextMode.SelectedValue = cboPixelTextMode.Items[(int)Settings.Instance.PixelTextMode];
+            }
+        }
+
         private void CboInvertIconsMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             if (cboInvertIconsMode.SelectedItem == null)

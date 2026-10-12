@@ -283,6 +283,17 @@
                             <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=AllowFontSmoothing, UpdateSourceTrigger=PropertyChanged}">
                                 <Label Content="{DynamicResource allow_font_smoothing}" />
                             </CheckBox>
+                            <!-- UXUI-Extreme (UX-002): experimental crisp text when scaled -->
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboPixelTextMode}">
+                                    <AccessText Text="{DynamicResource pixel_text_mode}" />
+                                </Label>
+                                <ComboBox x:Name="cboPixelTextMode"
+                                          ItemsSource="{DynamicResource pixel_text_mode_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=PixelTextMode, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}"
+                                          SelectionChanged="CboPixelTextMode_SelectionChanged" />
+                            </DockPanel>
                             <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=LockTaskbar, UpdateSourceTrigger=PropertyChanged}">
                                 <Label Content="{DynamicResource lock_taskbar}" />
                             </CheckBox>
