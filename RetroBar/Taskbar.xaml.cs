@@ -22,7 +22,7 @@ namespace RetroBar
     {
         public bool IsLocked => Settings.Instance.LockTaskbar;
 
-        public bool IsScaled => DpiScale > 1 || Settings.Instance.TaskbarScale > 1;
+        public bool IsScaled => DpiScale > 1 || ScaleModel.TransformScale > 1; // UXUI-Extreme (UX-006)
 
         private double _unlockedMargin;
         public double DesiredRowHeight { get; private set; }
@@ -453,12 +453,13 @@ namespace RetroBar
 
         private void RecalculateSize(bool performResize = true)
         {
-            _unlockedMargin = Settings.Instance.TaskbarScale * (Application.Current.FindResource("TaskbarUnlockedSize") as double? ?? 0);
+            // UXUI-Extreme (UX-006): in native mode theme sizes are already scaled (ThemeScaler), so TransformScale is 1.
+            _unlockedMargin = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarUnlockedSize") as double? ?? 0);
             // UXUI-Extreme (UX-005): grow rows so a larger chosen font fits instead of overflowing.
             double extraRowHeight = TaskbarTextStyler.ExtraRowHeight();
-            DesiredRowHeight = Settings.Instance.TaskbarScale * (Application.Current.FindResource("TaskbarRowHeight") as double? ?? 0) + extraRowHeight;
-            double newWidth = (Settings.Instance.TaskbarScale * (Application.Current.FindResource("TaskbarWidth") as double? ?? 0)) + DesiredRowHeight * (Settings.Instance.TaskbarWidth - 1);
-            double newHeight = (Settings.Instance.TaskbarScale * (Application.Current.FindResource("TaskbarHeight") as double? ?? 0)) + extraRowHeight + DesiredRowHeight * (Rows - 1);
+            DesiredRowHeight = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarRowHeight") as double? ?? 0) + extraRowHeight;
+            double newWidth = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarWidth") as double? ?? 0)) + DesiredRowHeight * (Settings.Instance.TaskbarWidth - 1);
+            double newHeight = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarHeight") as double? ?? 0)) + extraRowHeight + DesiredRowHeight * (Rows - 1);
 
             if (AppBarMode == AppBarMode.AutoHide || !Settings.Instance.LockTaskbar)
             {

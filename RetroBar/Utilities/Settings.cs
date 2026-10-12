@@ -389,6 +389,14 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _invertIconsMode, value);
         }
 
+        // UXUI-Extreme (UX-006): Native = draw at real size (default); Stretch = upstream zoom.
+        private ScalingModeOption _scalingMode = ScalingModeOption.Native;
+        public ScalingModeOption ScalingMode
+        {
+            get => _scalingMode;
+            set => SetEnum(ref _scalingMode, value);
+        }
+
         // UXUI-Extreme (UX-002): experimental crisp text when scaled. Off = stock behaviour.
         private PixelTextOption _pixelTextMode = PixelTextOption.Off;
         public PixelTextOption PixelTextMode
@@ -570,6 +578,13 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-006)
+    public enum ScalingModeOption
+    {
+        Native,
+        Stretch
+    }
+
     // UXUI-Extreme (UX-002)
     public enum PixelTextOption
     {

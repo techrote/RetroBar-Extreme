@@ -90,10 +90,22 @@ namespace RetroBar
             {
                 setTaskIconSize();
             }
+
+            // UXUI-Extreme (UX-006): native sizing bakes the scale into the theme, so a scale or
+            // mode change that alters it needs the theme reloaded and the taskbars rebuilt.
+            if ((e.PropertyName == nameof(Settings.TaskbarScale) || e.PropertyName == nameof(Settings.ScalingMode)) &&
+                ScaleModel.ThemeScale != _loadedThemeScale)
+            {
+                loadTheme();
+                _windowManager?.ReopenTaskbars();
+            }
         }
+
+        private double _loadedThemeScale = 1.0; // UXUI-Extreme (UX-006)
 
         private void loadTheme()
         {
+            _loadedThemeScale = ScaleModel.ThemeScale; // UXUI-Extreme (UX-006)
             _dictionaryManager.SetThemeFromSettings();
             setTaskIconSize();
         }

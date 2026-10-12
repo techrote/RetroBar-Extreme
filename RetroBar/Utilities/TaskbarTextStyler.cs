@@ -47,6 +47,7 @@ namespace RetroBar.Utilities
             nameof(Settings.FontOverrideSize),
             nameof(Settings.FontOverrideWeight),
             nameof(Settings.FontOverrideItalic),
+            nameof(Settings.ScalingMode),
         };
 
         private static bool _initialized;
@@ -88,7 +89,8 @@ namespace RetroBar.Utilities
         private static bool IsPixelTextActive(out double scale)
         {
             scale = Settings.Instance.TaskbarScale;
-            return Settings.Instance.PixelTextMode != PixelTextOption.Off &&
+            return !ScaleModel.IsNative && // UX-006: native sizing needs no counter-scale
+                   Settings.Instance.PixelTextMode != PixelTextOption.Off &&
                    !Settings.Instance.AllowFontSmoothing &&
                    scale > 1.0;
         }
@@ -107,7 +109,9 @@ namespace RetroBar.Utilities
             bool pixelText = IsPixelTextActive(out double scale);
             Original original = (Original)textBlock.GetValue(OriginalProperty);
 
-            if (!pixelText && !IsFontOverrideActive())
+            bool nativeSizing = ScaleModel.IsNative; // UX-006
+
+            if (!pixelText && !nativeSizing && !IsFontOverrideActive())
             {
                 if (original != null)
                 {
@@ -194,7 +198,13 @@ namespace RetroBar.Utilities
             double? targetSize = null;
             double? counterScale = null;
 
-            if (pixelText)
+            if (nativeSizing)
+            {
+                // UX-006: the theme is loaded at real size, so text just gets its real size too:
+                // whole pixels, no transform.
+                targetSize = Math.Max(1.0, Math.Round(baseSize * Settings.Instance.TaskbarScale));
+            }
+            else if (pixelText)
             {
                 double size = baseSize * scale;
                 if (s.PixelTextMode == PixelTextOption.NativeWholePixels)
@@ -249,7 +259,8 @@ namespace RetroBar.Utilities
             double scale = Settings.Instance.TaskbarScale;
             double size = sizeAt100 * scale;
 
-            if (IsPixelTextActive(out _) && Settings.Instance.PixelTextMode == PixelTextOption.NativeWholePixels)
+            if (ScaleModel.IsNative ||
+                (IsPixelTextActive(out _) && Settings.Instance.PixelTextMode == PixelTextOption.NativeWholePixels))
             {
                 size = Math.Max(1.0, Math.Round(size));
             }

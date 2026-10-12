@@ -9,6 +9,7 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
         <converters:ToolTipHorizontalOffsetConverter x:Key="toolTipHorizontalOffsetConverter" />
+        <converters:TransformScaleConverter x:Key="transformScaleConverter" /> <!-- UXUI-Extreme (UX-006) -->
         <converters:ToolTipVerticalOffsetConverter x:Key="toolTipVerticalOffsetConverter" />
         <converters:ToolTipPlacementConverter x:Key="toolTipPlacementConverter" />
         <converters:TaskLabelConverter x:Key="taskLabelConverter" />
@@ -119,7 +120,7 @@
                                             <MultiBinding Converter="{StaticResource toolTipHorizontalOffsetConverter}" UpdateSourceTrigger="PropertyChanged">
                                                 <Binding RelativeSource="{RelativeSource Self}" Path="PlacementTarget.ActualWidth"/>
                                                 <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth"/>
-                                                <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale"/>
+                                                <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale" Converter="{StaticResource transformScaleConverter}"/>
                                                 <Binding Source="{x:Static utilities:Settings.Instance}" Path="Edge"/>
                                             </MultiBinding>
                                         </Setter.Value>
@@ -129,7 +130,7 @@
                                             <MultiBinding Converter="{StaticResource toolTipVerticalOffsetConverter}" UpdateSourceTrigger="PropertyChanged">
                                                 <Binding RelativeSource="{RelativeSource Self}" Path="PlacementTarget.ActualHeight"/>
                                                 <Binding RelativeSource="{RelativeSource Self}" Path="ActualHeight"/>
-                                                <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale"/>
+                                                <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale" Converter="{StaticResource transformScaleConverter}"/>
                                                 <Binding Source="{x:Static utilities:Settings.Instance}" Path="Edge"/>
                                             </MultiBinding>
                                         </Setter.Value>
