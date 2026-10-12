@@ -565,6 +565,27 @@
                                         Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=FontOverrideSize, UpdateSourceTrigger=PropertyChanged}"
                                         ValueChanged="SldFontSize_ValueChanged" />
                             </DockPanel>
+                            <!-- UXUI-Extreme (UX-008): line spacing; leftmost position = Auto -->
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=sldLineSpacing}">
+                                    <AccessText Text="{DynamicResource uxui_line_spacing}" />
+                                </Label>
+                                <TextBlock x:Name="txtLineSpacing"
+                                           DockPanel.Dock="Right"
+                                           Width="110"
+                                           VerticalAlignment="Center" />
+                                <Slider x:Name="sldLineSpacing"
+                                        Orientation="Horizontal"
+                                        Minimum="0.55"
+                                        Maximum="1.6"
+                                        TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        Width="83"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,4,0,3"
+                                        ValueChanged="SldLineSpacing_ValueChanged" />
+                            </DockPanel>
                             <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=FontOverrideItalic, UpdateSourceTrigger=PropertyChanged}">
                                 <Label Content="{DynamicResource uxui_font_italic}" />
                             </CheckBox>

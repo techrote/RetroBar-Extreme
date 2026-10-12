@@ -413,7 +413,7 @@ namespace RetroBar
         }
 
         // UXUI-Extreme (UX-005): Style tab — taskbar font settings
-        private bool _loadingStyleTab;
+        private bool _loadingStyleTab = true; // true until LoadStyleTab finishes, so control events during InitializeComponent never overwrite settings (UX-008)
 
         private void LoadStyleTab()
         {
@@ -442,6 +442,8 @@ namespace RetroBar
 
             UpdateFontSizeText();
             SldRowHeightAdjust_ValueChanged(null, null); // UXUI-Extreme (UX-007)
+            sldLineSpacing.Value = Settings.Instance.FontOverrideLineSpacing > 0 ? Settings.Instance.FontOverrideLineSpacing : LineSpacingAutoPosition; // UX-008
+            UpdateLineSpacingText();
             _loadingStyleTab = false;
         }
 
@@ -498,6 +500,32 @@ namespace RetroBar
             }
         }
 
+        // UXUI-Extreme (UX-008): slider's leftmost position means "Auto" (the font's own spacing)
+        private const double LineSpacingAutoPosition = 0.55;
+
+        private void SldLineSpacing_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_loadingStyleTab || sldLineSpacing == null)
+            {
+                return;
+            }
+
+            double value = sldLineSpacing.Value;
+            Settings.Instance.FontOverrideLineSpacing = value < LineSpacingAutoPosition + 0.025 ? 0 : Math.Round(value, 2);
+            UpdateLineSpacingText();
+        }
+
+        private void UpdateLineSpacingText()
+        {
+            if (txtLineSpacing == null)
+            {
+                return;
+            }
+
+            double spacing = Settings.Instance.FontOverrideLineSpacing;
+            txtLineSpacing.Text = spacing > 0 ? $"{spacing:0.00} × size" : "Auto (font)";
+        }
+
         // UXUI-Extreme (UX-007)
         private void SldRowHeightAdjust_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -516,6 +544,7 @@ namespace RetroBar
             Settings.Instance.FontOverrideWeight = 0;
             Settings.Instance.FontOverrideSize = 0;
             Settings.Instance.FontOverrideItalic = false;
+            Settings.Instance.FontOverrideLineSpacing = 0; // UX-008
             LoadStyleTab();
         }
 

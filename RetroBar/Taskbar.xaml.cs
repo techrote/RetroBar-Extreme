@@ -192,6 +192,7 @@ namespace RetroBar
             else if (e.PropertyName == nameof(Settings.FontOverrideFamily) ||
                      e.PropertyName == nameof(Settings.FontOverrideSize) ||
                      e.PropertyName == nameof(Settings.RowHeightAdjust) ||
+                     e.PropertyName == nameof(Settings.FontOverrideLineSpacing) ||
                      e.PropertyName == nameof(Settings.ScalingMode) ||
                      e.PropertyName == nameof(Settings.PixelTextMode) ||
                      e.PropertyName == nameof(Settings.AllowFontSmoothing))

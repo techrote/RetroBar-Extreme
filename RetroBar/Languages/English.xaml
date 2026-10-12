@@ -39,6 +39,8 @@
         <s:String>Native size (sharp)</s:String>
         <s:String>Stretch (classic)</s:String>
     </x:Array>
+    <!-- UXUI-Extreme (UX-008) -->
+    <s:String x:Key="uxui_line_spacing">_Line spacing:</s:String>
     <!-- UXUI-Extreme (UX-007) -->
     <s:String x:Key="uxui_taskbar_size">Taskbar size</s:String>
     <s:String x:Key="uxui_row_height_adjust">Row _height adjust:</s:String>

@@ -427,6 +427,14 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideWeight, value);
         }
 
+        // UXUI-Extreme (UX-008): line spacing as a multiple of font size; 0 = the font's own spacing.
+        private double _fontOverrideLineSpacing = 0;
+        public double FontOverrideLineSpacing
+        {
+            get => _fontOverrideLineSpacing;
+            set => Set(ref _fontOverrideLineSpacing, value);
+        }
+
         // UXUI-Extreme (UX-007): manual row height fine-tuning, px at 100% scale (-10..+20).
         private double _rowHeightAdjust = 0;
         public double RowHeightAdjust
