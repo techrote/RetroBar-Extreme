@@ -69,7 +69,7 @@ namespace RetroBar.Utilities
         private static ResourceDictionary GetActualThemeDictionary()
         {
             foreach (ResourceDictionary rd in GetMergedDictionaries()
-                .Where(rd => rd.Source.ToString().Contains($"{THEME_FOLDER}/")))
+                .Where(rd => rd.Source != null && rd.Source.ToString().Contains($"{THEME_FOLDER}/"))) // UXUI-Extreme (UX-006): scaled themes have no Source
             {
                 return rd;
             }
@@ -82,6 +82,72 @@ namespace RetroBar.Utilities
             if (GetActualThemeDictionary() != null)
             {
                 _ = GetMergedDictionaries().Remove(GetActualThemeDictionary());
+            }
+
+            // UXUI-Extreme (UX-006): scaled themes have no Source, so they are tracked separately.
+            // When native sizing is in use, also drop any stretch-mode (Source-loaded) theme
+            // dictionaries so switching modes never leaves an old theme merged.
+            foreach (ResourceDictionary scaled in _scaledThemeDictionaries)
+            {
+                GetMergedDictionaries().Remove(scaled);
+            }
+            _scaledThemeDictionaries.Clear();
+
+            if (ScaleModel.IsNative)
+            {
+                ResourceDictionary stale;
+                while ((stale = GetActualThemeDictionary()) != null)
+                {
+                    GetMergedDictionaries().Remove(stale);
+                }
+            }
+        }
+
+        // UXUI-Extreme (UX-006): native sizing — load the theme with its sizes rewritten for the
+        // current scale (ThemeScaler). Returns false (caller falls back to a normal load) on any
+        // problem, so RetroBar always starts.
+        private readonly List<ResourceDictionary> _scaledThemeDictionaries = new List<ResourceDictionary>();
+        private const string SYSTEM_THEME_RESOURCE = "RetroBar.Themes.System.xaml";
+
+        private bool TryAddScaledTheme(string dictionary, string dictDefault, string dictFilePath)
+        {
+            double scale = ScaleModel.ThemeScale;
+
+            if (scale == 1.0)
+            {
+                return false;
+            }
+
+            try
+            {
+                string xaml;
+
+                if (dictionary == dictDefault)
+                {
+                    using Stream stream = typeof(DictionaryManager).Assembly.GetManifestResourceStream(SYSTEM_THEME_RESOURCE);
+                    if (stream == null)
+                    {
+                        ManagedShell.Common.Logging.ShellLogger.Warning($"UXUI-Extreme: embedded {SYSTEM_THEME_RESOURCE} not found; using stretch scaling.");
+                        return false;
+                    }
+                    using StreamReader reader = new StreamReader(stream);
+                    xaml = reader.ReadToEnd();
+                }
+                else
+                {
+                    xaml = File.ReadAllText(dictFilePath);
+                }
+
+                string scaledXaml = ThemeScaler.Scale(xaml, scale);
+                var scaledDictionary = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(scaledXaml);
+                GetMergedDictionaries().Add(scaledDictionary);
+                _scaledThemeDictionaries.Add(scaledDictionary);
+                return true;
+            }
+            catch (Exception e)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Error($"UXUI-Extreme: could not load scaled theme '{dictionary}', using stretch scaling: {e.Message} {e.InnerException?.Message}");
+                return false;
             }
         }
 
@@ -145,6 +211,12 @@ namespace RetroBar.Utilities
                         }
                     }
                 }
+            }
+
+            // UXUI-Extreme (UX-006): native sizing for themes
+            if (dictType == 0 && ScaleModel.IsNative && TryAddScaledTheme(dictionary, dictDefault, dictFilePath))
+            {
+                return;
             }
 
             try

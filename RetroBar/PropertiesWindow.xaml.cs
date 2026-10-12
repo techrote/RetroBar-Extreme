@@ -403,6 +403,15 @@ namespace RetroBar
             }
         }
 
+        // UXUI-Extreme (UX-006): keep a selection when the language (item list) changes
+        private void CboScalingMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cboScalingMode.SelectedItem == null)
+            {
+                cboScalingMode.SelectedValue = cboScalingMode.Items[(int)Settings.Instance.ScalingMode];
+            }
+        }
+
         // UXUI-Extreme (UX-005): Style tab — taskbar font settings
         private bool _loadingStyleTab;
 

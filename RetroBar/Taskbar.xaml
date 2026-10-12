@@ -18,6 +18,7 @@
         <ResourceDictionary>
             <converters:BoolToTextRenderingModeConverter x:Key="textRenderingModeConverter" />
             <converters:SettingsToTextFormattingModeConverter x:Key="textFormattingModeConverter" />
+            <converters:TransformScaleConverter x:Key="transformScaleConverter" /> <!-- UXUI-Extreme (UX-006) -->
             <converters:EdgeOrientationConverter x:Key="edgeOrientationConverter" />
             <converters:DockOrientationConverter x:Key="dockOrientationConverter" />
             <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
@@ -36,7 +37,7 @@
     </Window.Resources>
     <TextOptions.TextFormattingMode>
         <MultiBinding Converter="{StaticResource textFormattingModeConverter}" UpdateSourceTrigger="PropertyChanged">
-            <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale"/>
+            <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskbarScale" Converter="{StaticResource transformScaleConverter}"/>
             <Binding Source="{x:Static utilities:Settings.Instance}" Path="AllowFontSmoothing"/>
         </MultiBinding>
     </TextOptions.TextFormattingMode>
@@ -48,8 +49,8 @@
     <ContentControl Style="{DynamicResource Taskbar}" x:Name="TaskbarContentControl">
         <ContentControl.LayoutTransform>
             <ScaleTransform x:Name="TaskbarScaleTransform"
-                            ScaleX="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale}"
-                            ScaleY="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale}"
+                            ScaleX="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale, Converter={StaticResource transformScaleConverter}}"
+                            ScaleY="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale, Converter={StaticResource transformScaleConverter}}"
                             CenterX="0"
                             CenterY="0" />
         </ContentControl.LayoutTransform>
