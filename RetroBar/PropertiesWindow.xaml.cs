@@ -475,8 +475,17 @@ namespace RetroBar
                 return;
             }
 
+            // Show the size at 100% and what it actually becomes on screen at the current scale.
             double size = Settings.Instance.FontOverrideSize;
-            txtFontSize.Text = size > 0 ? $"{size:0} px" : FindResource("uxui_theme_default") as string;
+            if (size > 0)
+            {
+                double onScreen = TaskbarTextStyler.OnScreenFontSize(size);
+                txtFontSize.Text = Settings.Instance.TaskbarScale > 1.0 ? $"{size:0} → {onScreen:0.#} px" : $"{size:0} px";
+            }
+            else
+            {
+                txtFontSize.Text = FindResource("uxui_theme_default") as string;
+            }
         }
 
         private void ResetFont_OnClick(object sender, RoutedEventArgs e)

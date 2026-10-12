@@ -537,7 +537,7 @@
                                 </Label>
                                 <TextBlock x:Name="txtFontSize"
                                            DockPanel.Dock="Right"
-                                           Width="90"
+                                           Width="110"
                                            VerticalAlignment="Center" />
                                 <Slider x:Name="sldFontSize"
                                         Orientation="Horizontal"
@@ -546,7 +546,7 @@
                                         TickFrequency="1"
                                         IsSnapToTickEnabled="True"
                                         TickPlacement="BottomRight"
-                                        Width="103"
+                                        Width="83"
                                         HorizontalAlignment="Right"
                                         Margin="0,4,0,3"
                                         Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=FontOverrideSize, UpdateSourceTrigger=PropertyChanged}"

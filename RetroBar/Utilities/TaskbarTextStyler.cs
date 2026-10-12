@@ -241,6 +241,47 @@ namespace RetroBar.Utilities
             }
         }
 
+        /// <summary>
+        /// Final on-screen text size in px for a given size at 100%, matching what Apply() does.
+        /// </summary>
+        public static double OnScreenFontSize(double sizeAt100)
+        {
+            double scale = Settings.Instance.TaskbarScale;
+            double size = sizeAt100 * scale;
+
+            if (IsPixelTextActive(out _) && Settings.Instance.PixelTextMode == PixelTextOption.NativeWholePixels)
+            {
+                size = Math.Max(1.0, Math.Round(size));
+            }
+
+            return size;
+        }
+
+        /// <summary>
+        /// How much taller each taskbar row must be (in the same units as Taskbar.DesiredRowHeight,
+        /// i.e. already including TaskbarScale) so text in the chosen font fits. 0 when the font
+        /// is no taller than the theme's. Only grows; never shrinks a theme's rows.
+        /// </summary>
+        public static double ExtraRowHeight()
+        {
+            var s = Settings.Instance;
+
+            if (string.IsNullOrWhiteSpace(s.FontOverrideFamily) && s.FontOverrideSize <= 0)
+            {
+                return 0;
+            }
+
+            FontFamily themeFamily = Application.Current.TryFindResource("GlobalFontFamily") as FontFamily ?? SystemFonts.CaptionFontFamily;
+            double themeSize = Application.Current.TryFindResource("GlobalFontSize") as double? ?? 11.0;
+            FontFamily family = string.IsNullOrWhiteSpace(s.FontOverrideFamily) ? themeFamily : new FontFamily(s.FontOverrideFamily);
+            double size = s.FontOverrideSize > 0 ? s.FontOverrideSize : themeSize;
+
+            double themeLine = themeFamily.LineSpacing * themeSize * s.TaskbarScale;
+            double newLine = family.LineSpacing * OnScreenFontSize(size);
+
+            return Math.Max(0, Math.Ceiling(newLine - themeLine));
+        }
+
         private static void Restore(TextBlock textBlock)
         {
             Original original = (Original)textBlock.GetValue(OriginalProperty);
