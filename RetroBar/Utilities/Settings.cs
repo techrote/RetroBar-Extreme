@@ -427,6 +427,14 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideWeight, value);
         }
 
+        // UXUI-Extreme (UX-007): manual row height fine-tuning, px at 100% scale (-10..+20).
+        private double _rowHeightAdjust = 0;
+        public double RowHeightAdjust
+        {
+            get => _rowHeightAdjust;
+            set => Set(ref _rowHeightAdjust, value);
+        }
+
         private bool _fontOverrideItalic = false;
         public bool FontOverrideItalic
         {

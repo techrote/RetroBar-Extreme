@@ -441,6 +441,7 @@ namespace RetroBar
             cboFontWeight.SelectedIndex = weightIndex >= 0 && weightIndex <= 9 ? weightIndex : 0;
 
             UpdateFontSizeText();
+            SldRowHeightAdjust_ValueChanged(null, null); // UXUI-Extreme (UX-007)
             _loadingStyleTab = false;
         }
 
@@ -495,6 +496,18 @@ namespace RetroBar
             {
                 txtFontSize.Text = FindResource("uxui_theme_default") as string;
             }
+        }
+
+        // UXUI-Extreme (UX-007)
+        private void SldRowHeightAdjust_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (txtRowHeightAdjust == null)
+            {
+                return;
+            }
+
+            double adjust = Settings.Instance.RowHeightAdjust;
+            txtRowHeightAdjust.Text = adjust == 0 ? "0 px (auto)" : $"{adjust:+0;-0} px";
         }
 
         private void ResetFont_OnClick(object sender, RoutedEventArgs e)
