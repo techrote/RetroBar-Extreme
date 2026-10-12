@@ -81,6 +81,7 @@ namespace RetroBar
             LoadPreviewHeight();
             LoadAutoStart();
             LoadLanguages();
+            LoadStyleTab(); // UXUI-Extreme (UX-005)
             LoadOSSupport();
             LoadRows();
             LoadThemes();
@@ -400,6 +401,100 @@ namespace RetroBar
             {
                 cboMultiMonMode.SelectedValue = cboMultiMonMode.Items[(int)Settings.Instance.MultiMonMode];
             }
+        }
+
+        // UXUI-Extreme (UX-005): Style tab — taskbar font settings
+        private bool _loadingStyleTab;
+
+        private void LoadStyleTab()
+        {
+            _loadingStyleTab = true;
+
+            // Font list: "Theme default" first, then installed fonts alphabetically.
+            var fontNames = System.Windows.Media.Fonts.SystemFontFamilies
+                .Select(f => f.Source)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct()
+                .OrderBy(name => name)
+                .ToList();
+
+            cboFontFamily.Items.Clear();
+            cboFontFamily.Items.Add(FindResource("uxui_theme_default"));
+            foreach (string name in fontNames)
+            {
+                cboFontFamily.Items.Add(name);
+            }
+
+            int familyIndex = fontNames.IndexOf(Settings.Instance.FontOverrideFamily);
+            cboFontFamily.SelectedIndex = familyIndex >= 0 ? familyIndex + 1 : 0;
+
+            int weightIndex = Settings.Instance.FontOverrideWeight / 100;
+            cboFontWeight.SelectedIndex = weightIndex >= 0 && weightIndex <= 9 ? weightIndex : 0;
+
+            UpdateFontSizeText();
+            _loadingStyleTab = false;
+        }
+
+        private void CboFontFamily_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_loadingStyleTab || cboFontFamily.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            Settings.Instance.FontOverrideFamily = cboFontFamily.SelectedIndex == 0 ? "" : cboFontFamily.SelectedItem as string;
+        }
+
+        private void CboFontWeight_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cboFontWeight.SelectedIndex < 0)
+            {
+                // Item list was reloaded (language change); restore the selection.
+                int weightIndex = Settings.Instance.FontOverrideWeight / 100;
+                cboFontWeight.SelectedIndex = weightIndex >= 0 && weightIndex <= 9 ? weightIndex : 0;
+                return;
+            }
+
+            if (_loadingStyleTab)
+            {
+                return;
+            }
+
+            Settings.Instance.FontOverrideWeight = cboFontWeight.SelectedIndex * 100;
+        }
+
+        private void SldFontSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UpdateFontSizeText();
+        }
+
+        private void UpdateFontSizeText()
+        {
+            if (txtFontSize == null)
+            {
+                return;
+            }
+
+            // Show the size at 100% and what it actually becomes on screen at the current scale.
+            double size = Settings.Instance.FontOverrideSize;
+            if (size > 0)
+            {
+                double onScreen = TaskbarTextStyler.OnScreenFontSize(size);
+                txtFontSize.Text = Settings.Instance.TaskbarScale > 1.0 ? $"{size:0} → {onScreen:0.#} px" : $"{size:0} px";
+            }
+            else
+            {
+                txtFontSize.Text = FindResource("uxui_theme_default") as string;
+            }
+        }
+
+        private void ResetFont_OnClick(object sender, RoutedEventArgs e)
+        {
+            Settings.Instance.FontOverrideFamily = "";
+            Settings.Instance.FontOverrideWeight = 0;
+            Settings.Instance.FontOverrideSize = 0;
+            Settings.Instance.FontOverrideItalic = false;
+            LoadStyleTab();
         }
 
         // UXUI-Extreme (UX-002): keep a selection when the language (item list) changes
