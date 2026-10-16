@@ -176,7 +176,9 @@ namespace RetroBar.Controls
             btnDelete.IsEnabled = saved;
         }
 
-        private string CurrentPart => cboPart.SelectedIndex >= 0 && cboPart.SelectedIndex < StyleMap.Parts.Length ? StyleMap.Parts[cboPart.SelectedIndex] : null;
+        // UXUI-Extreme (UX-010): the bitmap part follows the existing localised brush parts.
+        private string CurrentPart => cboPart.SelectedIndex == StyleMap.Parts.Length ? "start"
+            : cboPart.SelectedIndex >= 0 && cboPart.SelectedIndex < StyleMap.Parts.Length ? StyleMap.Parts[cboPart.SelectedIndex] : null;
 
         private void CboPart_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -186,10 +188,16 @@ namespace RetroBar.Controls
         private void BuildPart()
         {
             panelProperties.Children.Clear();
+            btnFromStart.IsEnabled = StartButtonColourways.HasImage(StyleLayer.ThemeResource);
 
             string part = CurrentPart;
             if (part == null)
             {
+                return;
+            }
+            if (part == "start") // UXUI-Extreme (UX-010): not a brush or gradient property.
+            {
+                BuildStartPart();
                 return;
             }
 
@@ -421,6 +429,13 @@ namespace RetroBar.Controls
             string part = CurrentPart;
             if (part == null)
             {
+                return;
+            }
+            if (part == "start") // UXUI-Extreme (UX-010): restore the original bitmap only.
+            {
+                _style.StartRecolour = null;
+                SaveActive();
+                BuildPart();
                 return;
             }
 
