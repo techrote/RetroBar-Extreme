@@ -3,16 +3,23 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using RetroBar.Utilities;
 
 namespace RetroBar.Controls
 {
     // UXUI-Extreme (UX-012): Start button layout. Optionally turned to run vertically on a
-    // horizontal taskbar, scaled to a length (automatic = fill the taskbar's height) and
-    // thickness (automatic = keep proportions), and with its icon and/or "start" text hidden.
-    // The theme's own button is kept and transformed, so every theme (image or drawn) works.
+    // horizontal taskbar, made a given length (automatic = fill the taskbar's height) and
+    // thickness, and with its icon and/or "start" text hidden. The theme's own button is kept:
+    // - Keep ends (default): the button is made longer itself. Image buttons (XP family) get a
+    //   copy of their image with a middle column repeated (SlicedImage), so the rounded tip
+    //   isn't stretched; drawn buttons (classic) just widen.
+    // - Scale: the whole button is scaled.
     public partial class StartButton
     {
+        private const string ImageKey = "StartButtonImage";
+        private const double EmptyButtonLength = 48; // when neither icon nor text is shown
+
         // availableLength: room along the taskbar's height for the button (the taskbar works
         // this out, e.g. less when Show desktop sits under the Start button).
         public void ApplyLayout(double availableLength)
@@ -21,23 +28,41 @@ namespace RetroBar.Controls
 
             StartIconImage.Visibility = s.StartButtonShowIcon ? Visibility.Visible : Visibility.Collapsed;
             StartLabelText.Visibility = s.StartButtonShowText ? Visibility.Visible : Visibility.Collapsed;
+            bool empty = !s.StartButtonShowIcon && !s.StartButtonShowText;
 
             bool horizontalBar = Host == null || Host.Orientation == Orientation.Horizontal;
             bool rotated = horizontalBar && s.StartButtonOrientation != ElementOrientationOption.Horizontal;
             bool customLength = s.StartButtonLengthMode == SizeModeOption.Custom;
             bool customThickness = s.StartButtonThicknessMode == SizeModeOption.Custom;
+            bool keepEnds = s.StartButtonStretchMode == StretchModeOption.KeepEnds;
 
-            // Natural size: the theme's button as it would be with no transform.
+            // Back to the theme's button, then measure it as it would be with no changes.
             Start.ClearValue(LayoutTransformProperty);
-            if (!rotated && !customLength && !customThickness)
+            StartContentGrid.ClearValue(MinWidthProperty);
+            Start.ClearValue(MinWidthProperty);
+            Start.Resources.Remove(ImageKey);
+
+            if (!rotated && !customLength && !customThickness && !empty)
             {
                 return;
             }
 
+            BitmapSource? image = Application.Current.TryFindResource(ImageKey) as BitmapSource; // incl. UX-010 recolouring
+
             Start.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            StartContentGrid.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Thickness margin = Start.Margin;
             double naturalLength = Start.DesiredSize.Width - margin.Left - margin.Right;
             double naturalThickness = Start.DesiredSize.Height - margin.Top - margin.Bottom;
+            double chrome = Math.Max(0, naturalLength - StartContentGrid.DesiredSize.Width); // padding around the content
+
+            // With nothing inside, image buttons collapse to nothing: start from the image's own width.
+            if (empty && naturalLength < 4)
+            {
+                naturalLength = image != null ? image.Width : EmptyButtonLength;
+                chrome = 0;
+            }
+
             if (naturalLength <= 0 || naturalThickness <= 0)
             {
                 return;
@@ -61,9 +86,39 @@ namespace RetroBar.Controls
                 length = naturalLength;
             }
 
-            double lengthScale = length / naturalLength;
-            double thickness = customThickness ? Math.Max(8, s.StartButtonThicknessPx * unit) : naturalThickness * lengthScale;
-            double thicknessScale = thickness / naturalThickness;
+            double lengthScale, thicknessScale;
+            if (keepEnds)
+            {
+                // Make the button itself that long; nothing is scaled along its length.
+                Start.MinWidth = 0; // themes set a minimum (XP: 99px) that would stop it getting shorter
+                StartContentGrid.MinWidth = Math.Max(0, length - chrome);
+                if (image != null && image.PixelWidth > 2 && Math.Abs(length - naturalLength) > 0.5)
+                {
+                    int pixels = (int)Math.Round(image.PixelWidth * length / naturalLength);
+                    BitmapSource? sliced = SlicedImage.StretchWidth(image, Math.Max(3, pixels));
+                    if (sliced != null)
+                    {
+                        Start.Resources[ImageKey] = sliced;
+                    }
+                }
+                lengthScale = 1;
+                thicknessScale = customThickness ? Math.Max(8, s.StartButtonThicknessPx * unit) / naturalThickness : 1;
+            }
+            else
+            {
+                if (empty)
+                {
+                    StartContentGrid.MinWidth = Math.Max(0, naturalLength - chrome);
+                }
+                lengthScale = length / naturalLength;
+                double thickness = customThickness ? Math.Max(8, s.StartButtonThicknessPx * unit) : naturalThickness * lengthScale;
+                thicknessScale = thickness / naturalThickness;
+            }
+
+            if (!rotated && Math.Abs(lengthScale - 1) < 0.001 && Math.Abs(thicknessScale - 1) < 0.001)
+            {
+                return;
+            }
 
             var transform = new TransformGroup();
             if (rotated)

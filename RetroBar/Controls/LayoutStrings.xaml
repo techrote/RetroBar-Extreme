@@ -12,6 +12,11 @@
         <system:String>Vertical, reading down</system:String>
     </x:Array>
     <system:String x:Key="uxui_layout_length">_Length:</system:String>
+    <system:String x:Key="uxui_layout_stretch">St_retch:</system:String>
+    <x:Array x:Key="uxui_layout_stretch_values" Type="system:String">
+        <system:String>Keep ends (repeat the middle)</system:String>
+        <system:String>Scale the whole button</system:String>
+    </x:Array>
     <system:String x:Key="uxui_layout_thickness">T_hickness:</system:String>
     <x:Array x:Key="uxui_layout_size_mode_values" Type="system:String">
         <system:String>Automatic</system:String>

@@ -82,6 +82,14 @@
                     <TextBlock />
                 </DockPanel>
                 <DockPanel>
+                    <Label Target="{Binding ElementName=cboStartStretch}">
+                        <AccessText Text="{DynamicResource uxui_layout_stretch}" />
+                    </Label>
+                    <ComboBox x:Name="cboStartStretch"
+                              ItemsSource="{DynamicResource uxui_layout_stretch_values}"
+                              SelectionChanged="Combo_SelectionChanged" />
+                </DockPanel>
+                <DockPanel>
                     <Label Target="{Binding ElementName=cboStartThickness}">
                         <AccessText Text="{DynamicResource uxui_layout_thickness}" />
                     </Label>

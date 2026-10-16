@@ -23,6 +23,7 @@ namespace RetroBar
             nameof(Settings.StartButtonAnchor),
             nameof(Settings.StartButtonShowIcon),
             nameof(Settings.StartButtonShowText),
+            nameof(Settings.StartButtonStretchMode),
             nameof(Settings.ShowDesktopPosition),
             nameof(Settings.ShowDesktopButton),
             nameof(Settings.ClockOrientation),
@@ -41,11 +42,13 @@ namespace RetroBar
 
             Settings.Instance.PropertyChanged += LayoutSettings_PropertyChanged;
             PropertyChanged += LayoutTaskbar_PropertyChanged;
+            StyleLayer.Changed += LayoutStyleLayer_Changed; // UX-010 recolouring changes the Start image
             Loaded += (s, e) => ScheduleLayoutOptions();
             Closed += (s, e) =>
             {
                 Settings.Instance.PropertyChanged -= LayoutSettings_PropertyChanged;
                 PropertyChanged -= LayoutTaskbar_PropertyChanged;
+                StyleLayer.Changed -= LayoutStyleLayer_Changed;
             };
 
             // The Start button fills the taskbar's height, so follow changes to it (rows, scale).
@@ -65,6 +68,11 @@ namespace RetroBar
             {
                 ScheduleLayoutOptions();
             }
+        }
+
+        private void LayoutStyleLayer_Changed(object sender, EventArgs e)
+        {
+            ScheduleLayoutOptions();
         }
 
         private void LayoutTaskbar_PropertyChanged(object sender, PropertyChangedEventArgs e)

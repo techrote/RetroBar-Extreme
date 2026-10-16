@@ -499,6 +499,14 @@ namespace RetroBar.Utilities
         }
 
         // Thickness across the text: Automatic = keep the button's proportions.
+        // UXUI-Extreme (UX-012)
+        private StretchModeOption _startButtonStretchMode = StretchModeOption.KeepEnds;
+        public StretchModeOption StartButtonStretchMode
+        {
+            get => _startButtonStretchMode;
+            set => SetEnum(ref _startButtonStretchMode, value);
+        }
+
         private SizeModeOption _startButtonThicknessMode = SizeModeOption.Automatic;
         public SizeModeOption StartButtonThicknessMode
         {
@@ -735,6 +743,13 @@ namespace RetroBar.Utilities
         Horizontal,
         VerticalUp,   // turned 90° anticlockwise: reads bottom to top
         VerticalDown  // turned 90° clockwise: reads top to bottom
+    }
+
+    // UXUI-Extreme (UX-012): how the Start button is made longer or shorter
+    public enum StretchModeOption
+    {
+        KeepEnds, // repeat a middle slice of the image (or widen a drawn button); ends not distorted
+        Scale     // scale the whole button
     }
 
     // UXUI-Extreme (UX-012)

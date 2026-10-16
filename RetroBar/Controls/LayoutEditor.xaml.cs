@@ -39,6 +39,7 @@ namespace RetroBar.Controls
             cboStartOrientation.SelectedIndex = (int)s.StartButtonOrientation;
             cboStartLength.SelectedIndex = (int)s.StartButtonLengthMode;
             cboStartThickness.SelectedIndex = (int)s.StartButtonThicknessMode;
+            cboStartStretch.SelectedIndex = (int)s.StartButtonStretchMode;
             cboStartAnchor.SelectedIndex = (int)s.StartButtonAnchor;
             cboShowDesktopPosition.SelectedIndex = (int)s.ShowDesktopPosition;
             cboClockOrientation.SelectedIndex = (int)s.ClockOrientation;
@@ -107,6 +108,7 @@ namespace RetroBar.Controls
             if (combo == cboStartOrientation) s.StartButtonOrientation = (ElementOrientationOption)i;
             else if (combo == cboStartLength) s.StartButtonLengthMode = (SizeModeOption)i;
             else if (combo == cboStartThickness) s.StartButtonThicknessMode = (SizeModeOption)i;
+            else if (combo == cboStartStretch) s.StartButtonStretchMode = (StretchModeOption)i;
             else if (combo == cboStartAnchor) s.StartButtonAnchor = (VerticalAnchorOption)i;
             else if (combo == cboShowDesktopPosition) s.ShowDesktopPosition = (ShowDesktopPositionOption)i;
             else if (combo == cboClockOrientation) s.ClockOrientation = (ElementOrientationOption)i;
