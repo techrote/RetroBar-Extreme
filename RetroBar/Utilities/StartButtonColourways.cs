@@ -35,11 +35,16 @@ namespace RetroBar.Utilities
         private sealed class Analysis
         {
             public byte[] Pixels;
-            public Color[] Palette;
-            public double Hue, Saturation;
-            public bool Neutral;
+            public Face[] Faces;
             public Color? LastTarget, LastSourceColour;
             public BitmapSource LastResult;
+        }
+
+        private sealed class Face
+        {
+            public Color[] Palette = Array.Empty<Color>();
+            public double Hue, Saturation;
+            public bool Neutral;
         }
 
         public static SpriteKind KindFor(string key, BitmapSource source)
@@ -121,7 +126,7 @@ namespace RetroBar.Utilities
         // Palette order: most populous cluster, highlight, shadow (duplicates omitted).
         public static Color[] Extract(BitmapSource source, SpriteKind kind = SpriteKind.Background)
         {
-            return (Color[])GetAnalysis(source, kind).Palette.Clone();
+            return (Color[])GetAnalysis(source, kind).Faces[0].Palette.Clone();
         }
 
         public static BitmapSource Recolour(BitmapSource source, Color target, SpriteKind kind = SpriteKind.Background,
@@ -131,17 +136,16 @@ namespace RetroBar.Utilities
             // A target's alpha is not opacity: keep each pixel's original coverage instead.
             target = Color.FromRgb(target.R, target.G, target.B);
             if (a.LastTarget == target && a.LastSourceColour == sourceColour && a.LastResult != null) return a.LastResult;
-            if (a.Palette.Length == 0 && !sourceColour.HasValue) return source;
-            double sourceHue = a.Hue, sourceSaturation = a.Saturation;
-            bool neutral = a.Neutral;
-            if (sourceColour is Color reference)
+            if (a.Faces.All(face => face.Palette.Length == 0) && !sourceColour.HasValue) return source;
+            Face reference = null;
+            if (sourceColour is Color colour)
             {
-                Colourways.ToHsl(reference, out sourceHue, out sourceSaturation, out _);
-                neutral = sourceSaturation < 0.12;
+                reference = new Face();
+                Colourways.ToHsl(colour, out reference.Hue, out reference.Saturation, out _);
+                reference.Neutral = reference.Saturation < 0.12;
             }
 
             Colourways.ToHsl(target, out double th, out double ts, out _);
-            double shift = SignedHue(th - sourceHue);
             byte[] pixels = (byte[])a.Pixels.Clone();
             int width = source.PixelWidth, frameHeight = FrameHeight(source, kind);
 
@@ -149,6 +153,13 @@ namespace RetroBar.Utilities
             {
                 int pixel = i / 4;
                 if (pixels[i + 3] == 0) continue;
+                // Royale Noir changes its face hue from blue-black to green on hover/press.
+                // Mask each non-orb state against its OWN original hue, then map to the same
+                // target. Vista variants instead share the complete orb reference at their join.
+                Face face = reference ?? a.Faces[kind == SpriteKind.Vista ? 0 : pixel / (width * frameHeight)];
+                if (reference == null && face.Palette.Length == 0) continue;
+                double sourceHue = face.Hue, sourceSaturation = face.Saturation;
+                double shift = SignedHue(th - sourceHue);
                 Color c = Color.FromRgb(pixels[i + 2], pixels[i + 1], pixels[i]);
                 Colourways.ToHsl(c, out double h, out double s, out double l);
                 if (l <= 0.001 || l >= 0.999) continue; // pure black/white, including white labels
@@ -158,7 +169,7 @@ namespace RetroBar.Utilities
                     && (kind != SpriteKind.Longhorn || s >= 0.025)) continue;
 
                 double weight, saturation;
-                if (neutral)
+                if (face.Neutral)
                 {
                     // Neutral Longhorn faces need a tint, not a hue shift of undefined grey.
                     weight = 1 - Smooth((s - 0.12) / 0.10);
@@ -261,14 +272,25 @@ namespace RetroBar.Utilities
                 : new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
             var pixels = new byte[checked(width * source.PixelHeight * 4)];
             straight.CopyPixels(pixels, width * 4, 0);
+            // Extraction exposes only Faces[0]. Recolouring also analyses other states when
+            // their face hues can differ; keep the overall sampling budget bounded.
+            int count = kind == SpriteKind.Vista ? 1 : source.PixelHeight / frameHeight;
+            var faces = new Face[count];
+            for (int state = 0; state < count; state++)
+                faces[state] = AnalyseFace(pixels, width, frameHeight, state, kind, MaxSamples / count);
+            return new Analysis { Pixels = pixels, Faces = faces };
+        }
+
+        private static Face AnalyseFace(byte[] pixels, int width, int frameHeight, int state,
+            SpriteKind kind, int sampleBudget)
+        {
             var samples = new List<Color>();
             double[] histogram = new double[36];
             int colourful = 0;
-            int step = Math.Max(1, (width * frameHeight + MaxSamples - 1) / MaxSamples);
-            // Extract only the normal state, not the brighter hover/pressed states or duplicates.
+            int step = Math.Max(1, (width * frameHeight + sampleBudget - 1) / sampleBudget);
             for (int p = 0; p < width * frameHeight; p += step)
             {
-                int i = p * 4;
+                int i = (state * width * frameHeight + p) * 4;
                 if (pixels[i + 3] < 224 || IsLogo(kind, p % width, p / width, width, frameHeight)) continue;
                 Color c = Color.FromRgb(pixels[i + 2], pixels[i + 1], pixels[i]);
                 Colourways.ToHsl(c, out double h, out double s, out double l);
@@ -280,7 +302,7 @@ namespace RetroBar.Utilities
                     colourful++;
                 }
             }
-            var analysis = new Analysis { Pixels = pixels, Palette = Array.Empty<Color>() };
+            var analysis = new Face();
             if (samples.Count == 0) return analysis;
             analysis.Neutral = colourful < Math.Max(8, samples.Count / 20);
             int dominant = Array.IndexOf(histogram, histogram.Max());

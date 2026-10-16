@@ -43,8 +43,11 @@ its target is set. There is no theme-file mutation and no additional settings-st
 
 `StartButtonColourways` works in straight BGRA32 (converts premultiplied sources first), remaps
 HSL hue/saturation and preserves per-pixel HSL lightness and alpha. Black/white and unrelated
-hues are retained. Soft hue/saturation shoulders reduce hard chromatic-mask transitions. Neutral
-Longhorn faces receive a saturation tint rather than a shift of undefined grey hue.
+hues are retained. Non-orb sprites analyse each state's face independently: Royale Noir's
+blue-black normal face and green hover/pressed faces must all follow the requested target;
+extraction still returns only the normal state's palette. Soft hue/saturation shoulders reduce
+hard chromatic-mask transitions. Neutral Longhorn faces receive a saturation tint rather than
+a shift of undefined grey hue.
 
 XP's Windows flag is a **separate resource and is never replaced**. Vista has its flag inside the
 orb, including a blue pane sharing the background hue. A normalised authored silhouette protects
@@ -78,8 +81,9 @@ The separate `Start colourways contracts` workflow runs it on both supported fra
 not launch shell integration, show the taskbar, or write active user styles. Tests cover document
 compatibility/round-trips, malformed values, original resource precedence, live override/reset,
 all shipped Start families and all six Vista variants in all three states, exact alpha, bounded
-HSL-lightness rounding, flag-pane samples, immutable inputs, cache reuse/invalidation, size limits,
-compiled editor XAML, classic fallback, dynamic localisation and incremental hex typing.
+HSL-lightness rounding, flag-pane samples, all-state Royale Noir face-region hue checks, immutable
+inputs, cache reuse/invalidation, size limits, compiled editor XAML, classic fallback, dynamic
+localisation and incremental hex typing.
 
 Evidence artifacts contain machine-readable results tagged with the PR head plus original,
 purple and orange sprite PNGs. Pixel contracts and sampled flag cores are not a substitute for

@@ -239,6 +239,25 @@ internal static class Program
             int frameSize = before.Length / 3;
             for (int state = 0; state < 3; state++)
                 Check(!before.Skip(state * frameSize).Take(frameSize).SequenceEqual(after.Skip(state * frameSize).Take(frameSize)), entry.Item1 + " unchanged state " + state);
+            if (entry.Item1 == "startnoir.png")
+            {
+                Colourways.ToHsl(Purple, out double targetHue, out _, out _);
+                // The original hover/pressed faces are green, unlike the blue-black normal
+                // face. Counting any changed pixel let a tinted border hide an unchanged face.
+                // Check the central face region in every state against the requested hue.
+                int frameHeight = source.PixelHeight / 3;
+                for (int state = 0; state < 3; state++)
+                    for (int y = frameHeight / 3; y < frameHeight * 2 / 3; y++)
+                        for (int x = source.PixelWidth / 4; x < source.PixelWidth * 3 / 4; x++)
+                        {
+                            int i = (state * frameHeight * source.PixelWidth + y * source.PixelWidth + x) * 4;
+                            Color c = Color.FromRgb(after[i + 2], after[i + 1], after[i]);
+                            Colourways.ToHsl(c, out double hue, out double saturation, out _);
+                            double distance = Math.Abs(hue - targetHue);
+                            Check(saturation > 0.12 && Math.Min(distance, 1 - distance) < 0.10,
+                                "Royale Noir face did not follow target in state " + state);
+                        }
+            }
             if (entry.Item2 != Kind.Background)
             {
                 var points = entry.Item2 == Kind.Vista ? new[] { (26, 15), (35, 19), (24, 25), (33, 28) }
@@ -344,6 +363,12 @@ internal static class Program
             Check(style.StartRecolour == null, "uncheck restores theme in model");
         }
         finally { timer.Stop(); resources.Remove(theme); }
+        // The non-shown ComboBox has not generated its dropdown containers. Attach the
+        // deferred item to a non-shown logical root, as the real dropdown does when opened.
+        var startItem = (ComboBoxItem)parts.Items[StyleMap.Parts.Length];
+        if (LogicalTreeHelper.GetParent(startItem) == null)
+            _ = new Window { Content = startItem, ShowInTaskbar = false };
+        DrainDispatcher();
         Application.Current.Resources["uxui_start_part"] = "Start localised";
         DrainDispatcher(); // The editor save timer was stopped in the finally block above.
         Check(((ComboBoxItem)parts.Items[StyleMap.Parts.Length]).Content as string == "Start localised", "Start label remains dynamic/localisable");
