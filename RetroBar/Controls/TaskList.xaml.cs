@@ -41,6 +41,28 @@ namespace RetroBar.Controls
 
         // Number of columns in a full row that get one extra pixel, so the row fills the
         // taskbar exactly instead of leaving the floored remainder empty.
+        // UXUI-Extreme (UX-014): per-app task button widths
+        public static DependencyProperty ButtonMarginTotalProperty = DependencyProperty.Register(nameof(ButtonMarginTotal), typeof(double), typeof(TaskList), new PropertyMetadata(0.0));
+        public double ButtonMarginTotal
+        {
+            get { return (double)GetValue(ButtonMarginTotalProperty); }
+            set { SetValue(ButtonMarginTotalProperty, value); }
+        }
+
+        public static DependencyProperty IconOnlyWidthProperty = DependencyProperty.Register(nameof(IconOnlyWidth), typeof(double), typeof(TaskList), new PropertyMetadata(0.0));
+        public double IconOnlyWidth
+        {
+            get { return (double)GetValue(IconOnlyWidthProperty); }
+            set { SetValue(IconOnlyWidthProperty, value); }
+        }
+
+        public static DependencyProperty DefaultWidthWithMarginProperty = DependencyProperty.Register(nameof(DefaultWidthWithMargin), typeof(double), typeof(TaskList), new PropertyMetadata(0.0));
+        public double DefaultWidthWithMargin
+        {
+            get { return (double)GetValue(DefaultWidthWithMarginProperty); }
+            set { SetValue(DefaultWidthWithMarginProperty, value); }
+        }
+
         public static DependencyProperty ExtraWidthCountProperty = DependencyProperty.Register(nameof(ExtraWidthCount), typeof(int), typeof(TaskList), new PropertyMetadata(0));
 
         public int ExtraWidthCount
@@ -74,6 +96,12 @@ namespace RetroBar.Controls
         {
             DefaultButtonWidth = Application.Current.FindResource("TaskButtonWidth") as double? ?? 0;
             MinButtonWidth = Application.Current.FindResource("TaskButtonMinWidth") as double? ?? 0;
+
+            // UXUI-Extreme (UX-014): all-apps width (px at 100%) instead of the theme's.
+            if (Settings.Instance.TaskButtonWidthPx > 0)
+            {
+                DefaultButtonWidth = Settings.Instance.TaskButtonWidthPx * (ScaleModel.IsNative ? Settings.Instance.TaskbarScale : 1.0);
+            }
             Thickness buttonMargin;
 
             if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
@@ -87,6 +115,11 @@ namespace RetroBar.Controls
 
             TaskButtonLeftMargin = buttonMargin.Left;
             TaskButtonRightMargin = buttonMargin.Right;
+
+            // UXUI-Extreme (UX-014): for per-app widths (TaskButtonWidthConverter)
+            ButtonMarginTotal = buttonMargin.Left + buttonMargin.Right;
+            IconOnlyWidth = MinButtonWidth + ButtonMarginTotal;
+            DefaultWidthWithMargin = DefaultButtonWidth + ButtonMarginTotal;
         }
 
         private void TaskList_OnLoaded(object sender, RoutedEventArgs e)
@@ -125,6 +158,13 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == nameof(Settings.TaskButtonWidthPx)) // UXUI-Extreme (UX-014)
+            {
+                SetStyles();
+                SetTaskButtonWidth();
+                return;
+            }
+
             if (e.PropertyName == nameof(Settings.MultiMonMode))
             {
                 taskbarItems?.Refresh();

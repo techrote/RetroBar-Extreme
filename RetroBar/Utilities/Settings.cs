@@ -474,6 +474,37 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideItalic, value);
         }
 
+        // UXUI-Extreme (UX-014): task buttons for all apps. 0 = theme width (px at 100% scale).
+        private double _taskButtonWidthPx = 0;
+        public double TaskButtonWidthPx
+        {
+            get => _taskButtonWidthPx;
+            set => Set(ref _taskButtonWidthPx, value);
+        }
+
+        private bool _taskButtonShowIcons = true;
+        public bool TaskButtonShowIcons
+        {
+            get => _taskButtonShowIcons;
+            set => Set(ref _taskButtonShowIcons, value);
+        }
+
+        private bool _taskButtonShowLabels = true;
+        public bool TaskButtonShowLabels
+        {
+            get => _taskButtonShowLabels;
+            set => Set(ref _taskButtonShowLabels, value);
+        }
+
+        // UXUI-Extreme (UX-014): per-app task button settings, remembered by app (see TaskButtonRules).
+        // Replaced as a whole list on every change so PropertyChanged fires.
+        private List<TaskButtonAppRule> _taskButtonAppRules = new List<TaskButtonAppRule>();
+        public List<TaskButtonAppRule> TaskButtonAppRules
+        {
+            get => _taskButtonAppRules;
+            set => Set(ref _taskButtonAppRules, value ?? new List<TaskButtonAppRule>());
+        }
+
         // UXUI-Extreme (UX-013): multiplier for all theme border widths (0 = no borders, 1 = theme).
         private double _borderThicknessFactor = 1;
         public double BorderThicknessFactor
@@ -745,6 +776,28 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-014): a per-app override of an all-apps setting
+    public enum AppOverrideOption
+    {
+        Default,
+        Show,
+        Hide
+    }
+
+    // UXUI-Extreme (UX-014): one app's remembered task button settings.
+    public class TaskButtonAppRule
+    {
+        public string App { get; set; } = "";   // exe file name (lower case) or AppUserModelID
+        public string Name { get; set; } = "";  // shown in the Layout tab
+        public double Width { get; set; }       // 0 = default; -1 = icon only; otherwise px at 100%
+        public AppOverrideOption Icon { get; set; }
+        public AppOverrideOption Label { get; set; }
+
+        public TaskButtonAppRule Clone() => (TaskButtonAppRule)MemberwiseClone();
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool IsEmpty => Width == 0 && Icon == AppOverrideOption.Default && Label == AppOverrideOption.Default;
+    }
+
     // UXUI-Extreme (UX-012): rotation for the Start button and clock on horizontal taskbars
     public enum ElementOrientationOption
     {

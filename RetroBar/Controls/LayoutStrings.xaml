@@ -51,6 +51,42 @@
     <system:String x:Key="uxui_layout_clock_size">Si_ze (at 100%):</system:String>
     <system:String x:Key="uxui_layout_clock_spacing">Line _spacing:</system:String>
     <system:String x:Key="uxui_layout_same_as_taskbar">Same as taskbar</system:String>
+    <!-- UXUI-Extreme (UX-014): task buttons -->
+    <system:String x:Key="uxui_taskbuttons_heading">Task buttons</system:String>
+    <system:String x:Key="uxui_taskbuttons_width">Wi_dth:</system:String>
+    <x:Array x:Key="uxui_taskbuttons_width_values" Type="system:String">
+        <system:String>Theme default</system:String>
+        <system:String>Custom</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_taskbuttons_show_icons">Show icons</system:String>
+    <system:String x:Key="uxui_taskbuttons_show_labels">Show labels</system:String>
+    <system:String x:Key="uxui_taskbuttons_app">Appli_cation:</system:String>
+    <system:String x:Key="uxui_taskbuttons_app_width">Width:</system:String>
+    <x:Array x:Key="uxui_taskbuttons_app_width_values" Type="system:String">
+        <system:String>Default</system:String>
+        <system:String>Icon only</system:String>
+        <system:String>Narrow</system:String>
+        <system:String>Wide</system:String>
+        <system:String>Custom</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_taskbuttons_app_icon">Icon:</system:String>
+    <system:String x:Key="uxui_taskbuttons_app_label">Label:</system:String>
+    <x:Array x:Key="uxui_taskbuttons_override_values" Type="system:String">
+        <system:String>Default</system:String>
+        <system:String>Show</system:String>
+        <system:String>Hide</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_taskbuttons_forget">Forget this app</system:String>
+    <system:String x:Key="uxui_taskbuttons_hint">To set one app's button, right-click it on the taskbar and use Button. Apps set that way are listed here.</system:String>
+    <system:String x:Key="uxui_taskbutton_menu">B_utton</system:String>
+    <system:String x:Key="uxui_taskbutton_width">_Width</system:String>
+    <system:String x:Key="uxui_taskbutton_width_default">_Default</system:String>
+    <system:String x:Key="uxui_taskbutton_width_icon">_Icon only</system:String>
+    <system:String x:Key="uxui_taskbutton_width_narrow">_Narrow</system:String>
+    <system:String x:Key="uxui_taskbutton_width_wide">W_ide</system:String>
+    <system:String x:Key="uxui_taskbutton_show_icon">Show i_con</system:String>
+    <system:String x:Key="uxui_taskbutton_show_label">Show _label</system:String>
+    <system:String x:Key="uxui_taskbutton_reset">_Reset this app's button</system:String>
     <!-- UXUI-Extreme (UX-013): Style tab -->
     <system:String x:Key="uxui_border_thickness">_Border thickness:</system:String>
     <x:Array x:Key="uxui_border_thickness_values" Type="system:String">

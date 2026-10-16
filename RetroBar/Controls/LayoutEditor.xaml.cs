@@ -76,6 +76,11 @@ namespace RetroBar.Controls
 
             sldClockSpacing.Value = s.ClockLineSpacing > 0 ? s.ClockLineSpacing : SpacingSamePosition;
 
+            // UX-014
+            cboTaskWidth.SelectedIndex = s.TaskButtonWidthPx > 0 ? 1 : 0;
+            sldTaskWidth.Value = s.TaskButtonWidthPx > 0 ? s.TaskButtonWidthPx : 160;
+            LoadApps();
+
             _loading = false;
             UpdateTexts();
         }
@@ -115,6 +120,7 @@ namespace RetroBar.Controls
             else if (combo == cboClockItalic) s.ClockFontItalic = (ClockItalicOption)i;
             else if (combo == cboClockFont) s.ClockFontFamily = i == 0 ? "" : combo.SelectedItem as string;
             else if (combo == cboClockWeight) s.ClockFontWeight = i * 100;
+            else if (combo == cboTaskWidth) s.TaskButtonWidthPx = i == 0 ? 0 : Math.Round(sldTaskWidth.Value); // UX-014
 
             UpdateTexts();
         }
@@ -154,6 +160,12 @@ namespace RetroBar.Controls
             // Position only matters when the button doesn't fill the taskbar's height.
             bool fills = s.StartButtonOrientation != ElementOrientationOption.Horizontal && s.StartButtonLengthMode == SizeModeOption.Automatic;
             cboStartAnchor.IsEnabled = !fills;
+
+            // UX-014
+            rowTaskWidthPx.IsEnabled = s.TaskButtonWidthPx > 0;
+            txtTaskWidth.Text = $"{Math.Round(sldTaskWidth.Value)} px";
+            txtAppWidth.Text = $"{Math.Round(sldAppWidth.Value)} px";
+            rowAppWidthPx.IsEnabled = cboAppWidth.SelectedIndex == 4;
 
             txtClockSize.Text = s.ClockFontSize > 0 ? $"{Math.Round(s.ClockFontSize)} px" : same;
             txtClockSpacing.Text = s.ClockLineSpacing > 0 ? "× " + s.ClockLineSpacing.ToString("0.00", CultureInfo.CurrentCulture) : same;
