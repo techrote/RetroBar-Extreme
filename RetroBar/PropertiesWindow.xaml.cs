@@ -338,6 +338,25 @@ namespace RetroBar
             Left = 10;
             Top = (ScreenHelper.PrimaryMonitorDeviceSize.Height / DpiHelper.DpiScale) - Height - 40;
             UpdateWindowPosition();
+
+            // UXUI-Extreme (UX-009): the Colours tab grows the window to fit; cap it at the
+            // screen's working area (room left for the title bar, tabs and OK button) and keep
+            // the window on screen as it resizes.
+            ColoursScroll.MaxHeight = Math.Max(300, (_screen.WorkingArea.Height / _dpiScale) - 140);
+            SizeChanged += (s, args) => KeepInWorkingArea();
+            KeepInWorkingArea();
+        }
+
+        // UXUI-Extreme (UX-009)
+        private void KeepInWorkingArea()
+        {
+            double top = (_screen.WorkingArea.Top / _dpiScale) + 10;
+            double bottom = (_screen.WorkingArea.Bottom / _dpiScale) - 10;
+
+            if (Top + ActualHeight > bottom)
+            {
+                Top = Math.Max(top, bottom - ActualHeight);
+            }
         }
 
         private void PropertiesWindow_OnContentRendered(object sender, EventArgs e)

@@ -17,7 +17,7 @@ namespace RetroBar.Controls
         private const int MAX_STOPS = 6;
 
         private readonly ComboBox _mode = new ComboBox { Width = 110, HorizontalAlignment = HorizontalAlignment.Right };
-        private readonly StackPanel _details = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(16, 0, 0, 2) };
+        private readonly StackPanel _details = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(14, 0, 0, 2) };
         private readonly Func<BrushSpec> _themeSeed;
         private BrushSpec _value;
         private bool _updating;
@@ -110,7 +110,7 @@ namespace RetroBar.Controls
             }
 
             // Angle
-            var angleRow = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
+            var angleRow = new DockPanel { Margin = new Thickness(0, 1, 0, 1) };
             var angleLabel = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
             angleLabel.SetResourceReference(TextBlock.TextProperty, "uxui_style_angle");
             // The slider moves in 5° steps; any angle can be typed in the box next to it.
@@ -196,18 +196,21 @@ namespace RetroBar.Controls
 
             // Stops, in offset order
             _value.Stops = _value.Stops.OrderBy(s => s.Offset).ToList();
+            Panel lastRow = null;
             for (int i = 0; i < _value.Stops.Count; i++)
             {
                 int index = i;
-                _details.Children.Add(ColourRow(
+                lastRow = (Panel)ColourRow(
                     () => _value.Stops[index].Color,
                     c => { _value.Stops[index].Color = c; preview.Background = _value.ToBrush(); },
-                    index));
+                    index);
+                _details.Children.Add(lastRow);
             }
 
             if (_value.Stops.Count < MAX_STOPS)
             {
-                var add = new Button { HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 0, Margin = new Thickness(0, 2, 0, 2), Padding = new Thickness(6, 0, 6, 0) };
+                // UX-009: on the end of the last colour row, to save a row.
+                var add = new Button { MinWidth = 0, Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(6, 0, 6, 0) };
                 add.SetResourceReference(ContentControl.ContentProperty, "uxui_style_add_stop");
                 add.Click += (s, e) =>
                 {
@@ -238,7 +241,7 @@ namespace RetroBar.Controls
                     BuildDetails();
                     RaiseChanged();
                 };
-                _details.Children.Add(add);
+                lastRow.Children.Add(add);
             }
         }
 

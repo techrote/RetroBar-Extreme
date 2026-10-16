@@ -25,8 +25,8 @@ namespace RetroBar.Controls
         private bool _subscribed;
 
         // UX-009: colourway pickers and the floating palette.
-        private readonly ColourField _base = new ColourField(Colourways.Presets[0].Base);
-        private readonly ColourField _accent = new ColourField(Colourways.Presets[0].Accent);
+        private readonly ColourField _base = new ColourField(Colourways.Presets[0].Base, compact: true);
+        private readonly ColourField _accent = new ColourField(Colourways.Presets[0].Accent, compact: true);
         private PaletteWindow _palette;
 
         public StyleEditor()

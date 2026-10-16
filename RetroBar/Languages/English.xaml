@@ -119,7 +119,7 @@
     <s:String x:Key="uxui_style_stop_position">Position along the gradient (0-100%)</s:String>
     <s:String x:Key="uxui_style_not_used">not used by this theme</s:String>
     <s:String x:Key="uxui_style_reset_part">_Reset part</s:String>
-    <s:String x:Key="uxui_style_note">Changes show on the taskbar straight away and stay after a restart. Fonts are on the Style tab.</s:String>
+    <s:String x:Key="uxui_style_note">Changes show straight away and stay after a restart. Fonts are on the Style tab.</s:String>
     <s:String x:Key="uxui_style_need_name">Type a name for the style first.</s:String>
     <s:String x:Key="uxui_style_overwrite">A saved style called "{0}" already exists. Replace it?</s:String>
     <s:String x:Key="uxui_style_delete_confirm">Delete the saved style "{0}"? The taskbar keeps its current colours.</s:String>
@@ -133,8 +133,8 @@
     <s:String x:Key="uxui_style_paste_colour">Paste colour</s:String>
     <s:String x:Key="uxui_colourway_heading">Colourway</s:String>
     <s:String x:Key="uxui_colourway_preset">Preset:</s:String>
-    <s:String x:Key="uxui_colourway_base">Base colo_ur:</s:String>
-    <s:String x:Key="uxui_colourway_accent">A_ccent colour:</s:String>
+    <s:String x:Key="uxui_colourway_base">Base:</s:String>
+    <s:String x:Key="uxui_colourway_accent">A_ccent:</s:String>
     <s:String x:Key="uxui_colourway_apply">Appl_y colourway</s:String>
     <s:String x:Key="uxui_colourway_note">Fills in task buttons, notification area, clock and 3D edges to match the base and accent colours. The taskbar background is kept. Fine-tune any part below.</s:String>
     <s:String x:Key="uxui_colourway_replace_confirm">Replace the current colours of the task buttons, notification area, clock and 3D edges with this colourway?</s:String>

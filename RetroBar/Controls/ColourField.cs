@@ -28,7 +28,8 @@ namespace RetroBar.Controls
 
         public event EventHandler Changed;
 
-        public ColourField(Color? value, bool allowEmpty = false)
+        // compact: narrower swatch and hex box, for two fields side by side.
+        public ColourField(Color? value, bool allowEmpty = false, bool compact = false)
         {
             Orientation = Orientation.Horizontal;
             Margin = new Thickness(0, 1, 0, 1);
@@ -37,7 +38,7 @@ namespace RetroBar.Controls
 
             _swatch = new Button
             {
-                Width = 36,
+                Width = compact ? 26 : 36,
                 MinWidth = 0,
                 Height = 18,
                 Margin = new Thickness(0, 0, 4, 0),
@@ -45,7 +46,7 @@ namespace RetroBar.Controls
             };
             _swatch.Click += Swatch_Click;
 
-            _hex = new TextBox { Width = 76, VerticalContentAlignment = VerticalAlignment.Center };
+            _hex = new TextBox { Width = compact ? 64 : 76, VerticalContentAlignment = VerticalAlignment.Center };
             _hex.TextChanged += Hex_TextChanged;
             _hex.LostFocus += (s, e) => ShowValue();
 
