@@ -45,6 +45,14 @@ namespace RetroBar.Controls
             row.Children.Add(combo);
             row.Children.Add(label);
             panelProperties.Children.Add(row);
+
+            // Classic Start buttons are drawn only with their bevel, on the bar's own colour.
+            if (part == "start" && !StartButtonColourways.HasImage(StyleLayer.ThemeResource))
+            {
+                var note = new TextBlock { TextWrapping = TextWrapping.Wrap, MaxWidth = 400, Margin = new Thickness(4, 0, 4, 2) };
+                note.SetResourceReference(TextBlock.TextProperty, "uxui_border_start_classic");
+                panelProperties.Children.Add(note);
+            }
         }
     }
 }

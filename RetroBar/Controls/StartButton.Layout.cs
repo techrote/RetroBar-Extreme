@@ -49,9 +49,14 @@ namespace RetroBar.Controls
             Start.ClearValue(LayoutTransformProperty);
             StartContentGrid.ClearValue(MinWidthProperty);
             Start.ClearValue(MinWidthProperty);
+            Start.ClearValue(WidthProperty);
             Start.Resources.Remove(ImageKey);
 
-            if (!rotated && !customLength && !customThickness && !empty)
+            // The Vista orb is a round graphic drawn in its own floating window: turning or
+            // stretching it only distorts it, so it keeps its own shape (Position still applies).
+            bool floatingOrb = Application.Current.TryFindResource("UseFloatingStartButton") as bool? ?? false;
+
+            if (floatingOrb || (!rotated && !customLength && !customThickness && !empty))
             {
                 return;
             }
@@ -116,6 +121,12 @@ namespace RetroBar.Controls
             {
                 // Make the button itself that long; nothing is scaled along its length.
                 Start.MinWidth = 0; // themes set a minimum (XP: 99px) that would stop it getting shorter
+                // Some themes fix the width (Longhorn: 78px); the content can't make those longer.
+                double themeWidth = (double)Start.GetValue(WidthProperty);
+                if (!double.IsNaN(themeWidth))
+                {
+                    Start.Width = length;
+                }
                 StartContentGrid.MinWidth = Math.Max(0, length - chrome);
                 if (image != null && image.PixelWidth > 2 && Math.Abs(length - naturalLength) > 0.5)
                 {
