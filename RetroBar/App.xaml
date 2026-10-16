@@ -10,6 +10,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- UXUI-Extreme (UX-010): localisable defaults for Start colourways. -->
+                <ResourceDictionary Source="Controls/StartColourwaysStrings.xaml" />
                 <ResourceDictionary Source="Languages/English.xaml" />
                 <ResourceDictionary Source="Themes/System.xaml" />
             </ResourceDictionary.MergedDictionaries>

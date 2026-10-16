@@ -33,7 +33,7 @@ namespace RetroBar.Utilities
     // gradient: { "angle": degrees (0 = left to right, 90 = top to bottom, the default),
     // "stops": [ "#colour", ... ] } with stops spaced evenly, or
     // [ { "color": "#colour", "offset": 0.0-1.0 }, ... ].
-    public static class StyleLayer
+    public static partial class StyleLayer // UXUI-Extreme (UX-010): original-resource lookup in StyleLayer.Start.cs.
     {
         public const string FILE_NAME = "Style.json";
 
@@ -158,6 +158,10 @@ namespace RetroBar.Utilities
                     applied += ApplyProperty(dictionary, family, $"{part.Key}.{property.Key}", property.Value);
                 }
             }
+
+            // UXUI-Extreme (UX-010): bitmap overrides sit beside the brush overrides.
+            applied += StartButtonColourways.Apply(dictionary, style.StartRecolour, ThemeResource,
+                warning => ShellLogger.Warning($"UXUI-Extreme: {warning}"));
 
             ShellLogger.Info($"UXUI-Extreme: style \"{(string.IsNullOrEmpty(style.Name) ? FILE_NAME : style.Name)}\" applied over the {family} theme family ({applied} resources).");
             return dictionary;

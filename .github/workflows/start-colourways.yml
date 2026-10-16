@@ -1,0 +1,43 @@
+name: Start colourways contracts
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: WPF contracts (${{ matrix.framework }})
+    runs-on: windows-2025
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ net6.0-windows, net10.0-windows ]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            6.0.x
+            10.0.x
+      - name: Run real WPF pixel, persistence, resource and editor tests
+        shell: pwsh
+        env:
+          UX010_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          dotnet run --project tests/RetroBar.StartColourways.Tests/RetroBar.StartColourways.Tests.csproj -c Release -f ${{ matrix.framework }} -- "$env:GITHUB_WORKSPACE/evidence"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload test results and original/recoloured sprites
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Start colourways evidence ${{ matrix.framework }}
+          path: evidence/
+          if-no-files-found: warn
