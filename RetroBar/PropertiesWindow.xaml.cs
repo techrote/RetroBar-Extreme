@@ -338,6 +338,42 @@ namespace RetroBar
             Left = 10;
             Top = (ScreenHelper.PrimaryMonitorDeviceSize.Height / DpiHelper.DpiScale) - Height - 40;
             UpdateWindowPosition();
+
+            // UXUI-Extreme (UX-009): the Colours tab grows the window to fit; cap it at the
+            // screen's working area (room left for the title bar, tabs and OK button) and keep
+            // the window on screen as it resizes.
+            GetFreeArea(out double freeTop, out double freeBottom);
+            ColoursScroll.MaxHeight = Math.Max(300, freeBottom - freeTop - 140);
+            SizeChanged += (s, args) => KeepInWorkingArea();
+            KeepInWorkingArea();
+        }
+
+        // UXUI-Extreme (UX-009): screen space not covered by this taskbar. The screen's own
+        // working area doesn't always exclude RetroBar's bar, so take it off by edge, as
+        // UpdateWindowPosition does.
+        private void GetFreeArea(out double top, out double bottom)
+        {
+            top = (_screen.WorkingArea.Top / _dpiScale) + 10;
+            bottom = (_screen.WorkingArea.Bottom / _dpiScale) - 10;
+
+            if (Settings.Instance.Edge == AppBarEdge.Bottom)
+            {
+                bottom = Math.Min(bottom, (_screen.Bounds.Bottom / _dpiScale) - _barSize - 10);
+            }
+            else if (Settings.Instance.Edge == AppBarEdge.Top)
+            {
+                top = Math.Max(top, (_screen.Bounds.Top / _dpiScale) + _barSize + 10);
+            }
+        }
+
+        private void KeepInWorkingArea()
+        {
+            GetFreeArea(out double top, out double bottom);
+
+            if (Top + ActualHeight > bottom)
+            {
+                Top = Math.Max(top, bottom - ActualHeight);
+            }
         }
 
         private void PropertiesWindow_OnContentRendered(object sender, EventArgs e)

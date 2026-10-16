@@ -28,7 +28,11 @@ namespace RetroBar.Utilities
             CommentHandling = JsonCommentHandling.Skip,
         };
 
-        public bool IsEmpty => Parts.Values.All(p => p.Count == 0);
+        // UX-009: the floating palette in the editor, kept with the style. Null = empty slot.
+        public const int PALETTE_SIZE = 12;
+        public readonly Color?[] Palette = new Color?[PALETTE_SIZE];
+
+        public bool IsEmpty => Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
 
         public BrushSpec Get(string part, string property)
         {
@@ -60,6 +64,7 @@ namespace RetroBar.Utilities
         public StyleDocument Clone()
         {
             var copy = new StyleDocument { Name = Name };
+            Array.Copy(Palette, copy.Palette, PALETTE_SIZE);
             foreach (var part in Parts)
             {
                 foreach (var property in part.Value)
@@ -142,6 +147,25 @@ namespace RetroBar.Utilities
                     }
                 }
 
+                // UX-009: the palette is for the editor only; the style layer ignores it.
+                if (root.TryGetProperty("palette", out JsonElement palette) && palette.ValueKind == JsonValueKind.Array)
+                {
+                    int slot = 0;
+                    foreach (JsonElement entry in palette.EnumerateArray())
+                    {
+                        if (slot >= PALETTE_SIZE)
+                        {
+                            break;
+                        }
+
+                        if (entry.ValueKind == JsonValueKind.String && BrushSpec.TryParseColor(entry.GetString(), out Color colour))
+                        {
+                            style.Palette[slot] = colour;
+                        }
+                        slot++;
+                    }
+                }
+
                 return style;
             }
         }
@@ -168,6 +192,25 @@ namespace RetroBar.Utilities
                 }
 
                 writer.WriteEndObject();
+
+                // UX-009: palette slots, empty ones as null so positions are kept.
+                if (Palette.Any(c => c.HasValue))
+                {
+                    writer.WriteStartArray("palette");
+                    foreach (Color? colour in Palette)
+                    {
+                        if (colour is Color c)
+                        {
+                            writer.WriteStringValue(BrushSpec.FormatColor(c));
+                        }
+                        else
+                        {
+                            writer.WriteNullValue();
+                        }
+                    }
+                    writer.WriteEndArray();
+                }
+
                 writer.WriteEndObject();
             }
 

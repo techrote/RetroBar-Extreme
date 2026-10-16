@@ -2,75 +2,167 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              IsVisibleChanged="StyleEditor_IsVisibleChanged">
-    <!-- UXUI-Extreme (UX-004): the Colours tab. Edits the style layer (UX-003). -->
+    <!-- UXUI-Extreme (UX-004): the Colours tab. Edits the style layer (UX-003).
+         UX-009: laid out compactly (rows shared, short notes, tight group padding) so the tab
+         fits without scrolling in normal use. -->
+    <UserControl.Resources>
+        <!-- Compact versions of the Properties window's own implicit styles (which add 5px combo
+             margins, a 60px minimum text width and 73px minimum buttons). -->
+        <Style TargetType="GroupBox">
+            <Setter Property="Padding"
+                    Value="4,2,4,2" />
+            <Setter Property="Margin"
+                    Value="0,0,0,4" />
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Padding"
+                    Value="2,2,6,2" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin"
+                    Value="0,1,0,1" />
+            <Setter Property="MinHeight"
+                    Value="21" />
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding"
+                    Value="1" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Margin"
+                    Value="0,0,4,0" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="MinHeight"
+                    Value="18" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
+        <Style x:Key="CompactButton"
+               TargetType="Button">
+            <Setter Property="MinWidth"
+                    Value="0" />
+            <Setter Property="MinHeight"
+                    Value="21" />
+            <Setter Property="Padding"
+                    Value="8,0" />
+            <Setter Property="Margin"
+                    Value="4,0,0,0" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
+    </UserControl.Resources>
     <StackPanel Orientation="Vertical">
         <GroupBox Header="{DynamicResource uxui_saved_styles}">
             <StackPanel Orientation="Vertical">
-                <DockPanel>
+                <DockPanel Margin="0,2,0,0">
                     <Label VerticalAlignment="Center"
                            Target="{Binding ElementName=cboStyleName}">
                         <AccessText Text="{DynamicResource uxui_style_name}" />
                     </Label>
+                    <Button x:Name="btnDelete"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_delete}"
+                            Click="Delete_OnClick" />
+                    <Button x:Name="btnLoad"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_load}"
+                            Click="Load_OnClick" />
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_save}"
+                            Click="Save_OnClick" />
                     <ComboBox x:Name="cboStyleName"
-                              Width="193"
-                              HorizontalAlignment="Right"
                               IsEditable="True"
                               SelectionChanged="CboStyleName_SelectionChanged" />
                 </DockPanel>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
-                            Margin="0,4,0,0">
-                    <Button Content="{DynamicResource uxui_style_save}"
-                            Margin="0,0,4,0"
-                            Click="Save_OnClick" />
-                    <Button x:Name="btnLoad"
-                            Content="{DynamicResource uxui_style_load}"
-                            Margin="0,0,4,0"
-                            Click="Load_OnClick" />
-                    <Button x:Name="btnDelete"
-                            Content="{DynamicResource uxui_style_delete}"
-                            Click="Delete_OnClick" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            Margin="0,4,0,4">
-                    <Button Content="{DynamicResource uxui_style_import}"
-                            Margin="0,0,4,0"
+                            Margin="0,4,0,2">
+                    <Button Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_import}"
                             Click="Import_OnClick" />
-                    <Button Content="{DynamicResource uxui_style_export}"
-                            Margin="0,0,4,0"
+                    <Button Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_export}"
                             Click="Export_OnClick" />
-                    <Button Content="{DynamicResource uxui_style_reset_all}"
+                    <Button Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_reset_all}"
                             Click="ResetAll_OnClick" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <!-- UX-009: colourways — generate matching button / tray / clock / edge colours -->
+        <GroupBox Header="{DynamicResource uxui_colourway_heading}">
+            <StackPanel Orientation="Vertical">
+                <DockPanel Margin="0,2,0,0">
+                    <Label VerticalAlignment="Center"
+                           Target="{Binding ElementName=cboPreset}">
+                        <AccessText Text="{DynamicResource uxui_colourway_preset}" />
+                    </Label>
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_colourway_apply}"
+                            ToolTip="{DynamicResource uxui_colourway_note}"
+                            Click="ApplyColourway_OnClick" />
+                    <Button x:Name="btnPalette"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_palette_button}"
+                            ToolTip="{DynamicResource uxui_palette_note}"
+                            Click="Palette_OnClick" />
+                    <ComboBox x:Name="cboPreset"
+                              SelectionChanged="CboPreset_SelectionChanged" />
+                </DockPanel>
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,3,0,2">
+                    <Label VerticalAlignment="Center">
+                        <AccessText Text="{DynamicResource uxui_colourway_base}" />
+                    </Label>
+                    <ContentControl x:Name="hostBase"
+                                    Focusable="False" />
+                    <Label VerticalAlignment="Center"
+                           Margin="8,0,0,0">
+                        <AccessText Text="{DynamicResource uxui_colourway_accent}" />
+                    </Label>
+                    <ContentControl x:Name="hostAccent"
+                                    Focusable="False" />
                 </StackPanel>
             </StackPanel>
         </GroupBox>
         <GroupBox Header="{DynamicResource uxui_style_part_heading}">
             <StackPanel Orientation="Vertical">
-                <DockPanel>
+                <DockPanel Margin="0,2,0,0">
                     <Label VerticalAlignment="Center"
                            Target="{Binding ElementName=cboPart}">
                         <AccessText Text="{DynamicResource uxui_style_part}" />
                     </Label>
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource CompactButton}"
+                            Content="{DynamicResource uxui_style_reset_part}"
+                            Click="ResetPart_OnClick" />
                     <ComboBox x:Name="cboPart"
-                              Width="193"
-                              HorizontalAlignment="Right"
                               ItemsSource="{DynamicResource uxui_style_part_values}"
                               SelectionChanged="CboPart_SelectionChanged" />
                 </DockPanel>
                 <StackPanel x:Name="panelProperties"
                             Orientation="Vertical"
-                            Margin="0,4,0,0" />
-                <Button HorizontalAlignment="Right"
-                        Margin="0,4,0,4"
-                        Content="{DynamicResource uxui_style_reset_part}"
-                        Click="ResetPart_OnClick" />
+                            Margin="0,2,0,2" />
             </StackPanel>
         </GroupBox>
         <TextBlock TextWrapping="Wrap"
-                   MaxWidth="360"
+                   MaxWidth="400"
                    HorizontalAlignment="Left"
-                   Margin="4,4,4,2"
+                   Margin="4,0,4,0"
                    Text="{DynamicResource uxui_style_note}" />
     </StackPanel>
 </UserControl>

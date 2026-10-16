@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 using System.Windows.Threading;
 using ManagedShell.Common.Logging;
 using RetroBar.Utilities;
@@ -23,12 +24,76 @@ namespace RetroBar.Controls
         private readonly DispatcherTimer _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         private bool _subscribed;
 
+        // UX-009: colourway pickers and the floating palette.
+        private readonly ColourField _base = new ColourField(Colourways.Presets[0].Base, compact: true);
+        private readonly ColourField _accent = new ColourField(Colourways.Presets[0].Accent, compact: true);
+        private PaletteWindow _palette;
+
         public StyleEditor()
         {
             InitializeComponent();
 
             _saveTimer.Tick += (s, e) => SaveActive();
             cboStyleName.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((s, e) => UpdateButtons()));
+
+            hostBase.Content = _base;
+            hostAccent.Content = _accent;
+            foreach (Colourways.Preset preset in Colourways.Presets)
+            {
+                cboPreset.Items.Add(preset.Name);
+            }
+        }
+
+        // UX-009: a preset fills in the base and accent colours; Apply writes the colourway.
+        private void CboPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cboPreset.SelectedIndex >= 0)
+            {
+                Colourways.Preset preset = Colourways.Presets[cboPreset.SelectedIndex];
+                _base.Value = preset.Base;
+                _accent.Value = preset.Accent;
+            }
+        }
+
+        private void ApplyColourway_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!(_base.Value is Color baseColour) || !(_accent.Value is Color accent))
+            {
+                return;
+            }
+
+            bool replacing = false;
+            foreach (string part in Colourways.GeneratedParts)
+            {
+                replacing |= _style.Parts.ContainsKey(part);
+            }
+
+            if (replacing && !Confirm(Text("uxui_colourway_replace_confirm")))
+            {
+                return;
+            }
+
+            Colourways.Apply(_style, baseColour, accent);
+            SaveActive();
+            BuildPart();
+        }
+
+        private void Palette_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_palette != null)
+            {
+                _palette.Activate();
+                return;
+            }
+
+            _palette = new PaletteWindow(Window.GetWindow(this), _style.Palette);
+            _palette.SlotChanged += (slot, colour) =>
+            {
+                _style.Palette[slot] = colour;
+                ScheduleSave();
+            };
+            _palette.Closed += (s, args) => _palette = null;
+            _palette.Show();
         }
 
         private void StyleEditor_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -84,6 +149,7 @@ namespace RetroBar.Controls
 
             RefreshNames();
             cboStyleName.Text = _style.Name;
+            _palette?.ShowPalette(_style.Palette);
 
             if (cboPart.SelectedIndex < 0)
             {
@@ -199,6 +265,7 @@ namespace RetroBar.Controls
 
             cboStyleName.Text = _style.Name;
             SaveActive();
+            _palette?.ShowPalette(_style.Palette);
             BuildPart();
             UpdateButtons();
         }
@@ -343,7 +410,10 @@ namespace RetroBar.Controls
                 return;
             }
 
-            UseStyle(new StyleDocument(), "");
+            // The palette is a working set of colours, not part of the look, so it stays.
+            var cleared = new StyleDocument();
+            System.Array.Copy(_style.Palette, cleared.Palette, StyleDocument.PALETTE_SIZE);
+            UseStyle(cleared, "");
         }
 
         private void ResetPart_OnClick(object sender, RoutedEventArgs e)
