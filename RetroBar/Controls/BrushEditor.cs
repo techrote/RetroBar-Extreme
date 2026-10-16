@@ -16,9 +16,6 @@ namespace RetroBar.Controls
         private const int MODE_THEME = 0, MODE_COLOUR = 1, MODE_GRADIENT = 2;
         private const int MAX_STOPS = 6;
 
-        // Shared by every editor so picked colours stay in the dialog's custom colours row.
-        private static int[] _customColors = new int[16];
-
         private readonly ComboBox _mode = new ComboBox { Width = 110, HorizontalAlignment = HorizontalAlignment.Right };
         private readonly StackPanel _details = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(16, 0, 0, 2) };
         private readonly Func<BrushSpec> _themeSeed;
@@ -249,68 +246,19 @@ namespace RetroBar.Controls
         // position (0-100 %) and a remove button.
         private UIElement ColourRow(Func<Color> get, Action<Color> set, int? stopIndex)
         {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 1, 0, 1) };
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
 
-            var swatch = new Button
+            // UX-009: shared colour field (swatch, hex, copy, paste).
+            var field = new ColourField(get());
+            field.Changed += (s, e) =>
             {
-                Width = 36,
-                MinWidth = 0,
-                Height = 18,
-                Margin = new Thickness(0, 0, 4, 0),
-                Background = new SolidColorBrush(get()),
-                ToolTip = FindResource("uxui_style_pick_colour"),
-            };
-            var hex = new TextBox { Width = 76, Text = BrushSpec.FormatColor(get()), VerticalContentAlignment = VerticalAlignment.Center };
-
-            void apply(Color c, bool updateText)
-            {
-                set(c);
-                swatch.Background = new SolidColorBrush(c);
-                if (updateText)
+                if (field.Value is Color c)
                 {
-                    hex.Text = BrushSpec.FormatColor(c);
-                }
-                RaiseChanged();
-            }
-
-            swatch.Click += (s, e) =>
-            {
-                Color current = get();
-                using var dialog = new System.Windows.Forms.ColorDialog
-                {
-                    AnyColor = true,
-                    FullOpen = true,
-                    Color = System.Drawing.Color.FromArgb(current.R, current.G, current.B),
-                    CustomColors = _customColors,
-                };
-
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    _customColors = dialog.CustomColors;
-                    // The dialog has no transparency; keep the colour's existing alpha.
-                    apply(Color.FromArgb(current.A, dialog.Color.R, dialog.Color.G, dialog.Color.B), true);
+                    set(c);
+                    RaiseChanged();
                 }
             };
-
-            hex.TextChanged += (s, e) =>
-            {
-                if (BrushSpec.TryParseColor(hex.Text, out Color c))
-                {
-                    hex.ClearValue(Control.BorderBrushProperty);
-                    if (c != get())
-                    {
-                        apply(c, false);
-                    }
-                }
-                else
-                {
-                    hex.BorderBrush = Brushes.Red;
-                }
-            };
-            hex.LostFocus += (s, e) => hex.Text = BrushSpec.FormatColor(get());
-
-            row.Children.Add(swatch);
-            row.Children.Add(hex);
+            row.Children.Add(field);
 
             if (stopIndex is int index)
             {

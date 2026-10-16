@@ -45,6 +45,52 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
+        <!-- UX-009: colourways — generate matching button / tray / clock / edge colours -->
+        <GroupBox Header="{DynamicResource uxui_colourway_heading}">
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Label VerticalAlignment="Center"
+                           Target="{Binding ElementName=cboPreset}">
+                        <AccessText Text="{DynamicResource uxui_colourway_preset}" />
+                    </Label>
+                    <ComboBox x:Name="cboPreset"
+                              Width="193"
+                              HorizontalAlignment="Right"
+                              SelectionChanged="CboPreset_SelectionChanged" />
+                </DockPanel>
+                <DockPanel>
+                    <Label VerticalAlignment="Center">
+                        <AccessText Text="{DynamicResource uxui_colourway_base}" />
+                    </Label>
+                    <ContentControl x:Name="hostBase"
+                                    HorizontalAlignment="Right"
+                                    Focusable="False" />
+                </DockPanel>
+                <DockPanel>
+                    <Label VerticalAlignment="Center">
+                        <AccessText Text="{DynamicResource uxui_colourway_accent}" />
+                    </Label>
+                    <ContentControl x:Name="hostAccent"
+                                    HorizontalAlignment="Right"
+                                    Focusable="False" />
+                </DockPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,4,0,4">
+                    <Button x:Name="btnPalette"
+                            Content="{DynamicResource uxui_palette_button}"
+                            Margin="0,0,4,0"
+                            Click="Palette_OnClick" />
+                    <Button Content="{DynamicResource uxui_colourway_apply}"
+                            Click="ApplyColourway_OnClick" />
+                </StackPanel>
+                <TextBlock TextWrapping="Wrap"
+                           MaxWidth="360"
+                           HorizontalAlignment="Left"
+                           Margin="4,0,4,2"
+                           Text="{DynamicResource uxui_colourway_note}" />
+            </StackPanel>
+        </GroupBox>
         <GroupBox Header="{DynamicResource uxui_style_part_heading}">
             <StackPanel Orientation="Vertical">
                 <DockPanel>
