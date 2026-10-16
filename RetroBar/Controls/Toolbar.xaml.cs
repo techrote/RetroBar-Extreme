@@ -306,6 +306,7 @@ namespace RetroBar.Controls
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             Initialize();
+            HookIconFit(); // UXUI-Extreme
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)

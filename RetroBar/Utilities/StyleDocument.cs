@@ -32,7 +32,7 @@ namespace RetroBar.Utilities
         public const int PALETTE_SIZE = 12;
         public readonly Color?[] Palette = new Color?[PALETTE_SIZE];
 
-        public bool IsEmpty => !StartRecolour.HasValue && Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
+        public bool IsEmpty => !StartRecolour.HasValue && Borders.Count == 0 && Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
 
         public BrushSpec Get(string part, string property)
         {
@@ -64,6 +64,7 @@ namespace RetroBar.Utilities
         public StyleDocument Clone()
         {
             var copy = new StyleDocument { Name = Name, StartRecolour = StartRecolour };
+            foreach (var border in Borders) copy.Borders[border.Key] = border.Value; // UX-013
             Array.Copy(Palette, copy.Palette, PALETTE_SIZE);
             foreach (var part in Parts)
             {
@@ -114,6 +115,7 @@ namespace RetroBar.Utilities
 
                 var style = new StyleDocument();
                 style.ReadStart(root, warn);
+                style.ReadBorders(root, warn); // UXUI-Extreme (UX-013)
                 if (root.TryGetProperty("name", out JsonElement name) && name.ValueKind == JsonValueKind.String)
                 {
                     style.Name = name.GetString();
@@ -194,6 +196,7 @@ namespace RetroBar.Utilities
 
                 writer.WriteEndObject();
                 WriteStart(writer); // UXUI-Extreme (UX-010): omitted when the theme image is unchanged.
+                WriteBorders(writer); // UXUI-Extreme (UX-013): omitted when every part keeps the theme's borders.
 
                 // UX-009: palette slots, empty ones as null so positions are kept.
                 if (Palette.Any(c => c.HasValue))

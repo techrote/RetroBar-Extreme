@@ -496,7 +496,6 @@ namespace RetroBar
 
             UpdateFontSizeText();
             SldRowHeightAdjust_ValueChanged(null, null); // UXUI-Extreme (UX-007)
-            cboBorderThickness.SelectedIndex = (int)Math.Clamp(Math.Round(Settings.Instance.BorderThicknessFactor), 0, 4); // UX-013
             sldLineSpacing.Value = Settings.Instance.FontOverrideLineSpacing > 0 ? Settings.Instance.FontOverrideLineSpacing : LineSpacingAutoPosition; // UX-008
             UpdateLineSpacingText();
             _loadingStyleTab = false;
@@ -582,24 +581,6 @@ namespace RetroBar
         }
 
         // UXUI-Extreme (UX-007)
-        // UXUI-Extreme (UX-013): items are None (×0), Theme (×1), ×2, ×3, ×4
-        private void CboBorderThickness_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (cboBorderThickness.SelectedIndex < 0)
-            {
-                // Item list was reloaded (language change); restore the selection.
-                cboBorderThickness.SelectedIndex = (int)Math.Clamp(Math.Round(Settings.Instance.BorderThicknessFactor), 0, 4);
-                return;
-            }
-
-            if (_loadingStyleTab)
-            {
-                return;
-            }
-
-            Settings.Instance.BorderThicknessFactor = cboBorderThickness.SelectedIndex;
-        }
-
         private void SldRowHeightAdjust_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (txtRowHeightAdjust == null)

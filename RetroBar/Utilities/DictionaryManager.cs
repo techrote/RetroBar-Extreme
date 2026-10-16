@@ -29,6 +29,8 @@ namespace RetroBar.Utilities
 
         public void SetThemeFromSettings()
         {
+            StyleLayer.ReadBordersForTheme(); // UXUI-Extreme (UX-013): borders are baked in as the theme loads
+
             SetTheme(THEME_DEFAULT);
 
             if (Settings.Instance.Theme.StartsWith(THEME_DEFAULT))
@@ -95,7 +97,7 @@ namespace RetroBar.Utilities
             }
             _scaledThemeDictionaries.Clear();
 
-            if (ScaleModel.IsNative || Settings.Instance.BorderThicknessFactor != 1.0) // UX-013: rewritten in stretch mode too
+            if (ScaleModel.IsNative || StyleLayer.HasBorders) // UX-013: rewritten in stretch mode too
             {
                 ResourceDictionary stale;
                 while ((stale = GetActualThemeDictionary()) != null)
@@ -114,9 +116,9 @@ namespace RetroBar.Utilities
         private bool TryAddScaledTheme(string dictionary, string dictDefault, string dictFilePath)
         {
             double scale = ScaleModel.ThemeScale;
-            double borders = Settings.Instance.BorderThicknessFactor; // UXUI-Extreme (UX-013)
+            StyleDocument borders = StyleLayer.LoadedBorders; // UXUI-Extreme (UX-013): per part, from Style.json
 
-            if (scale == 1.0 && borders == 1.0)
+            if (scale == 1.0 && !StyleLayer.HasBorders)
             {
                 return false;
             }
@@ -149,9 +151,9 @@ namespace RetroBar.Utilities
                 {
                     scaledXaml = ThemeScaler.Scale(scaledXaml, scale);
                 }
-                if (borders != 1.0)
+                if (StyleLayer.HasBorders)
                 {
-                    scaledXaml = ThemeBorders.ScaleBorders(scaledXaml, borders);
+                    scaledXaml = ThemeBorders.ScaleBorders(scaledXaml, borders.BorderFactor);
                 }
                 var context = new System.Windows.Markup.ParserContext();
                 if (folder != null)
@@ -234,7 +236,7 @@ namespace RetroBar.Utilities
 
             // UXUI-Extreme (UX-006): native sizing for themes
             // UXUI-Extreme (UX-013): also when borders are thickened or removed, in either scaling mode
-            if (dictType == 0 && (ScaleModel.IsNative || Settings.Instance.BorderThicknessFactor != 1.0) && TryAddScaledTheme(dictionary, dictDefault, dictFilePath))
+            if (dictType == 0 && (ScaleModel.IsNative || StyleLayer.HasBorders) && TryAddScaledTheme(dictionary, dictDefault, dictFilePath))
             {
                 return;
             }

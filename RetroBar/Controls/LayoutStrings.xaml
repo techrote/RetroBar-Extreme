@@ -87,8 +87,8 @@
     <system:String x:Key="uxui_taskbutton_show_icon">Show i_con</system:String>
     <system:String x:Key="uxui_taskbutton_show_label">Show _label</system:String>
     <system:String x:Key="uxui_taskbutton_reset">_Reset this app's button</system:String>
-    <!-- UXUI-Extreme (UX-013): Style tab -->
-    <system:String x:Key="uxui_border_thickness">_Border thickness:</system:String>
+    <!-- UXUI-Extreme (UX-013): per-part border thickness (Colours tab) -->
+    <system:String x:Key="uxui_border_thickness">Border thic_kness:</system:String>
     <x:Array x:Key="uxui_border_thickness_values" Type="system:String">
         <system:String>None</system:String>
         <system:String>Theme (×1)</system:String>

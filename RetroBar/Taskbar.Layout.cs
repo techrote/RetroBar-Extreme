@@ -33,6 +33,7 @@ namespace RetroBar
             nameof(Settings.Edge),
         };
 
+        private const double StartAreaGap = 4; // px at 100%
         private bool _layoutPending;
         private double _layoutBarHeight = -1;
 
@@ -51,15 +52,17 @@ namespace RetroBar
                 StyleLayer.Changed -= LayoutStyleLayer_Changed;
             };
 
-            // The Start button fills the taskbar's height, so follow changes to it (rows, scale).
-            StartArea.SizeChanged += (s, e) =>
+            // The Start button fills the taskbar's height, so follow changes to it (rows, scale, lock).
+            if (StartArea.Parent is FrameworkElement bar)
             {
-                double height = (StartArea.Parent as FrameworkElement)?.ActualHeight ?? 0;
-                if (Math.Abs(height - _layoutBarHeight) > 0.5)
+                bar.SizeChanged += (s, e) =>
                 {
-                    ScheduleLayoutOptions();
-                }
-            };
+                    if (Math.Abs(e.NewSize.Height - _layoutBarHeight) > 0.5)
+                    {
+                        ScheduleLayoutOptions();
+                    }
+                };
+            }
         }
 
         private void LayoutSettings_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -130,9 +133,14 @@ namespace RetroBar
                 double barHeight = (StartArea.Parent as FrameworkElement)?.ActualHeight ?? 0;
                 _layoutBarHeight = barHeight;
 
+                // A small gap between the Start button and a tucked Show desktop button.
+                double gap = ShowDesktopButtonStart.Visibility == Visibility.Visible ? Math.Round(StartAreaGap * (ScaleModel.IsNative ? s.TaskbarScale : 1.0)) : 0;
+                ShowDesktopButtonStart.Margin = StartArea.Orientation == Orientation.Vertical ? new Thickness(0, gap, 0, 0) : new Thickness(gap, 0, 0, 0);
+
                 double available = barHeight;
                 if (under && horizontal)
                 {
+                    // Its measured height includes the gap above it.
                     ShowDesktopButtonStart.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                     available -= ShowDesktopButtonStart.DesiredSize.Height;
                 }

@@ -17,7 +17,13 @@ namespace RetroBar.Utilities
     {
         private const int MaxIncludeDepth = 4;
 
-        public static string ScaleBorders(string xaml, double factor)
+        // Every border by the same factor.
+        public static string ScaleBorders(string xaml, double factor) => ScaleBorders(xaml, part => factor);
+
+        // UX-013: per part. factorFor gets a style-editor part name (bar, tray, button, buttonActive,
+        // buttonFlashing, clock, start) and returns its multiplier; borders in theme styles that
+        // belong to no part keep the theme's width.
+        public static string ScaleBorders(string xaml, Func<string, double> factorFor)
         {
             XDocument doc = XDocument.Parse(xaml, LoadOptions.PreserveWhitespace);
 
@@ -27,7 +33,7 @@ namespace RetroBar.Utilities
 
                 if (name == "Setter")
                 {
-                    if (ThemeScaler.PropertyName(element) == "BorderThickness")
+                    if (ThemeScaler.PropertyName(element) == "BorderThickness" && FactorFor(element, factorFor) is double factor && factor != 1)
                     {
                         XAttribute value = element.Attribute("Value");
                         if (value != null && ThemeScaler.TryScaleList(value.Value, factor, out string scaled))
@@ -40,6 +46,10 @@ namespace RetroBar.Utilities
 
                 if (name == "Thickness" && IsBorderThickness(element))
                 {
+                    if (!(FactorFor(element, factorFor) is double factor) || factor == 1)
+                    {
+                        continue;
+                    }
                     foreach (XAttribute side in element.Attributes().Where(a => a.Name.Namespace == XNamespace.None &&
                              (a.Name.LocalName == "Left" || a.Name.LocalName == "Top" || a.Name.LocalName == "Right" || a.Name.LocalName == "Bottom")))
                     {
@@ -56,13 +66,61 @@ namespace RetroBar.Utilities
                 }
 
                 XAttribute border = element.Attribute("BorderThickness");
-                if (border != null && ThemeScaler.TryScaleList(border.Value, factor, out string scaledBorder))
+                if (border != null && FactorFor(element, factorFor) is double borderFactor && borderFactor != 1 &&
+                    ThemeScaler.TryScaleList(border.Value, borderFactor, out string scaledBorder))
                 {
                     border.Value = scaledBorder;
                 }
             }
 
             return doc.ToString(SaveOptions.DisableFormatting);
+        }
+
+        // Theme style keys to style-editor parts, most specific first.
+        private static readonly (string prefix, string part)[] KeyParts =
+        {
+            ("TaskButtonActive", "buttonActive"),
+            ("TaskButtonFlashing", "buttonFlashing"),
+            ("TaskButton", "button"),
+            ("TaskbarWindow", "bar"),
+            ("Taskbar", "bar"),
+            ("TrayToggle", "tray"),
+            ("Tray", "tray"),
+            ("StartButton", "start"),
+            ("Clock", "clock"),
+        };
+
+        public static string PartForKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return null;
+            }
+
+            foreach (var (prefix, part) in KeyParts)
+            {
+                if (key.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    return part;
+                }
+            }
+            return null;
+        }
+
+        // The multiplier for a border: from the nearest keyed style / template / resource around it.
+        private static double? FactorFor(XElement element, Func<string, double> factorFor)
+        {
+            XName keyName = XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
+            foreach (XElement e in element.AncestorsAndSelf())
+            {
+                string key = (string)e.Attribute(keyName);
+                if (key != null)
+                {
+                    string part = PartForKey(key);
+                    return part == null ? (double?)null : factorFor(part);
+                }
+            }
+            return null;
         }
 
         // A <Thickness> that is a border: inside a BorderThickness setter, or keyed as one
