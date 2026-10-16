@@ -547,7 +547,7 @@
                     </GroupBox>
                 </StackPanel>
             </TabItem>
-            <!-- UXUI-Extreme (UX-005): Style tab. Colour controls (UX-003/UX-004) will join here. -->
+            <!-- UXUI-Extreme (UX-005): Style tab (fonts and size). Colours are on the next tab (UX-004). -->
             <TabItem Header="{DynamicResource uxui_style_tab}">
                 <StackPanel Orientation="Vertical"
                             Margin="10">
@@ -658,6 +658,10 @@
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>
+            </TabItem>
+            <!-- UXUI-Extreme (UX-004): Colours tab, the style editor for the UX-003 style layer -->
+            <TabItem Header="{DynamicResource uxui_colours_tab}">
+                <controls:StyleEditor Margin="10" />
             </TabItem>
             <TabItem Header="{DynamicResource advanced_tab}">
                 <DockPanel Margin="10"

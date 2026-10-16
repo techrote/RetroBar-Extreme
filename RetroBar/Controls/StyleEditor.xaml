@@ -1,0 +1,76 @@
+<UserControl x:Class="RetroBar.Controls.StyleEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             IsVisibleChanged="StyleEditor_IsVisibleChanged">
+    <!-- UXUI-Extreme (UX-004): the Colours tab. Edits the style layer (UX-003). -->
+    <StackPanel Orientation="Vertical">
+        <GroupBox Header="{DynamicResource uxui_saved_styles}">
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Label VerticalAlignment="Center"
+                           Target="{Binding ElementName=cboStyleName}">
+                        <AccessText Text="{DynamicResource uxui_style_name}" />
+                    </Label>
+                    <ComboBox x:Name="cboStyleName"
+                              Width="193"
+                              HorizontalAlignment="Right"
+                              IsEditable="True"
+                              SelectionChanged="CboStyleName_SelectionChanged" />
+                </DockPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,4,0,0">
+                    <Button Content="{DynamicResource uxui_style_save}"
+                            Margin="0,0,4,0"
+                            Click="Save_OnClick" />
+                    <Button x:Name="btnLoad"
+                            Content="{DynamicResource uxui_style_load}"
+                            Margin="0,0,4,0"
+                            Click="Load_OnClick" />
+                    <Button x:Name="btnDelete"
+                            Content="{DynamicResource uxui_style_delete}"
+                            Click="Delete_OnClick" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,4,0,4">
+                    <Button Content="{DynamicResource uxui_style_import}"
+                            Margin="0,0,4,0"
+                            Click="Import_OnClick" />
+                    <Button Content="{DynamicResource uxui_style_export}"
+                            Margin="0,0,4,0"
+                            Click="Export_OnClick" />
+                    <Button Content="{DynamicResource uxui_style_reset_all}"
+                            Click="ResetAll_OnClick" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Header="{DynamicResource uxui_style_part_heading}">
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Label VerticalAlignment="Center"
+                           Target="{Binding ElementName=cboPart}">
+                        <AccessText Text="{DynamicResource uxui_style_part}" />
+                    </Label>
+                    <ComboBox x:Name="cboPart"
+                              Width="193"
+                              HorizontalAlignment="Right"
+                              ItemsSource="{DynamicResource uxui_style_part_values}"
+                              SelectionChanged="CboPart_SelectionChanged" />
+                </DockPanel>
+                <StackPanel x:Name="panelProperties"
+                            Orientation="Vertical"
+                            Margin="0,4,0,0" />
+                <Button HorizontalAlignment="Right"
+                        Margin="0,4,0,4"
+                        Content="{DynamicResource uxui_style_reset_part}"
+                        Click="ResetPart_OnClick" />
+            </StackPanel>
+        </GroupBox>
+        <TextBlock TextWrapping="Wrap"
+                   MaxWidth="360"
+                   HorizontalAlignment="Left"
+                   Margin="4,4,4,2"
+                   Text="{DynamicResource uxui_style_note}" />
+    </StackPanel>
+</UserControl>

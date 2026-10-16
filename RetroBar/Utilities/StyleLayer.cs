@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Text.Json;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -45,12 +45,6 @@ namespace RetroBar.Utilities
         private static ResourceDictionary _dictionary;
         private static FileSystemWatcher _watcher;
         private static DispatcherTimer _reloadTimer;
-
-        private static readonly JsonDocumentOptions JsonOptions = new JsonDocumentOptions
-        {
-            AllowTrailingCommas = true,
-            CommentHandling = JsonCommentHandling.Skip,
-        };
 
         public static void Initialize()
         {
@@ -136,13 +130,10 @@ namespace RetroBar.Utilities
                 return null;
             }
 
-            string json;
+            StyleDocument style;
             try
             {
-                // Shared read so a file still open in an editor can be read.
-                using var stream = new FileStream(StylePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                using var reader = new StreamReader(stream);
-                json = reader.ReadToEnd();
+                style = StyleDocument.Load(StylePath, warning => ShellLogger.Warning($"UXUI-Extreme: {warning}"));
             }
             catch (IOException e)
             {
@@ -150,72 +141,29 @@ namespace RetroBar.Utilities
                 _reloadTimer?.Start();
                 return null;
             }
-
-            JsonDocument document;
-            try
+            catch (FormatException e)
             {
-                document = JsonDocument.Parse(json, JsonOptions);
-            }
-            catch (JsonException e)
-            {
-                ShellLogger.Warning($"UXUI-Extreme: {StylePath} is not valid JSON, using the theme alone: {e.Message}");
+                ShellLogger.Warning($"UXUI-Extreme: {StylePath} is {e.Message}, using the theme alone.");
                 return null;
             }
 
-            using (document)
+            StyleMap.Family family = StyleMap.Detect();
+            var dictionary = new ResourceDictionary();
+            int applied = 0;
+
+            foreach (var part in style.Parts)
             {
-                if (document.RootElement.ValueKind != JsonValueKind.Object ||
-                    !document.RootElement.TryGetProperty("parts", out JsonElement parts) ||
-                    parts.ValueKind != JsonValueKind.Object)
+                foreach (var property in part.Value)
                 {
-                    ShellLogger.Warning($"UXUI-Extreme: {StylePath} has no \"parts\" object, using the theme alone.");
-                    return null;
+                    applied += ApplyProperty(dictionary, family, $"{part.Key}.{property.Key}", property.Value);
                 }
-
-                StyleMap.Family family = StyleMap.Detect();
-                var dictionary = new ResourceDictionary();
-                int applied = 0;
-
-                foreach (JsonProperty part in parts.EnumerateObject())
-                {
-                    if (!StyleMap.PartProperties.TryGetValue(part.Name, out string[] properties) || part.Value.ValueKind != JsonValueKind.Object)
-                    {
-                        ShellLogger.Warning($"UXUI-Extreme: style part \"{part.Name}\" is unknown, skipped. Known parts: {string.Join(", ", StyleMap.Parts)}.");
-                        continue;
-                    }
-
-                    foreach (JsonProperty property in part.Value.EnumerateObject())
-                    {
-                        string name = $"{part.Name}.{property.Name}";
-
-                        if (Array.IndexOf(properties, property.Name) < 0)
-                        {
-                            ShellLogger.Warning($"UXUI-Extreme: style property \"{name}\" is unknown, skipped. \"{part.Name}\" has: {string.Join(", ", properties)}.");
-                            continue;
-                        }
-
-                        Fill fill;
-                        try
-                        {
-                            fill = Fill.Parse(property.Value);
-                        }
-                        catch (Exception e)
-                        {
-                            ShellLogger.Warning($"UXUI-Extreme: style value for \"{name}\" skipped: {e.Message}");
-                            continue;
-                        }
-
-                        applied += ApplyProperty(dictionary, family, name, fill);
-                    }
-                }
-
-                string styleName = document.RootElement.TryGetProperty("name", out JsonElement n) && n.ValueKind == JsonValueKind.String ? n.GetString() : FILE_NAME;
-                ShellLogger.Info($"UXUI-Extreme: style \"{styleName}\" applied over the {family} theme family ({applied} resources).");
-                return dictionary;
             }
+
+            ShellLogger.Info($"UXUI-Extreme: style \"{(string.IsNullOrEmpty(style.Name) ? FILE_NAME : style.Name)}\" applied over the {family} theme family ({applied} resources).");
+            return dictionary;
         }
 
-        private static int ApplyProperty(ResourceDictionary dictionary, StyleMap.Family family, string name, Fill fill)
+        private static int ApplyProperty(ResourceDictionary dictionary, StyleMap.Family family, string name, BrushSpec fill)
         {
             int count = 0;
 
@@ -223,7 +171,7 @@ namespace RetroBar.Utilities
                 Application.Current.TryFindResource("TaskButton") is Style baseStyle)
             {
                 var style = new Style(typeof(Button), baseStyle);
-                style.Setters.Add(new Setter(Control.BackgroundProperty, fill.ToBrush(0)));
+                style.Setters.Add(new Setter(Control.BackgroundProperty, fill.ToBrush()));
                 style.Seal();
                 dictionary["TaskButton"] = style;
                 count++;
@@ -241,7 +189,7 @@ namespace RetroBar.Utilities
                 {
                     StyleMap.Role.Clear => Brushes.Transparent,
                     StyleMap.Role.FillVertical => fill.ToBrush(-90),
-                    _ => fill.ToBrush(0),
+                    _ => fill.ToBrush(),
                 };
                 count++;
             }
@@ -254,106 +202,60 @@ namespace RetroBar.Utilities
             return count;
         }
 
-        // A colour or linear gradient from a style file.
-        private class Fill
+        // UX-004: what the theme alone draws a part with (ignoring the layer), so the style
+        // editor can start from it. Null if the part isn't drawn by a brush in this theme.
+        public static Brush ThemeBrush(string part, string property)
         {
-            private Color _color;
-            private GradientStopCollection _stops;
-            private double _angle = 90;
+            string name = $"{part}.{property}";
+            StyleMap.Family family = StyleMap.Detect();
 
-            public static Fill Parse(JsonElement value)
+            var keys = StyleMap.Targets(family, name).Where(t => t.Role == StyleMap.Role.Fill).Select(t => t.Key).ToList();
+            if (name == StyleMap.TaskButtonStyleBackground && family != StyleMap.Family.Modern)
             {
-                if (value.ValueKind == JsonValueKind.String)
-                {
-                    return new Fill { _color = ParseColor(value.GetString()) };
-                }
-
-                if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty("stops", out JsonElement stops) || stops.ValueKind != JsonValueKind.Array)
-                {
-                    throw new FormatException("expected a colour such as \"#3a3f44\", or a gradient { \"angle\": 90, \"stops\": [ \"#colour\", \"#colour\" ] }");
-                }
-
-                var fill = new Fill { _stops = new GradientStopCollection() };
-
-                if (value.TryGetProperty("angle", out JsonElement angle))
-                {
-                    if (angle.ValueKind != JsonValueKind.Number)
-                    {
-                        throw new FormatException("a gradient's \"angle\" is a number of degrees, such as 90");
-                    }
-
-                    fill._angle = angle.GetDouble();
-                }
-
-                int count = stops.GetArrayLength();
-                if (count < 1)
-                {
-                    throw new FormatException("a gradient needs at least one stop");
-                }
-
-                int i = 0;
-                foreach (JsonElement stop in stops.EnumerateArray())
-                {
-                    double evenOffset = count == 1 ? 0 : (double)i / (count - 1);
-
-                    if (stop.ValueKind == JsonValueKind.String)
-                    {
-                        fill._stops.Add(new GradientStop(ParseColor(stop.GetString()), evenOffset));
-                    }
-                    else if (stop.ValueKind == JsonValueKind.Object && stop.TryGetProperty("color", out JsonElement color))
-                    {
-                        double offset = evenOffset;
-                        if (stop.TryGetProperty("offset", out JsonElement o))
-                        {
-                            offset = o.ValueKind == JsonValueKind.Number ? o.GetDouble()
-                                : throw new FormatException("a gradient stop's \"offset\" is a number from 0 to 1");
-                        }
-                        fill._stops.Add(new GradientStop(ParseColor(color.ValueKind == JsonValueKind.String ? color.GetString() : color.GetRawText()), Math.Clamp(offset, 0, 1)));
-                    }
-                    else
-                    {
-                        throw new FormatException("a gradient stop is a colour, or { \"color\": \"#colour\", \"offset\": 0.5 }");
-                    }
-
-                    i++;
-                }
-
-                fill._stops.Freeze();
-                return fill;
+                keys.Insert(0, "ButtonFace");
             }
 
-            private static Color ParseColor(string text)
+            var dictionaries = Application.Current.Resources.MergedDictionaries;
+            foreach (string key in keys)
             {
-                try
+                for (int i = dictionaries.Count - 1; i >= 0; i--)
                 {
-                    return (Color)ColorConverter.ConvertFromString(text?.Trim());
-                }
-                catch (Exception)
-                {
-                    throw new FormatException($"\"{text}\" is not a colour; use \"#rrggbb\", \"#aarrggbb\" or a colour name");
+                    if (dictionaries[i] != _dictionary && dictionaries[i][key] is Brush brush)
+                    {
+                        return brush;
+                    }
                 }
             }
 
-            // rotate: extra degrees, for backgrounds drawn on a vertical taskbar.
-            public Brush ToBrush(double rotate)
+            return null;
+        }
+
+        // UX-004: whether the current theme draws anything with a part property, so the editor
+        // can say when a setting has no effect here.
+        public static bool IsUsed(string part, string property)
+        {
+            string name = $"{part}.{property}";
+            StyleMap.Family family = StyleMap.Detect();
+
+            if (name == StyleMap.TaskButtonStyleBackground && family != StyleMap.Family.Modern)
             {
-                Brush brush;
-
-                if (_stops == null)
-                {
-                    brush = new SolidColorBrush(_color);
-                }
-                else
-                {
-                    // Centre the gradient line in the box so every angle spans it end to end.
-                    double radians = (_angle + rotate) * Math.PI / 180;
-                    double dx = Math.Cos(radians) / 2, dy = Math.Sin(radians) / 2;
-                    brush = new LinearGradientBrush(_stops, new Point(0.5 - dx, 0.5 - dy), new Point(0.5 + dx, 0.5 + dy));
-                }
-
-                brush.Freeze();
-                return brush;
+                return true;
             }
+
+            return StyleMap.Targets(family, name).Any(t => family != StyleMap.Family.Modern || ThemeHasKey(t.Key));
+        }
+
+        private static bool ThemeHasKey(string key)
+        {
+            var dictionaries = Application.Current.Resources.MergedDictionaries;
+            for (int i = dictionaries.Count - 1; i >= 0; i--)
+            {
+                if (dictionaries[i] != _dictionary && dictionaries[i][key] != null)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
