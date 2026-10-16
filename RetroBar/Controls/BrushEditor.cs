@@ -116,17 +116,28 @@ namespace RetroBar.Controls
             var angleRow = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
             var angleLabel = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
             angleLabel.SetResourceReference(TextBlock.TextProperty, "uxui_style_angle");
-            var angleValue = new TextBlock { Width = 36, VerticalAlignment = VerticalAlignment.Center, Text = FormatAngle(_value.Angle) };
+            // The slider moves in 5° steps; any angle can be typed in the box next to it.
+            var angleValue = new TextBox
+            {
+                Width = 36,
+                Margin = new Thickness(4, 0, 0, 0),
+                Text = FormatAngle(_value.Angle),
+                HorizontalContentAlignment = HorizontalAlignment.Right,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var degrees = new TextBlock { Text = "°", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0, 0, 0) };
             var angle = new Slider
             {
                 Minimum = 0,
-                Maximum = 345,
-                TickFrequency = 15,
+                Maximum = 355,
+                TickFrequency = 5,
                 IsSnapToTickEnabled = true,
                 Width = 120,
-                Value = ((_value.Angle % 360) + 360) % 360,
+                Value = NormaliseAngle(_value.Angle),
                 VerticalAlignment = VerticalAlignment.Center,
             };
+            bool typing = false;
             var preview = new Border
             {
                 Height = 16,
@@ -137,17 +148,52 @@ namespace RetroBar.Controls
             };
             angle.ValueChanged += (s, e) =>
             {
+                if (typing)
+                {
+                    return;
+                }
+
                 _value.Angle = angle.Value;
                 angleValue.Text = FormatAngle(angle.Value);
+                angleValue.ClearValue(Control.BorderBrushProperty);
                 preview.Background = _value.ToBrush();
                 RaiseChanged();
+            };
+            angleValue.TextChanged += (s, e) =>
+            {
+                if (!angleValue.IsKeyboardFocusWithin)
+                {
+                    return;
+                }
+
+                if (double.TryParse(angleValue.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double typed) && !double.IsNaN(typed) && !double.IsInfinity(typed))
+                {
+                    angleValue.ClearValue(Control.BorderBrushProperty);
+                    _value.Angle = NormaliseAngle(typed);
+                    typing = true;
+                    angle.Value = _value.Angle;
+                    typing = false;
+                    preview.Background = _value.ToBrush();
+                    RaiseChanged();
+                }
+                else
+                {
+                    angleValue.BorderBrush = Brushes.Red;
+                }
+            };
+            angleValue.LostFocus += (s, e) =>
+            {
+                angleValue.Text = FormatAngle(_value.Angle);
+                angleValue.ClearValue(Control.BorderBrushProperty);
             };
             DockPanel.SetDock(angleLabel, Dock.Left);
             DockPanel.SetDock(angle, Dock.Left);
             DockPanel.SetDock(angleValue, Dock.Left);
+            DockPanel.SetDock(degrees, Dock.Left);
             angleRow.Children.Add(angleLabel);
             angleRow.Children.Add(angle);
             angleRow.Children.Add(angleValue);
+            angleRow.Children.Add(degrees);
             angleRow.Children.Add(preview);
             _details.Children.Add(angleRow);
 
@@ -312,7 +358,10 @@ namespace RetroBar.Controls
             return row;
         }
 
-        private static string FormatAngle(double angle) => $"{Math.Round(angle)}°";
+        private static string FormatAngle(double angle) => Math.Round(angle, 1).ToString(CultureInfo.CurrentCulture);
+
+        // Any typed angle, as 0 to under 360.
+        private static double NormaliseAngle(double angle) => ((angle % 360) + 360) % 360;
 
         private static Color Lighten(Color c, double amount)
         {
