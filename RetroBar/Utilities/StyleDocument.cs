@@ -302,7 +302,7 @@ namespace RetroBar.Utilities
                     return Solid(solid.Color);
                 // Absolute (pixel) gradients keep their direction; offsets are along the line either way.
                 case LinearGradientBrush linear when linear.GradientStops.Count > 0 && linear.StartPoint != linear.EndPoint:
-                    double angle = Math.Atan2(linear.EndPoint.Y - linear.StartPoint.Y) * 180 / Math.PI;
+                    double angle = Math.Atan2(linear.EndPoint.Y - linear.StartPoint.Y, linear.EndPoint.X - linear.StartPoint.X) * 180 / Math.PI;
                     return new BrushSpec
                     {
                         Angle = Math.Round((angle + 360) % 360),
