@@ -78,6 +78,56 @@
         <s:String>Extra bold (800)</s:String>
         <s:String>Black (900)</s:String>
     </x:Array>
+    <!-- UXUI-Extreme (UX-004) -->
+    <s:String x:Key="uxui_colours_tab">Colours</s:String>
+    <s:String x:Key="uxui_saved_styles">Saved styles</s:String>
+    <s:String x:Key="uxui_style_name">_Name:</s:String>
+    <s:String x:Key="uxui_style_save">_Save</s:String>
+    <s:String x:Key="uxui_style_load">_Load</s:String>
+    <s:String x:Key="uxui_style_delete">_Delete</s:String>
+    <s:String x:Key="uxui_style_import">_Import...</s:String>
+    <s:String x:Key="uxui_style_export">_Export...</s:String>
+    <s:String x:Key="uxui_style_reset_all">Reset _all</s:String>
+    <s:String x:Key="uxui_style_part_heading">Taskbar part</s:String>
+    <s:String x:Key="uxui_style_part">_Part:</s:String>
+    <x:Array x:Key="uxui_style_part_values" Type="s:String">
+        <s:String>Taskbar</s:String>
+        <s:String>Notification area</s:String>
+        <s:String>Task button</s:String>
+        <s:String>Task button (mouse over)</s:String>
+        <s:String>Task button (active)</s:String>
+        <s:String>Task button (flashing)</s:String>
+        <s:String>Clock</s:String>
+        <s:String>3D edges</s:String>
+    </x:Array>
+    <s:String x:Key="uxui_style_prop_background">_Background:</s:String>
+    <s:String x:Key="uxui_style_prop_border">B_order:</s:String>
+    <s:String x:Key="uxui_style_prop_foreground">_Text:</s:String>
+    <s:String x:Key="uxui_style_prop_highlight">_Highlight:</s:String>
+    <s:String x:Key="uxui_style_prop_light">Li_ght edge:</s:String>
+    <s:String x:Key="uxui_style_prop_shadow">Sh_adow:</s:String>
+    <s:String x:Key="uxui_style_prop_darkShadow">Dar_k shadow:</s:String>
+    <x:Array x:Key="uxui_style_mode_values" Type="s:String">
+        <s:String>Theme default</s:String>
+        <s:String>Colour</s:String>
+        <s:String>Gradient</s:String>
+    </x:Array>
+    <s:String x:Key="uxui_style_angle">Angle:</s:String>
+    <s:String x:Key="uxui_style_add_stop">Add colour</s:String>
+    <s:String x:Key="uxui_style_remove_stop">Remove this colour</s:String>
+    <s:String x:Key="uxui_style_pick_colour">Pick a colour</s:String>
+    <s:String x:Key="uxui_style_stop_position">Position along the gradient (0-100%)</s:String>
+    <s:String x:Key="uxui_style_not_used">not used by this theme</s:String>
+    <s:String x:Key="uxui_style_reset_part">_Reset part</s:String>
+    <s:String x:Key="uxui_style_note">Changes show on the taskbar straight away and stay after a restart. Fonts are on the Style tab.</s:String>
+    <s:String x:Key="uxui_style_need_name">Type a name for the style first.</s:String>
+    <s:String x:Key="uxui_style_overwrite">A saved style called "{0}" already exists. Replace it?</s:String>
+    <s:String x:Key="uxui_style_delete_confirm">Delete the saved style "{0}"? The taskbar keeps its current colours.</s:String>
+    <s:String x:Key="uxui_style_reset_all_confirm">Remove all custom colours and go back to the plain theme?</s:String>
+    <s:String x:Key="uxui_style_load_failed">This style can't be used: {0}</s:String>
+    <s:String x:Key="uxui_style_load_warnings">The style was loaded, but some of it was skipped:&#x0a;{0}</s:String>
+    <s:String x:Key="uxui_style_save_failed">The style couldn't be saved: {0}</s:String>
+    <s:String x:Key="uxui_style_file_filter">Style files (*.json)|*.json|All files (*.*)|*.*</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_Allow font smoothing in menus</s:String>
     <s:String x:Key="collapse_tray_icons">Collapse _notification area icons</s:String>
     <s:String x:Key="customize">_Customize...</s:String>
