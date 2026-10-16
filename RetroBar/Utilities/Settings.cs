@@ -474,6 +474,21 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideItalic, value);
         }
 
+        // UXUI-Extreme (UX-015): user PNG icons (file names in %LOCALAPPDATA%RetroBarIcons; see CustomIcons).
+        private string _startButtonIcon = "";
+        public string StartButtonIcon
+        {
+            get => _startButtonIcon;
+            set => Set(ref _startButtonIcon, value ?? "");
+        }
+
+        private List<QuickLaunchIconSetting> _quickLaunchIcons = new List<QuickLaunchIconSetting>();
+        public List<QuickLaunchIconSetting> QuickLaunchIcons
+        {
+            get => _quickLaunchIcons;
+            set => Set(ref _quickLaunchIcons, value ?? new List<QuickLaunchIconSetting>());
+        }
+
         // UXUI-Extreme (UX-014): task buttons for all apps. 0 = theme width (px at 100% scale).
         private double _taskButtonWidthPx = 0;
         public double TaskButtonWidthPx
@@ -774,6 +789,13 @@ namespace RetroBar.Utilities
         Default,
         Show,
         Hide
+    }
+
+    // UXUI-Extreme (UX-015): a quick launch item's custom icon
+    public class QuickLaunchIconSetting
+    {
+        public string Item { get; set; } = "";  // shortcut file name, lower case
+        public string Icon { get; set; } = "";  // file name in the Icons folder
     }
 
     // UXUI-Extreme (UX-014): one app's remembered task button settings.

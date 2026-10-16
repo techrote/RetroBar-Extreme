@@ -26,6 +26,15 @@ namespace RetroBar.Controls
         {
             var s = Settings.Instance;
 
+            // UX-015: a user PNG in place of the theme's Start icon.
+            if (CustomIcons.Load(s.StartButtonIcon) is BitmapSource customIcon)
+            {
+                StartIconImage.Source = customIcon;
+            }
+            else
+            {
+                StartIconImage.ClearValue(Image.SourceProperty);
+            }
             StartIconImage.Visibility = s.StartButtonShowIcon ? Visibility.Visible : Visibility.Collapsed;
             StartLabelText.Visibility = s.StartButtonShowText ? Visibility.Visible : Visibility.Collapsed;
             bool empty = !s.StartButtonShowIcon && !s.StartButtonShowText;

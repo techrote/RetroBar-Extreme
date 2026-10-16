@@ -15,6 +15,7 @@ namespace RetroBar.Controls
             InitializeComponent();
 
             setIconBinding();
+            HookCustomIcon(); // UXUI-Extreme (UX-015)
         }
 
         private void setIconBinding()

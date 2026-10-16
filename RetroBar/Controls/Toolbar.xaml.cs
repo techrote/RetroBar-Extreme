@@ -24,7 +24,9 @@ namespace RetroBar.Controls
 
         private enum MenuItem : uint
         {
-            OpenParentFolder = CommonContextMenuItem.Paste + 1
+            OpenParentFolder = CommonContextMenuItem.Paste + 1,
+            ChangeIcon, // UXUI-Extreme (UX-015)
+            ResetIcon
         }
 
         public static DependencyProperty PathProperty = DependencyProperty.Register(nameof(Path), typeof(string), typeof(Toolbar), new PropertyMetadata(OnPathChanged));
@@ -266,6 +268,23 @@ namespace RetroBar.Controls
                 UID = (uint)MenuItem.OpenParentFolder
             });
 
+            // UXUI-Extreme (UX-015): custom PNG icon for this item
+            builder.AddCommand(new ShellMenuCommand
+            {
+                Flags = MFT.BYCOMMAND,
+                Label = (string)FindResource("uxui_ql_change_icon"),
+                UID = (uint)MenuItem.ChangeIcon
+            });
+            if (!string.IsNullOrEmpty(CustomIcons.QuickLaunchIcon(file.Path)))
+            {
+                builder.AddCommand(new ShellMenuCommand
+                {
+                    Flags = MFT.BYCOMMAND,
+                    Label = (string)FindResource("uxui_ql_reset_icon"),
+                    UID = (uint)MenuItem.ResetIcon
+                });
+            }
+
             return builder;
         }
 
@@ -285,6 +304,18 @@ namespace RetroBar.Controls
             if (action == ((uint)MenuItem.OpenParentFolder).ToString())
             {
                 ShellHelper.StartProcess(Folder.Path);
+                return true;
+            }
+
+            // UXUI-Extreme (UX-015)
+            if (action == ((uint)MenuItem.ChangeIcon).ToString() && items.Length > 0)
+            {
+                ChooseIcon(items[0].Path);
+                return true;
+            }
+            if (action == ((uint)MenuItem.ResetIcon).ToString() && items.Length > 0)
+            {
+                CustomIcons.SetQuickLaunchIcon(items[0].Path, null);
                 return true;
             }
 

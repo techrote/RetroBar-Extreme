@@ -51,6 +51,15 @@
     <system:String x:Key="uxui_layout_clock_size">Si_ze (at 100%):</system:String>
     <system:String x:Key="uxui_layout_clock_spacing">Line _spacing:</system:String>
     <system:String x:Key="uxui_layout_same_as_taskbar">Same as taskbar</system:String>
+    <!-- UXUI-Extreme (UX-015): custom PNG icons -->
+    <system:String x:Key="uxui_layout_start_icon">Icon:</system:String>
+    <system:String x:Key="uxui_icon_choose">Choose PNG...</system:String>
+    <system:String x:Key="uxui_icon_theme">Theme</system:String>
+    <system:String x:Key="uxui_icon_theme_current">Theme default</system:String>
+    <system:String x:Key="uxui_icon_filter">PNG images (*.png)|*.png</system:String>
+    <system:String x:Key="uxui_icon_failed">This icon can't be used: {0}</system:String>
+    <system:String x:Key="uxui_ql_change_icon">Change &amp;icon...</system:String>
+    <system:String x:Key="uxui_ql_reset_icon">&amp;Reset icon</system:String>
     <!-- UXUI-Extreme (UX-014): task buttons -->
     <system:String x:Key="uxui_taskbuttons_heading">Task buttons</system:String>
     <system:String x:Key="uxui_taskbuttons_width">Wi_dth:</system:String>

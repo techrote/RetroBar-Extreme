@@ -24,6 +24,7 @@ namespace RetroBar
             nameof(Settings.StartButtonShowIcon),
             nameof(Settings.StartButtonShowText),
             nameof(Settings.StartButtonStretchMode),
+            nameof(Settings.StartButtonIcon), // UX-015
             nameof(Settings.ShowDesktopPosition),
             nameof(Settings.ShowDesktopButton),
             nameof(Settings.ClockOrientation),
