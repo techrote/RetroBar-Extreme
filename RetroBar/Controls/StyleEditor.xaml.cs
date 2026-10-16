@@ -90,6 +90,9 @@ namespace RetroBar.Controls
             _palette.SlotChanged += (slot, colour) =>
             {
                 _style.Palette[slot] = colour;
+                // UXUI-Extreme (UX-011): update previews without rebuilding focused controls.
+                foreach (object child in panelProperties.Children)
+                    if (child is BrushEditor editor) editor.RefreshTexturePreview();
                 ScheduleSave();
             };
             _palette.Closed += (s, args) => _palette = null;
@@ -208,7 +211,8 @@ namespace RetroBar.Controls
                     $"uxui_style_prop_{p}",
                     _style.Get(part, p),
                     () => BrushSpec.FromBrush(StyleLayer.ThemeBrush(part, p)),
-                    StyleLayer.IsUsed(part, p));
+                    StyleLayer.IsUsed(part, p),
+                    () => _style.Palette); // UXUI-Extreme (UX-011): live palette, not a stale copy.
                 editor.Changed += (s, e) =>
                 {
                     _style.Set(part, p, ((BrushEditor)s).Value);
@@ -266,7 +270,7 @@ namespace RetroBar.Controls
         private void UseStyle(StyleDocument style, string fallbackName)
         {
             _style = style;
-            if (string.IsNullOrWhiteSpace(_style.Name))
+            if (string.IsNullOrWhiteSpace(style.Name))
             {
                 _style.Name = fallbackName;
             }
