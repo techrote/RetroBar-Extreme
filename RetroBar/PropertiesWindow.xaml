@@ -661,7 +661,13 @@
             </TabItem>
             <!-- UXUI-Extreme (UX-004): Colours tab, the style editor for the UX-003 style layer -->
             <TabItem Header="{DynamicResource uxui_colours_tab}">
-                <controls:StyleEditor Margin="10" />
+                <!-- UX-009: same height as the other tabs, scrolling, so the window never grows behind the taskbar -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Height="{Binding ElementName=FirstTabContent, Path=ActualHeight}"
+                              Margin="0,10,0,0">
+                    <controls:StyleEditor Margin="10,0,10,10" />
+                </ScrollViewer>
             </TabItem>
             <TabItem Header="{DynamicResource advanced_tab}">
                 <DockPanel Margin="10"
