@@ -172,6 +172,9 @@ namespace RetroBar.Controls
                 () => texture.Scale, n => texture.Scale = n));
             _details.Children.Add(TextureNumber("uxui_texture_contrast", "TextureContrast", TextureSpec.MinContrast, TextureSpec.MaxContrast, 0.1,
                 () => texture.Contrast, n => texture.Contrast = n));
+            // UXUI-Extreme (UX-013)
+            _details.Children.Add(TextureNumber("uxui_texture_angle", "TextureAngle", TextureSpec.MinAngle, TextureSpec.MaxAngle, 5,
+                () => texture.Angle, n => texture.Angle = n));
             _details.Children.Add(preview);
             _details.Children.Add(status);
             RefreshTexturePreview();

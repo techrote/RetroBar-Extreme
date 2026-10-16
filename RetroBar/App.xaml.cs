@@ -100,6 +100,13 @@ namespace RetroBar
                 loadTheme();
                 _windowManager?.ReopenTaskbars();
             }
+
+            // UXUI-Extreme (UX-013): border widths are baked into the theme the same way.
+            if (e.PropertyName == nameof(Settings.BorderThicknessFactor))
+            {
+                loadTheme();
+                _windowManager?.ReopenTaskbars();
+            }
         }
 
         private double _loadedThemeScale = 1.0; // UXUI-Extreme (UX-006)

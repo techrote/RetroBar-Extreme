@@ -12,15 +12,17 @@ namespace RetroBar.Utilities
     public sealed class TextureSpec
     {
         public const double MinScale = 0.25, MaxScale = 8, MinContrast = 0, MaxContrast = 4;
+        public const double MinAngle = 0, MaxAngle = 360; // UXUI-Extreme (UX-013)
         public string Name = "brushed";
         public List<Color> Lut = new List<Color> { Colors.Black, Colors.White };
         public bool UsePalette;
         public double Scale = 1;
         public double Contrast = 1;
+        public double Angle = 0; // UXUI-Extreme (UX-013): degrees, added to any vertical-taskbar turn
 
         public TextureSpec Clone() => new TextureSpec
         {
-            Name = Name, Lut = Lut?.ToList(), UsePalette = UsePalette, Scale = Scale, Contrast = Contrast,
+            Name = Name, Lut = Lut?.ToList(), UsePalette = UsePalette, Scale = Scale, Contrast = Contrast, Angle = Angle,
         };
 
         public void Validate()
@@ -29,6 +31,7 @@ namespace RetroBar.Utilities
                 throw new FormatException("texture must be a built-in name or a plain .png filename in the Textures folder");
             CheckRange(Scale, MinScale, MaxScale, "scale");
             CheckRange(Contrast, MinContrast, MaxContrast, "contrast");
+            CheckRange(Angle, MinAngle, MaxAngle, "angle");
             if (!UsePalette && (Lut == null || Lut.Count < 2 || Lut.Count > 6))
                 throw new FormatException("a texture LUT needs 2 to 6 colours");
         }
@@ -76,7 +79,7 @@ namespace RetroBar.Utilities
             foreach (JsonProperty property in value.EnumerateObject())
             {
                 if (!seen.Add(property.Name)) throw new FormatException($"duplicate texture property \"{property.Name}\"");
-                if (property.Name != "texture" && property.Name != "lut" && property.Name != "scale" && property.Name != "contrast")
+                if (property.Name != "texture" && property.Name != "lut" && property.Name != "scale" && property.Name != "contrast" && property.Name != "angle")
                     throw new FormatException($"unknown texture property \"{property.Name}\"");
             }
             JsonElement name = value.GetProperty("texture");
@@ -99,6 +102,7 @@ namespace RetroBar.Utilities
             else throw new FormatException("lut must be 2 to 6 colour strings, or \"palette\"");
             spec.Scale = ReadNumber(value, "scale", 1);
             spec.Contrast = ReadNumber(value, "contrast", 1);
+            spec.Angle = ReadNumber(value, "angle", 0);
             spec.Validate();
             return spec;
         }
@@ -125,6 +129,7 @@ namespace RetroBar.Utilities
             }
             writer.WriteNumber("scale", Scale);
             writer.WriteNumber("contrast", Contrast);
+            if (Angle != 0) writer.WriteNumber("angle", Angle); // omitted at 0 so UX-011 files stay as they were
             writer.WriteEndObject();
         }
 

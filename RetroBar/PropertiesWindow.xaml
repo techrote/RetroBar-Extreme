@@ -655,6 +655,18 @@
                                         Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=RowHeightAdjust, UpdateSourceTrigger=PropertyChanged}"
                                         ValueChanged="SldRowHeightAdjust_ValueChanged" />
                             </DockPanel>
+                            <!-- UXUI-Extreme (UX-013): theme border widths; a list, not a slider, because each change reloads the theme -->
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboBorderThickness}">
+                                    <AccessText Text="{DynamicResource uxui_border_thickness}" />
+                                </Label>
+                                <ComboBox x:Name="cboBorderThickness"
+                                          Width="193"
+                                          HorizontalAlignment="Right"
+                                          ItemsSource="{DynamicResource uxui_border_thickness_values}"
+                                          SelectionChanged="CboBorderThickness_SelectionChanged" />
+                            </DockPanel>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

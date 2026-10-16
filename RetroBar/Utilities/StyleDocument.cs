@@ -453,7 +453,7 @@ namespace RetroBar.Utilities
         // rotate: extra degrees, for backgrounds drawn on a vertical taskbar.
         public Brush ToBrush(double rotate = 0, IEnumerable<Color?> palette = null)
         {
-            if (IsTexture) return LutTextures.Create(Texture, palette, rotate); // UXUI-Extreme (UX-011)
+            if (IsTexture) return LutTextures.Create(Texture, palette, rotate + Texture.Angle); // UXUI-Extreme (UX-011)
             Brush brush;
 
             if (!IsGradient)

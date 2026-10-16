@@ -474,6 +474,14 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideItalic, value);
         }
 
+        // UXUI-Extreme (UX-013): multiplier for all theme border widths (0 = no borders, 1 = theme).
+        private double _borderThicknessFactor = 1;
+        public double BorderThicknessFactor
+        {
+            get => _borderThicknessFactor;
+            set => Set(ref _borderThicknessFactor, value);
+        }
+
         // UXUI-Extreme (UX-012): Start button layout. Defaults = the theme's own look.
         private ElementOrientationOption _startButtonOrientation = ElementOrientationOption.Horizontal;
         public ElementOrientationOption StartButtonOrientation
