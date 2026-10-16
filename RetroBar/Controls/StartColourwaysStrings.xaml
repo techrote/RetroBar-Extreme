@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+    <!-- UXUI-Extreme (UX-010): defaults load before language dictionaries so translations can override them. -->
+    <system:String x:Key="uxui_start_part">Start button</system:String>
+    <system:String x:Key="uxui_start_extract">Colours from Start button</system:String>
+    <system:String x:Key="uxui_start_extract_note">Read the original theme button into Base, Accent and the palette; then Apply to generate a matching scheme.</system:String>
+    <system:String x:Key="uxui_start_enable">Recolour Start button</system:String>
+    <system:String x:Key="uxui_start_note">Changes hue and saturation, keeping shading, the flag and transparency. Reset part restores the original image. Target alpha is ignored.</system:String>
+    <system:String x:Key="uxui_start_classic">This theme uses a brush-based Start button, not a background bitmap. Use the existing bar and bevel colours. A saved recolour is kept for bitmap themes.</system:String>
+    <system:String x:Key="uxui_start_use_base">Use colourway base</system:String>
+    <system:String x:Key="uxui_start_use_accent">Use colourway accent</system:String>
+    <system:String x:Key="uxui_start_no_palette">No usable Start button colours were found. Your style and palette have not changed.</system:String>
+    <system:String x:Key="uxui_start_palette_replace">Replace the working palette and Base/Accent fields with colours from the original Start button? The current taskbar scheme stays unchanged until you choose Apply.</system:String>
+</ResourceDictionary>
