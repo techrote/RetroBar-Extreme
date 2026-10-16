@@ -51,6 +51,12 @@ internal static class Program
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }
             catch (Exception e) { failures++; results.Add(new { test.Name, Passed = false, Error = e.ToString() }); Console.Error.WriteLine("FAIL " + test.Name + "\n" + e); }
+            finally
+            {
+                // A failed group must not leave theme keys/windows for the next group.
+                foreach (Window window in app.Windows.Cast<Window>().ToArray()) window.Close();
+                app.Resources = new ResourceDictionary();
+            }
         }
         File.WriteAllText(Path.Combine(evidence, "results.json"), JsonSerializer.Serialize(new
         {
@@ -74,6 +80,14 @@ internal static class Program
         throw new InvalidOperationException("Expected " + typeof(T).Name);
     }
     private static StyleDocument Parse(string json) => StyleDocument.Parse(json, s => throw new Exception(s));
+
+    private static void DrainDispatcher()
+    {
+        var frame = new DispatcherFrame();
+        Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,
+            new Action(() => frame.Continue = false));
+        Dispatcher.PushFrame(frame);
+    }
 
     private static void Styles()
     {
@@ -256,9 +270,15 @@ internal static class Program
         Func<string, object> original = key => StyleLayer.FindThemeResource(root, overlay, key);
         Check(StartButtonColourways.Apply(overlay, Purple, original, s => throw new Exception(s)) == 6, "all six Vista resources");
         Check(!overlay.Contains("StartIconImage") && ReferenceEquals(original("StartIconImage"), flag), "separate flag never overridden");
-        var image = new Image(); image.SetResourceReference(Image.SourceProperty, "StartButtonImageLarge");
+        var image = new Image();
+        // Application resource changes invalidate registered window trees, not detached Images.
+        // Do not show the host: this tests real WPF propagation without launching shell UI.
+        _ = new Window { Content = image, ShowInTaskbar = false };
+        image.SetResourceReference(Image.SourceProperty, "StartButtonImageLarge");
+        DrainDispatcher();
         Check(ReferenceEquals(image.Source, theme["StartButtonImageLarge"]), "initial live source");
         root.MergedDictionaries.Add(overlay);
+        DrainDispatcher();
         Check(ReferenceEquals(image.Source, overlay["StartButtonImageLarge"]), "live override");
         Check(ReferenceEquals(original("StartButtonImageLarge"), theme["StartButtonImageLarge"]), "lookup excludes own preview");
         Check(StartButtonColourways.Extract(original).SequenceEqual(StartButtonColourways.Extract((BitmapSource)theme["StartButtonImageLarge"], Kind.Vista)), "extraction from original while recoloured");
@@ -266,6 +286,7 @@ internal static class Program
         foreach (var orb in Orbs)
             Check(Bytes((BitmapSource)overlay[orb.Key]).SequenceEqual(Bytes(StartButtonColourways.Recolour((BitmapSource)theme[orb.Key], Purple, Kind.Vista, reference))), "shared orb reference " + orb.Key);
         root.MergedDictionaries.Remove(overlay);
+        DrainDispatcher();
         Check(ReferenceEquals(image.Source, theme["StartButtonImageLarge"]), "reset restores exact original resource");
         root.MergedDictionaries.Remove(theme);
         Check(!StartButtonColourways.HasImage(original), "classic theme has no bitmap override");
@@ -292,6 +313,10 @@ internal static class Program
         foreach (string path in new[] { "Controls/StartColourwaysStrings.xaml", "Languages/English.xaml", "Themes/System.xaml" })
             resources.Add(new ResourceDictionary { Source = new Uri("/RetroBar;component/" + path, UriKind.Relative) });
         var editor = new StyleEditor();
+        // A non-shown logical root permits DynamicResource invalidation without IsVisibleChanged
+        // loading user styles. Never show this host or run the save timer in these tests.
+        _ = new Window { Content = editor, ShowInTaskbar = false };
+        DrainDispatcher();
         var parts = (ComboBox)editor.FindName("cboPart");
         Check(parts.Items.Count == StyleMap.Parts.Length + 1, "all existing part labels plus Start");
         parts.SelectedIndex = StyleMap.Parts.Length;
@@ -320,6 +345,7 @@ internal static class Program
         }
         finally { timer.Stop(); resources.Remove(theme); }
         Application.Current.Resources["uxui_start_part"] = "Start localised";
+        DrainDispatcher(); // The editor save timer was stopped in the finally block above.
         Check(((ComboBoxItem)parts.Items[StyleMap.Parts.Length]).Content as string == "Start localised", "Start label remains dynamic/localisable");
     }
 }
