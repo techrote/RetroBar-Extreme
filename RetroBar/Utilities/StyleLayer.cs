@@ -277,6 +277,11 @@ namespace RetroBar.Utilities
 
                 if (value.TryGetProperty("angle", out JsonElement angle))
                 {
+                    if (angle.ValueKind != JsonValueKind.Number)
+                    {
+                        throw new FormatException("a gradient's \"angle\" is a number of degrees, such as 90");
+                    }
+
                     fill._angle = angle.GetDouble();
                 }
 
@@ -297,8 +302,13 @@ namespace RetroBar.Utilities
                     }
                     else if (stop.ValueKind == JsonValueKind.Object && stop.TryGetProperty("color", out JsonElement color))
                     {
-                        double offset = stop.TryGetProperty("offset", out JsonElement o) ? o.GetDouble() : evenOffset;
-                        fill._stops.Add(new GradientStop(ParseColor(color.GetString()), Math.Clamp(offset, 0, 1)));
+                        double offset = evenOffset;
+                        if (stop.TryGetProperty("offset", out JsonElement o))
+                        {
+                            offset = o.ValueKind == JsonValueKind.Number ? o.GetDouble()
+                                : throw new FormatException("a gradient stop's \"offset\" is a number from 0 to 1");
+                        }
+                        fill._stops.Add(new GradientStop(ParseColor(color.ValueKind == JsonValueKind.String ? color.GetString() : color.GetRawText()), Math.Clamp(offset, 0, 1)));
                     }
                     else
                     {
