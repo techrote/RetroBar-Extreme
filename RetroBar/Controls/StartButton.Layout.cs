@@ -49,18 +49,34 @@ namespace RetroBar.Controls
 
             BitmapSource? image = Application.Current.TryFindResource(ImageKey) as BitmapSource; // incl. UX-010 recolouring
 
-            Start.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            StartContentGrid.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Thickness margin = Start.Margin;
+            var unlimited = new Size(double.PositiveInfinity, double.PositiveInfinity);
+
+            // The theme's button as it is: measured first, before anything below changes it.
+            Start.Measure(unlimited);
             double naturalLength = Start.DesiredSize.Width - margin.Left - margin.Right;
             double naturalThickness = Start.DesiredSize.Height - margin.Top - margin.Bottom;
-            double chrome = Math.Max(0, naturalLength - StartContentGrid.DesiredSize.Width); // padding around the content
 
-            // With nothing inside, image buttons collapse to nothing: start from the image's own width.
-            if (empty && naturalLength < 4)
+            // Padding and borders around the content: measured with the content forced wide and
+            // the theme's minimum width off (XP's minimum doesn't widen its image, which is only
+            // as wide as the content). Undone straight after; the real layout pass re-measures.
+            const double probe = 400;
+            Start.MinWidth = 0;
+            StartContentGrid.MinWidth = probe;
+            StartContentGrid.InvalidateMeasure();
+            Start.InvalidateMeasure();
+            Start.Measure(unlimited);
+            double chrome = Math.Max(0, Start.DesiredSize.Width - margin.Left - margin.Right - probe);
+            StartContentGrid.ClearValue(MinWidthProperty);
+            Start.ClearValue(MinWidthProperty);
+            StartContentGrid.InvalidateMeasure();
+            Start.InvalidateMeasure();
+
+            // With nothing inside, the button would shrink to its padding (XP: to nothing), so
+            // start from the image's own width, or a small drawn button.
+            if (empty)
             {
-                naturalLength = image != null ? image.Width : EmptyButtonLength;
-                chrome = 0;
+                naturalLength = image != null ? image.Width : chrome + EmptyButtonLength;
             }
 
             if (naturalLength <= 0 || naturalThickness <= 0)
