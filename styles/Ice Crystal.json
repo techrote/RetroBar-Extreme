@@ -1,0 +1,39 @@
+// RetroBar-Extreme example style: Ice Crystal.
+// Shows: frosty cellular texture on the bar, angled clouds on the tray, cool blues with
+// dark-blue text for contrast.
+{
+  "name": "Ice Crystal",
+  "parts": {
+    "bar": {
+      "background": { "texture": "cells", "lut": [ "#9ac8e8", "#d0ecff", "#ffffff" ], "scale": 2, "contrast": 0.9 },
+      "border": "#3a7ab0"
+    },
+    "tray": {
+      "background": { "texture": "clouds", "lut": [ "#6aa8d8", "#b8e0ff" ], "scale": 1.5, "contrast": 1, "angle": 30 },
+      "border": "#3a7ab0"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#f4fbff", "#d0e8f8" ] },
+      "border": "#6aa8d8",
+      "foreground": "#0a2a4a"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#ffffff", "#e0f2ff" ] },
+      "border": "#3a7ab0"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#6aa8d8", "#3a7ab0" ] },
+      "border": "#0a2a4a",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ffb0c0", "#e06080" ] },
+      "border": "#6a1020",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#0a2a4a" },
+    "bevel": { "highlight": "#ffffff", "light": "#e0f2ff", "shadow": "#6aa8d8", "darkShadow": "#3a7ab0" }
+  },
+  "palette": [ "#d0e8f8", "#3a7ab0", "#0a2a4a", "#ffffff", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#5aa0e0" }
+}

@@ -61,11 +61,82 @@ namespace RetroBar.Utilities
                 File.Copy(path, target, true);
             }
 
+            ImportSizes(path, Path.GetFileNameWithoutExtension(name));
+
             lock (Cache)
             {
-                Cache.Remove(name);
+                foreach (string key in Cache.Keys.Where(k => k.StartsWith(Path.GetFileNameWithoutExtension(name), StringComparison.OrdinalIgnoreCase)).ToList())
+                {
+                    Cache.Remove(key);
+                }
             }
             return name;
+        }
+
+        // Icon sets: a PNG in a folder named like "16px", with sibling "24px", "32px"... folders
+        // holding the same file name, brings every size along (as "name@24.png" etc.), so the
+        // sharpest one can be used for the taskbar's scale.
+        private static void ImportSizes(string path, string storedStem)
+        {
+            try
+            {
+                string folder = Path.GetDirectoryName(path);
+                string parent = Path.GetDirectoryName(folder);
+                if (parent == null || SizeOf(Path.GetFileName(folder)) == 0)
+                {
+                    return;
+                }
+
+                foreach (string sibling in Directory.GetDirectories(parent))
+                {
+                    int size = SizeOf(Path.GetFileName(sibling));
+                    string candidate = Path.Combine(sibling, Path.GetFileName(path));
+                    if (size > 0 && File.Exists(candidate) && new FileInfo(candidate).Length <= MaxBytes)
+                    {
+                        Decode(File.ReadAllBytes(candidate)); // only valid PNGs
+                        File.Copy(candidate, Path.Combine(Folder, $"{storedStem}@{size}.png"), true);
+                    }
+                }
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is FormatException || e is NotSupportedException)
+            {
+                ShellLogger.Warning($"UXUI-Extreme: other sizes of icon \"{storedStem}\" not imported: {e.Message}");
+            }
+        }
+
+        // "24px" -> 24, anything else -> 0
+        private static int SizeOf(string folderName)
+        {
+            if (folderName != null && folderName.EndsWith("px", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(folderName.Substring(0, folderName.Length - 2), out int size) && size > 0 && size <= MaxDimension)
+            {
+                return size;
+            }
+            return 0;
+        }
+
+        // The stored icon in the size closest to (at least) pixelSize when an icon set was
+        // imported; otherwise the single stored PNG.
+        public static BitmapSource Load(string name, double pixelSize)
+        {
+            if (string.IsNullOrWhiteSpace(name) || pixelSize <= 0 || !Directory.Exists(Folder))
+            {
+                return Load(name);
+            }
+
+            string stem = Path.GetFileNameWithoutExtension(name);
+            var sizes = Directory.GetFiles(Folder, stem + "@*.png")
+                .Select(f => (file: Path.GetFileName(f), size: int.TryParse(Path.GetFileNameWithoutExtension(f).Substring(stem.Length + 1), out int s) ? s : 0))
+                .Where(v => v.size > 0)
+                .OrderBy(v => v.size)
+                .ToList();
+            if (sizes.Count == 0)
+            {
+                return Load(name);
+            }
+
+            var best = sizes.FirstOrDefault(v => v.size >= Math.Round(pixelSize));
+            return Load(best.file ?? sizes.Last().file) ?? Load(name);
         }
 
         // The stored icon, or null (no icon set, or it can't be read).
@@ -105,6 +176,18 @@ namespace RetroBar.Utilities
                 ShellLogger.Warning($"UXUI-Extreme: custom icon \"{name}\" can't be used, keeping the original: {e.Message}");
                 return null;
             }
+        }
+
+        // How many device pixels an icon image is drawn at (theme size, taskbar scale and DPI).
+        public static double DevicePixels(System.Windows.FrameworkElement image)
+        {
+            double width = (double)image.GetValue(System.Windows.FrameworkElement.WidthProperty);
+            if (double.IsNaN(width) || width <= 0)
+            {
+                width = 16;
+            }
+            double dpi = System.Windows.Media.VisualTreeHelper.GetDpi(image).DpiScaleX;
+            return width * dpi * ScaleModel.TransformScale;
         }
 
         private static BitmapSource Decode(byte[] bytes)

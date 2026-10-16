@@ -1,0 +1,40 @@
+// RetroBar-Extreme example style: Diamond Plate.
+// Shows: an industrial diamond-plate texture, hazard-yellow accents and flashing buttons,
+// thick bar and tray borders.
+{
+  "name": "Diamond Plate",
+  "parts": {
+    "bar": {
+      "background": { "texture": "diamond", "lut": [ "#3a3e42", "#8a9096", "#d0d6dc" ], "scale": 1, "contrast": 1 },
+      "border": "#ffcc00"
+    },
+    "tray": {
+      "background": { "angle": 90, "stops": [ "#2a2e32", "#1a1c1e" ] },
+      "border": "#ffcc00"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#5a6066", "#3a3e42" ] },
+      "border": "#1a1c1e",
+      "foreground": "#ffffff"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#6a7076", "#4a4e52" ] },
+      "border": "#ffcc00"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#2a2e32", "#3a3e42" ] },
+      "border": "#ffcc00",
+      "foreground": "#ffcc00"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ffe040", "#ffaa00" ] },
+      "border": "#000000",
+      "foreground": "#000000"
+    },
+    "clock": { "foreground": "#ffcc00" },
+    "bevel": { "highlight": "#d0d6dc", "light": "#8a9096", "shadow": "#1a1c1e", "darkShadow": "#000000" }
+  },
+  "palette": [ "#5a6066", "#ffcc00", "#1a1c1e", "#d0d6dc", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#ffcc00" },
+  "borders": { "bar": 2, "tray": 3 }
+}

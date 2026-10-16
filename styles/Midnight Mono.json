@@ -1,0 +1,41 @@
+// RetroBar-Extreme example style: Midnight Mono.
+// Shows: a minimal flat dark look: solid greys, no borders on the bar, buttons or Start
+// button, and a single white accent. Good with the "Icon only" task button width and a
+// vertical Start button.
+{
+  "name": "Midnight Mono",
+  "parts": {
+    "bar": {
+      "background": "#16181a",
+      "border": "#16181a"
+    },
+    "tray": {
+      "background": "#101112",
+      "border": "#101112"
+    },
+    "button": {
+      "background": "#202326",
+      "border": "#202326",
+      "foreground": "#c8cacc"
+    },
+    "buttonHover": {
+      "background": "#2c3034",
+      "border": "#2c3034"
+    },
+    "buttonActive": {
+      "background": "#3a3e42",
+      "border": "#3a3e42",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": "#e8e8e8",
+      "border": "#e8e8e8",
+      "foreground": "#101112"
+    },
+    "clock": { "foreground": "#ffffff" },
+    "bevel": { "highlight": "#2c3034", "light": "#202326", "shadow": "#101112", "darkShadow": "#000000" }
+  },
+  "palette": [ "#202326", "#ffffff", "#16181a", "#3a3e42", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#3a3e42" },
+  "borders": { "bar": 0, "button": 0, "buttonActive": 0, "buttonFlashing": 0 }
+}

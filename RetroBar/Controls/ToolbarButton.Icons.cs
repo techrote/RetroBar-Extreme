@@ -33,7 +33,7 @@ namespace RetroBar.Controls
 
         private void ApplyCustomIcon()
         {
-            BitmapSource icon = DataContext is ShellItem item ? CustomIcons.Load(CustomIcons.QuickLaunchIcon(item.Path)) : null;
+            BitmapSource icon = DataContext is ShellItem item ? CustomIcons.Load(CustomIcons.QuickLaunchIcon(item.Path), CustomIcons.DevicePixels(ToolbarIcon)) : null;
 
             if (icon != null)
             {

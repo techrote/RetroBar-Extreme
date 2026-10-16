@@ -1,0 +1,38 @@
+// RetroBar-Extreme example style: Marble Halls.
+// Shows: a light marble texture with turned veins, gold accents and dark text on a light bar.
+{
+  "name": "Marble Halls",
+  "parts": {
+    "bar": {
+      "background": { "texture": "marble", "lut": [ "#9a958c", "#d8d3ca", "#f4f0e8" ], "scale": 2, "contrast": 0.8, "angle": 20 },
+      "border": "#b08a30"
+    },
+    "tray": {
+      "background": { "texture": "marble", "lut": [ "#4a463e", "#7a756c", "#a8a398" ], "scale": 1.5, "contrast": 0.8, "angle": 60 },
+      "border": "#b08a30"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#fbf8f0", "#e0dace" ] },
+      "border": "#8a826e",
+      "foreground": "#2a2418"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#fffcf4", "#ece6d8" ] },
+      "border": "#b08a30"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#e8c870", "#b08a30" ] },
+      "border": "#6a5010",
+      "foreground": "#1a1408"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ff9a60", "#d05020" ] },
+      "border": "#6a2008",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#f4f0e8" },
+    "bevel": { "highlight": "#ffffff", "light": "#f0ece4", "shadow": "#8a826e", "darkShadow": "#4a463e" }
+  },
+  "palette": [ "#e0dace", "#b08a30", "#f4f0e8", "#2a2418", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#b08a30" }
+}

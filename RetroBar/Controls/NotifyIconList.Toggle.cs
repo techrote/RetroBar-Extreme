@@ -64,7 +64,8 @@ namespace RetroBar.Controls
             picture.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
             picture.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
             picture.SetValue(UIElement.RenderTransformOriginProperty, new Point(0.5, 0.5));
-            picture.SetValue(RenderOptions.BitmapScalingModeProperty, BitmapScalingMode.NearestNeighbor);
+            // Crisp at whole-number scales (pixel art stays pixel art), smooth otherwise.
+            picture.SetValue(RenderOptions.BitmapScalingModeProperty, unit == Math.Round(unit) ? BitmapScalingMode.NearestNeighbor : BitmapScalingMode.HighQuality);
             root.AppendChild(picture);
             template.VisualTree = root;
 

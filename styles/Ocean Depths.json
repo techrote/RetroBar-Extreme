@@ -1,0 +1,39 @@
+// RetroBar-Extreme example style: Ocean Depths.
+// Shows: a three-stop vertical gradient bar, a cellular "caustics" texture on the tray, and
+// teal accents.
+{
+  "name": "Ocean Depths",
+  "parts": {
+    "bar": {
+      "background": { "angle": 90, "stops": [ "#1a6a8a", "#0c3a5a", "#041a30" ] },
+      "border": "#40d0e0"
+    },
+    "tray": {
+      "background": { "texture": "cells", "lut": [ "#02101e", "#0c3a5a", "#40a8c0" ], "scale": 1.5, "contrast": 1 },
+      "border": "#40d0e0"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#1c5878", "#0e3450" ] },
+      "border": "#041a30",
+      "foreground": "#e0f8ff"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#2a7898", "#164868" ] },
+      "border": "#40d0e0"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#06223a", "#0c3a5a" ] },
+      "border": "#40d0e0",
+      "foreground": "#60f0ff"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ff9060", "#c04820" ] },
+      "border": "#401000",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#60f0ff" },
+    "bevel": { "highlight": "#60b0d0", "light": "#2a7898", "shadow": "#041a30", "darkShadow": "#000810" }
+  },
+  "palette": [ "#1c5878", "#40d0e0", "#041a30", "#60f0ff", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#1a8aa8" }
+}

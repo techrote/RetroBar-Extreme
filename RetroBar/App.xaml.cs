@@ -60,6 +60,7 @@ namespace RetroBar
             _dictionaryManager.SetLanguageFromSettings();
             loadTheme();
             TaskbarTextStyler.Initialize(); // UXUI-Extreme (UX-002, UX-005)
+            TaskbarImageQuality.Initialize(); // UXUI-Extreme: smooth icon scaling
             StyleLayer.Initialize(); // UXUI-Extreme (UX-003): reload when Style.json changes
             // UXUI-Extreme (UX-013): per-part borders are baked into the theme, so a style that
             // changes them needs the theme reloaded and the taskbars rebuilt.

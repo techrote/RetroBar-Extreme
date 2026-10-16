@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+// Original procedural icons for RetroBar-Extreme (UX-015/016 examples). Drawn on a 32-unit canvas
+// and rendered at each size, so every size is drawn fresh rather than resampled.
+static class P
+{
+    static Color C(string hex) => (Color)ColorConverter.ConvertFromString(hex);
+    static Brush Lin(string a, string b, double angle = 90) { var g = new LinearGradientBrush(C(a), C(b), angle); g.Freeze(); return g; }
+    static Brush Rad(string a, string b, double cx = 0.35, double cy = 0.3) { var g = new RadialGradientBrush(C(a), C(b)) { GradientOrigin = new Point(cx, cy), Center = new Point(0.5, 0.5), RadiusX = 0.6, RadiusY = 0.6 }; g.Freeze(); return g; }
+    static Brush S(string hex) { var b = new SolidColorBrush(C(hex)); b.Freeze(); return b; }
+    static Pen Pn(string hex, double w) { var p = new Pen(S(hex), w) { LineJoin = PenLineJoin.Round, StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }; p.Freeze(); return p; }
+    static Geometry G(string d) => Geometry.Parse(d);
+
+    static readonly Dictionary<string, Action<DrawingContext>> Start = new()
+    {
+        ["orb-chrome"] = dc => { dc.DrawEllipse(Rad("#ffffff", "#5a6066", 0.35, 0.25), Pn("#2b2f33", 1.5), new Point(16, 16), 14, 14); dc.DrawEllipse(Lin("#ccffffff", "#00ffffff"), null, new Point(16, 10), 9, 5); },
+        ["orb-neon"] = dc => { dc.DrawEllipse(Rad("#5a1fb0", "#12052a", 0.5, 0.5), Pn("#42fffb", 2.5), new Point(16, 16), 13, 13); dc.DrawEllipse(null, Pn("#8c24ff", 1.5), new Point(16, 16), 8, 8); dc.DrawEllipse(S("#42fffb"), null, new Point(16, 16), 3, 3); },
+        ["star-gold"] = dc => dc.DrawGeometry(Lin("#fff3a0", "#d08a00"), Pn("#6b4200", 1.5), G("M16,2 L20,12 L30,12 L22,19 L25,30 L16,23 L7,30 L10,19 L2,12 L12,12 Z")),
+        ["bolt"] = dc => dc.DrawGeometry(Lin("#fffb80", "#ff9a00"), Pn("#5e2d0b", 1.5), G("M19,2 L6,18 L14,18 L11,30 L26,12 L17,12 Z")),
+        ["flame"] = dc => { dc.DrawGeometry(Lin("#ffd040", "#e02000"), Pn("#5e1500", 1.2), G("M16,2 C22,9 27,14 26,21 C25,27 21,30 16,30 C11,30 6,27 6,21 C6,15 11,13 12,7 C14,10 15,12 16,14 C17,10 17,6 16,2 Z")); dc.DrawGeometry(Lin("#fffbe0", "#ffb000"), null, G("M16,16 C19,19 21,22 20,25 C19,28 13,28 12,25 C11,22 14,20 16,16 Z")); },
+        ["gear"] = dc => Gear(dc, "#c0c6cc", "#4e545a"),
+        ["pixel-heart"] = dc => Pixels(dc, new[] { "..XX..XX..", ".XXXXXXXX.", "XXXXXXXXXX", "XXXXXXXXXX", ".XXXXXXXX.", "..XXXXXX..", "...XXXX...", "....XX...." }, "#ff3060"),
+        ["rocket"] = dc => { dc.DrawGeometry(Lin("#ffffff", "#9aa4ae", 0), Pn("#2b2f33", 1.2), G("M16,2 C21,6 23,12 22,20 L10,20 C9,12 11,6 16,2 Z")); dc.DrawEllipse(S("#42a5ff"), Pn("#2b2f33", 1), new Point(16, 11), 3, 3); dc.DrawGeometry(S("#e04020"), Pn("#2b2f33", 1), G("M10,16 L5,24 L10,22 Z M22,16 L27,24 L22,22 Z")); dc.DrawGeometry(Lin("#ffd040", "#ff4000"), null, G("M12,21 L20,21 L16,30 Z")); },
+    };
+
+    static readonly Dictionary<string, Action<DrawingContext>> Quick = new()
+    {
+        ["globe"] = dc => { dc.DrawEllipse(Rad("#9ad8ff", "#1660c0"), Pn("#0b3060", 1.5), new Point(16, 16), 13, 13); var p = Pn("#d0f0ff", 1.3); dc.DrawEllipse(null, p, new Point(16, 16), 5.5, 13); dc.DrawLine(p, new Point(3, 16), new Point(29, 16)); dc.DrawLine(p, new Point(6, 9), new Point(26, 9)); dc.DrawLine(p, new Point(6, 23), new Point(26, 23)); },
+        ["folder"] = dc => { dc.DrawGeometry(Lin("#ffd870", "#e0a020"), Pn("#7a5200", 1.2), G("M3,9 L12,9 L14,6 L29,6 L29,26 L3,26 Z")); dc.DrawGeometry(Lin("#fff0a0", "#f0b830"), Pn("#7a5200", 1.2), G("M3,12 L29,12 L29,26 L3,26 Z")); },
+        ["terminal"] = dc => { dc.DrawRoundedRectangle(S("#101418"), Pn("#5a6066", 2), new Rect(3, 5, 26, 22), 3, 3); dc.DrawRectangle(S("#3a3f44"), null, new Rect(4, 6, 24, 4)); dc.DrawGeometry(null, Pn("#40ff80", 2.2), G("M8,14 L12,18 L8,22")); dc.DrawLine(Pn("#40ff80", 2.2), new Point(15, 22), new Point(22, 22)); },
+        ["note"] = dc => { dc.DrawGeometry(Lin("#ffffff", "#dde4ea"), Pn("#5a6066", 1.2), G("M6,3 L21,3 L27,9 L27,29 L6,29 Z")); dc.DrawGeometry(S("#b0bcc8"), Pn("#5a6066", 1), G("M21,3 L21,9 L27,9 Z")); var p = Pn("#5a8ad0", 1.4); foreach (int y in new[] { 14, 18, 22, 26 }) dc.DrawLine(p, new Point(9, y), new Point(24, y)); },
+        ["music"] = dc => { dc.DrawGeometry(Lin("#e080ff", "#8c24ff"), Pn("#2a0858", 1.2), G("M12,6 L27,3 L27,22 A4,3.5 0 1 1 23,18.5 L23,9.5 L16,11 L16,25 A4,3.5 0 1 1 12,21.5 Z")); },
+        ["gamepad"] = dc => { dc.DrawGeometry(Lin("#5a6066", "#2b2f33"), Pn("#101418", 1.2), G("M7,10 L25,10 C29,10 31,16 30,22 C29,26 25,26 23,22 L9,22 C7,26 3,26 2,22 C1,16 3,10 7,10 Z")); var w = Pn("#e8e4dc", 2); dc.DrawLine(w, new Point(8, 13), new Point(8, 19)); dc.DrawLine(w, new Point(5, 16), new Point(11, 16)); dc.DrawEllipse(S("#ff4060"), null, new Point(22, 14), 1.8, 1.8); dc.DrawEllipse(S("#42fffb"), null, new Point(25, 17), 1.8, 1.8); },
+        ["camera"] = dc => { dc.DrawRoundedRectangle(Lin("#5a6066", "#2b2f33"), Pn("#101418", 1.2), new Rect(3, 9, 26, 18), 3, 3); dc.DrawRectangle(S("#3a3f44"), Pn("#101418", 1), new Rect(11, 5, 10, 5)); dc.DrawEllipse(Rad("#9ad8ff", "#102040"), Pn("#c0c6cc", 2), new Point(16, 18), 6, 6); dc.DrawEllipse(S("#ffd040"), null, new Point(25, 12), 1.5, 1.5); },
+        ["settings"] = dc => Gear(dc, "#9ad8ff", "#1660c0"),
+    };
+
+    // Expand/collapse arrows pointing left (collapsed state); RetroBar mirrors them when expanded.
+    static readonly Dictionary<string, (int w, int h, Action<DrawingContext> draw)> Toggle = new()
+    {
+        ["chevron-steel"] = (16, 24, dc => { dc.DrawRoundedRectangle(Lin("#8a9096", "#3a3f44"), Pn("#1f2225", 1), new Rect(0.5, 0.5, 15, 23), 4, 4); dc.DrawGeometry(null, Pn("#e8e4dc", 2.2), G("M10,7 L5,12 L10,17")); }),
+        ["chevron-neon"] = (14, 22, dc => { dc.DrawGeometry(null, Pn("#8c24ff", 4), G("M10,4 L3,11 L10,18")); dc.DrawGeometry(null, Pn("#42fffb", 1.8), G("M10,4 L3,11 L10,18")); }),
+        ["triangle-amber"] = (12, 20, dc => dc.DrawGeometry(Lin("#ffd060", "#ff8a00", 0), Pn("#5e2d0b", 1), G("M11,1 L1,10 L11,19 Z"))),
+        ["pixel-arrow"] = (6, 8, dc => Pixels(dc, new[] { "....XX", "...XX.", "..XX..", ".XX...", ".XX...", "..XX..", "...XX.", "....XX" }, "#e8e4dc", 6, 8)),
+        ["orb-button"] = (20, 20, dc => { dc.DrawEllipse(Rad("#9ad8ff", "#1660c0"), Pn("#0b3060", 1), new Point(10, 10), 9.5, 9.5); dc.DrawGeometry(null, Pn("#ffffff", 2), G("M12,6 L8,10 L12,14")); }),
+    };
+
+    static void Gear(DrawingContext dc, string light, string dark)
+    {
+        var teeth = new StreamGeometry();
+        using (var ctx = teeth.Open())
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                double a = i * Math.PI / 8, a2 = (i + 1) * Math.PI / 8, r = i % 2 == 0 ? 14 : 10.5;
+                var p1 = new Point(16 + r * Math.Cos(a), 16 + r * Math.Sin(a));
+                var p2 = new Point(16 + r * Math.Cos(a2), 16 + r * Math.Sin(a2));
+                if (i == 0) ctx.BeginFigure(p1, true, true); else ctx.LineTo(p1, true, true);
+                ctx.LineTo(p2, true, true);
+            }
+        }
+        teeth.Freeze();
+        dc.DrawGeometry(Lin(light, dark), Pn("#101418", 1.2), teeth);
+        dc.DrawEllipse(S("#101418"), null, new Point(16, 16), 4, 4);
+    }
+
+    static void Pixels(DrawingContext dc, string[] rows, string fill, double w = 32, double h = 32)
+    {
+        double cell = Math.Min(w / rows[0].Length, h / rows.Length);
+        double ox = (w - cell * rows[0].Length) / 2, oy = (h - cell * rows.Length) / 2;
+        for (int y = 0; y < rows.Length; y++)
+            for (int x = 0; x < rows[y].Length; x++)
+                if (rows[y][x] == 'X') dc.DrawRectangle(S(fill), null, new Rect(ox + x * cell, oy + y * cell, cell, cell));
+    }
+
+    static BitmapSource Render(int width, int height, double canvasW, double canvasH, Action<DrawingContext> draw, bool pixel)
+    {
+        var dv = new DrawingVisual();
+        if (pixel) RenderOptions.SetEdgeMode(dv, EdgeMode.Aliased);
+        using (var dc = dv.RenderOpen())
+        {
+            dc.PushTransform(new ScaleTransform(width / canvasW, height / canvasH));
+            draw(dc);
+            dc.Pop();
+        }
+        var bmp = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bmp.Render(dv);
+        bmp.Freeze();
+        return bmp;
+    }
+
+    static void Save(BitmapSource b, string path)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        var e = new PngBitmapEncoder();
+        e.Frames.Add(BitmapFrame.Create(b));
+        using var f = File.Create(path);
+        e.Save(f);
+    }
+
+    [STAThread]
+    static void Main(string[] a)
+    {
+        string root = a[0];
+        int[] sizes = { 16, 24, 32, 48 };
+        var sheet = new List<(string label, BitmapSource img)>();
+        foreach (var (group, set) in new[] { ("start", Start), ("quicklaunch", Quick) })
+            foreach (var icon in set)
+                foreach (int s in sizes)
+                {
+                    var img = Render(s, s, 32, 32, icon.Value, icon.Key.StartsWith("pixel"));
+                    Save(img, Path.Combine(root, group, s + "px", icon.Key + ".png"));
+                    sheet.Add(($"{group}/{icon.Key}", img));
+                }
+        foreach (var t in Toggle)
+            foreach (int scale in new[] { 1, 2 })
+            {
+                int mult = t.Key.StartsWith("pixel") ? scale * 2 : scale; // the pixel arrow is drawn on a 6x8 grid
+                var img = Render(t.Value.w * mult, t.Value.h * mult, t.Value.w, t.Value.h, t.Value.draw, t.Key.StartsWith("pixel"));
+                Save(img, Path.Combine(root, "toggle", scale == 1 ? "100%" : "200%", t.Key + ".png"));
+                sheet.Add(($"toggle/{t.Key}", img));
+            }
+
+        // Contact sheet: every icon at every size, on light and dark backgrounds.
+        var names = sheet.Select(x => x.label).Distinct().ToList();
+        int rowH = 56, width = 560;
+        var dv = new DrawingVisual();
+        using (var dc = dv.RenderOpen())
+        {
+            dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, width, names.Count * rowH));
+            for (int i = 0; i < names.Count; i++)
+            {
+                dc.DrawRectangle(S(i % 2 == 0 ? "#2b2f33" : "#3a3f44"), null, new Rect(width / 2 + 40, i * rowH, width / 2 - 40, rowH));
+                dc.DrawText(new FormattedText(names[i], System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe UI"), 11, Brushes.Black, 1), new Point(4, i * rowH + 20));
+                double x = 120;
+                foreach (var img in sheet.Where(s => s.label == names[i]).Select(s => s.img))
+                {
+                    dc.DrawImage(img, new Rect(x, i * rowH + 4, img.PixelWidth, img.PixelHeight));
+                    dc.DrawImage(img, new Rect(x + width / 2 - 80, i * rowH + 4, img.PixelWidth, img.PixelHeight));
+                    x += Math.Max(img.PixelWidth + 4, 20);
+                }
+            }
+        }
+        var bmp = new RenderTargetBitmap(width, names.Count * rowH, 96, 96, PixelFormats.Pbgra32);
+        bmp.Render(dv);
+        Save(bmp, Path.Combine(a[1], "icon-sheet.png"));
+        Console.WriteLine($"{sheet.Count} images, {names.Count} icons");
+    }
+}
