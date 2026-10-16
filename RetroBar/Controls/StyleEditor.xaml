@@ -15,8 +15,7 @@
                               Width="193"
                               HorizontalAlignment="Right"
                               IsEditable="True"
-                              SelectionChanged="CboStyleName_SelectionChanged"
-                              LostKeyboardFocus="CboStyleName_LostKeyboardFocus" />
+                              SelectionChanged="CboStyleName_SelectionChanged" />
                 </DockPanel>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"

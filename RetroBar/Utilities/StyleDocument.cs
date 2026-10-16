@@ -251,7 +251,8 @@ namespace RetroBar.Utilities
             {
                 case SolidColorBrush solid:
                     return Solid(solid.Color);
-                case LinearGradientBrush linear when linear.GradientStops.Count > 0 && linear.MappingMode == BrushMappingMode.RelativeToBoundingBox:
+                // Absolute (pixel) gradients keep their direction; offsets are along the line either way.
+                case LinearGradientBrush linear when linear.GradientStops.Count > 0 && linear.StartPoint != linear.EndPoint:
                     double angle = Math.Atan2(linear.EndPoint.Y - linear.StartPoint.Y, linear.EndPoint.X - linear.StartPoint.X) * 180 / Math.PI;
                     return new BrushSpec
                     {

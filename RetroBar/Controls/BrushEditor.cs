@@ -164,7 +164,7 @@ namespace RetroBar.Controls
 
             if (_value.Stops.Count < MAX_STOPS)
             {
-                var add = new Button { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 2), Padding = new Thickness(6, 0, 6, 0) };
+                var add = new Button { HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 0, Margin = new Thickness(0, 2, 0, 2), Padding = new Thickness(6, 0, 6, 0) };
                 add.SetResourceReference(ContentControl.ContentProperty, "uxui_style_add_stop");
                 add.Click += (s, e) =>
                 {
@@ -208,6 +208,7 @@ namespace RetroBar.Controls
             var swatch = new Button
             {
                 Width = 36,
+                MinWidth = 0,
                 Height = 18,
                 Margin = new Thickness(0, 0, 4, 0),
                 Background = new SolidColorBrush(get()),
@@ -297,7 +298,7 @@ namespace RetroBar.Controls
 
                 if (_value.Stops.Count > 1)
                 {
-                    var remove = new Button { Content = "×", Width = 20, Margin = new Thickness(6, 0, 0, 0), ToolTip = FindResource("uxui_style_remove_stop") };
+                    var remove = new Button { Content = "×", Width = 20, MinWidth = 0, Padding = new Thickness(0), Margin = new Thickness(6, 0, 0, 0), ToolTip = FindResource("uxui_style_remove_stop") };
                     remove.Click += (s, e) =>
                     {
                         _value.Stops.RemoveAt(index);

@@ -149,16 +149,6 @@ namespace RetroBar.Controls
             UpdateButtons();
         }
 
-        private void CboStyleName_LostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
-        {
-            string name = cboStyleName.Text?.Trim() ?? "";
-            if (name != _style.Name)
-            {
-                _style.Name = name;
-                ScheduleSave();
-            }
-        }
-
         private void ScheduleSave()
         {
             _saveTimer.Stop();
