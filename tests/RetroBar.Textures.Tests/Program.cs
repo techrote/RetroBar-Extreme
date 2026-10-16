@@ -37,6 +37,7 @@ internal static partial class Program
             ("Bounded custom PNG decoding, replacement and fail-open", CustomPng),
             ("Real WPF tiling at fractional DPI, texture and legacy scales", Tiling),
             ("All part mappings, vertical brushes and per-property isolation", Resources),
+            ("Overlay-only fallback, reserved filenames and linked directories", EdgeCases),
             ("Compiled editor, mode transitions, locale input and live palette", Editor),
         })
         {

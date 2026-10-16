@@ -51,7 +51,16 @@ namespace RetroBar.Utilities
                 name.EndsWith(".png", StringComparison.OrdinalIgnoreCase) && name.Length > 4 &&
                 !name.StartsWith(".", StringComparison.Ordinal) && name == name.Trim() &&
                 name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 &&
-                name.IndexOfAny(new[] { '/', '\\', ':' }) < 0 && !Path.IsPathRooted(name);
+                name.IndexOfAny(new[] { '/', '\\', ':' }) < 0 && !Path.IsPathRooted(name) && !IsDeviceName(name);
+        }
+
+        private static bool IsDeviceName(string name)
+        {
+            // A .png extension does not stop Windows resolving a reserved DOS device.
+            string stem = name.Split('.')[0].TrimEnd().ToUpperInvariant();
+            if (stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL" || stem == "CONIN$" || stem == "CONOUT$") return true;
+            return stem.Length == 4 && (stem.StartsWith("COM", StringComparison.Ordinal) || stem.StartsWith("LPT", StringComparison.Ordinal)) &&
+                "0123456789¹²³".IndexOf(stem[3]) >= 0;
         }
 
         private static void CheckRange(double number, double min, double max, string name)
@@ -63,8 +72,10 @@ namespace RetroBar.Utilities
         public static TextureSpec Parse(JsonElement value)
         {
             var spec = new TextureSpec();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (JsonProperty property in value.EnumerateObject())
             {
+                if (!seen.Add(property.Name)) throw new FormatException($"duplicate texture property \"{property.Name}\"");
                 if (property.Name != "texture" && property.Name != "lut" && property.Name != "scale" && property.Name != "contrast")
                     throw new FormatException($"unknown texture property \"{property.Name}\"");
             }

@@ -188,6 +188,10 @@ namespace RetroBar.Utilities
                     continue;
                 }
 
+                // UXUI-Extreme (UX-011): even an overlay-only custom theme must validate
+                // its texture before clearing anything. No Fill target may exist here.
+                if (target.Role == StyleMap.Role.Clear && fill.IsTexture) _ = normal();
+
                 dictionary[target.Key] = target.Role switch
                 {
                     StyleMap.Role.Clear => Brushes.Transparent,
