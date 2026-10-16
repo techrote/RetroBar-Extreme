@@ -13,7 +13,7 @@ namespace RetroBar.Utilities
     // UXUI-Extreme (UX-003, UX-004): a style file in memory. Read by the style layer, edited by
     // the Colours tab in Properties, saved as Style.json (the active style) or as a named style
     // in %LOCALAPPDATA%\RetroBar\Styles\. The file format is described in StyleLayer.
-    public class StyleDocument
+    public partial class StyleDocument // UXUI-Extreme (UX-010): Start image settings in StyleDocument.Start.cs.
     {
         public string Name = "";
 
@@ -32,7 +32,7 @@ namespace RetroBar.Utilities
         public const int PALETTE_SIZE = 12;
         public readonly Color?[] Palette = new Color?[PALETTE_SIZE];
 
-        public bool IsEmpty => Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
+        public bool IsEmpty => !StartRecolour.HasValue && Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
 
         public BrushSpec Get(string part, string property)
         {
@@ -63,7 +63,7 @@ namespace RetroBar.Utilities
 
         public StyleDocument Clone()
         {
-            var copy = new StyleDocument { Name = Name };
+            var copy = new StyleDocument { Name = Name, StartRecolour = StartRecolour };
             Array.Copy(Palette, copy.Palette, PALETTE_SIZE);
             foreach (var part in Parts)
             {
@@ -105,20 +105,21 @@ namespace RetroBar.Utilities
             using (document)
             {
                 JsonElement root = document.RootElement;
-                if (root.ValueKind != JsonValueKind.Object ||
-                    !root.TryGetProperty("parts", out JsonElement parts) ||
-                    parts.ValueKind != JsonValueKind.Object)
+                if (root.ValueKind != JsonValueKind.Object)
                 {
-                    throw new FormatException("no \"parts\" object");
+                    throw new FormatException("expected a style object");
                 }
+                // UXUI-Extreme (UX-010): also allow a Start-only style without brush parts.
+                IEnumerable<JsonProperty> parts = ReadParts(root);
 
                 var style = new StyleDocument();
+                style.ReadStart(root, warn);
                 if (root.TryGetProperty("name", out JsonElement name) && name.ValueKind == JsonValueKind.String)
                 {
                     style.Name = name.GetString();
                 }
 
-                foreach (JsonProperty part in parts.EnumerateObject())
+                foreach (JsonProperty part in parts)
                 {
                     if (!StyleMap.PartProperties.TryGetValue(part.Name, out string[] properties) || part.Value.ValueKind != JsonValueKind.Object)
                     {
@@ -192,6 +193,7 @@ namespace RetroBar.Utilities
                 }
 
                 writer.WriteEndObject();
+                WriteStart(writer); // UXUI-Extreme (UX-010): omitted when the theme image is unchanged.
 
                 // UX-009: palette slots, empty ones as null so positions are kept.
                 if (Palette.Any(c => c.HasValue))
