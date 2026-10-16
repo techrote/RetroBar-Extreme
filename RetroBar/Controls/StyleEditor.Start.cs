@@ -28,6 +28,9 @@ namespace RetroBar.Controls
             Array.Clear(_style.Palette, 0, _style.Palette.Length);
             for (int i = 0; i < colours.Length && i < _style.Palette.Length; i++) _style.Palette[i] = colours[i];
             _palette?.ShowPalette(_style.Palette);
+            // UXUI-Extreme (UX-011): palette-backed textures also use extracted Start colours.
+            foreach (object child in panelProperties.Children)
+                if (child is BrushEditor editor) editor.RefreshTexturePreview();
             SaveActive();
             // Applying a generated scheme remains the existing, separately confirmed action.
         }

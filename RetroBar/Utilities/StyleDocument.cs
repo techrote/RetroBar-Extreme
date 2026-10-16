@@ -148,7 +148,7 @@ namespace RetroBar.Utilities
                     }
                 }
 
-                // UX-009: the palette is for the editor only; the style layer ignores it.
+                // UXUI-Extreme (UX-011): palette references resolve after the complete style is read.
                 if (root.TryGetProperty("palette", out JsonElement palette) && palette.ValueKind == JsonValueKind.Array)
                 {
                     int slot = 0;
@@ -254,7 +254,7 @@ namespace RetroBar.Utilities
         }
     }
 
-    // A solid colour or a linear gradient.
+    // A solid colour, linear gradient, or LUT texture (UXUI-Extreme: UX-011).
     public class BrushSpec
     {
         public Color Color = Colors.Gray;
@@ -265,7 +265,10 @@ namespace RetroBar.Utilities
         // Degrees: 0 = left to right, 90 = top to bottom.
         public double Angle = 90;
 
-        public bool IsGradient => Stops != null;
+        // UXUI-Extreme (UX-011): separate data, never disguised as a gradient.
+        public TextureSpec Texture;
+        public bool IsTexture => Texture != null;
+        public bool IsGradient => !IsTexture && Stops != null;
 
         public static BrushSpec Solid(Color color) => new BrushSpec { Color = color };
 
@@ -286,6 +289,7 @@ namespace RetroBar.Utilities
                 Color = Color,
                 Angle = Angle,
                 Stops = Stops?.Select(s => new GradientStop(s.Color, s.Offset)).ToList(),
+                Texture = Texture?.Clone(), // UXUI-Extreme (UX-011): LUT list is independently editable.
             };
         }
 
@@ -318,9 +322,15 @@ namespace RetroBar.Utilities
                 return Solid(ParseColor(value.GetString()));
             }
 
+            // UXUI-Extreme (UX-011): parse without touching the filesystem or resolving palette order.
+            if (value.ValueKind == JsonValueKind.Object && value.TryGetProperty("texture", out _))
+            {
+                return new BrushSpec { Texture = TextureSpec.Parse(value) };
+            }
+
             if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty("stops", out JsonElement stops) || stops.ValueKind != JsonValueKind.Array)
             {
-                throw new FormatException("expected a colour such as \"#3a3f44\", or a gradient { \"angle\": 90, \"stops\": [ \"#colour\", \"#colour\" ] }");
+                throw new FormatException("expected a colour such as \"#3a3f44\", a gradient, or a texture with a LUT");
             }
 
             var spec = new BrushSpec { Stops = new List<GradientStop>() };
@@ -404,6 +414,11 @@ namespace RetroBar.Utilities
 
         public void Write(Utf8JsonWriter writer)
         {
+            if (IsTexture) // UXUI-Extreme (UX-011)
+            {
+                Texture.Write(writer);
+                return;
+            }
             if (!IsGradient)
             {
                 writer.WriteStringValue(FormatColor(Color));
@@ -436,8 +451,9 @@ namespace RetroBar.Utilities
         }
 
         // rotate: extra degrees, for backgrounds drawn on a vertical taskbar.
-        public Brush ToBrush(double rotate = 0)
+        public Brush ToBrush(double rotate = 0, IEnumerable<Color?> palette = null)
         {
+            if (IsTexture) return LutTextures.Create(Texture, palette, rotate); // UXUI-Extreme (UX-011)
             Brush brush;
 
             if (!IsGradient)
@@ -459,6 +475,7 @@ namespace RetroBar.Utilities
 
         public override string ToString()
         {
+            if (IsTexture) return Texture.ToString(); // UXUI-Extreme (UX-011)
             return IsGradient
                 ? string.Join(" → ", Stops.OrderBy(s => s.Offset).Select(s => FormatColor(s.Color))) + $", {Angle.ToString(CultureInfo.CurrentCulture)}°"
                 : FormatColor(Color);
