@@ -60,6 +60,12 @@
     <system:String x:Key="uxui_icon_failed">This icon can't be used: {0}</system:String>
     <system:String x:Key="uxui_ql_change_icon">Change &amp;icon...</system:String>
     <system:String x:Key="uxui_ql_reset_icon">&amp;Reset icon</system:String>
+    <!-- UXUI-Extreme (UX-016): notification area toggle -->
+    <system:String x:Key="uxui_toggle_heading">Notification area toggle</system:String>
+    <system:String x:Key="uxui_toggle_image">Image:</system:String>
+    <system:String x:Key="uxui_toggle_flip">Mirror the image while the area is expanded</system:String>
+    <system:String x:Key="uxui_toggle_margin">Custom margins (px at 100%):</system:String>
+    <system:String x:Key="uxui_toggle_margin_tip">Space kept clear around the toggle: left, top, right, bottom (e.g. 2,0,2,0), or one or two numbers.</system:String>
     <!-- UXUI-Extreme (UX-014): task buttons -->
     <system:String x:Key="uxui_taskbuttons_heading">Task buttons</system:String>
     <system:String x:Key="uxui_taskbuttons_width">Wi_dth:</system:String>

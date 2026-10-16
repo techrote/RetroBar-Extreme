@@ -489,6 +489,36 @@ namespace RetroBar.Utilities
             set => Set(ref _quickLaunchIcons, value ?? new List<QuickLaunchIconSetting>());
         }
 
+        // UXUI-Extreme (UX-016): notification area expand/collapse toggle. "" = theme image.
+        private string _trayToggleIcon = "";
+        public string TrayToggleIcon
+        {
+            get => _trayToggleIcon;
+            set => Set(ref _trayToggleIcon, value ?? "");
+        }
+
+        private bool _trayToggleFlip = true; // mirror the custom image while the area is expanded
+        public bool TrayToggleFlip
+        {
+            get => _trayToggleFlip;
+            set => Set(ref _trayToggleFlip, value);
+        }
+
+        private bool _trayToggleCustomMargin = false;
+        public bool TrayToggleCustomMargin
+        {
+            get => _trayToggleCustomMargin;
+            set => Set(ref _trayToggleCustomMargin, value);
+        }
+
+        // px at 100% scale; used when TrayToggleCustomMargin is on
+        private string _trayToggleMargin = "2,0,2,0";
+        public string TrayToggleMargin
+        {
+            get => _trayToggleMargin;
+            set => Set(ref _trayToggleMargin, value ?? "");
+        }
+
         // UXUI-Extreme (UX-014): task buttons for all apps. 0 = theme width (px at 100% scale).
         private double _taskButtonWidthPx = 0;
         public double TaskButtonWidthPx

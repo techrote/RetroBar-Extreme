@@ -164,6 +164,45 @@
                 </CheckBox>
             </StackPanel>
         </GroupBox>
+        <!-- UX-016: notification area expand/collapse toggle: custom image and margins -->
+        <GroupBox Header="{DynamicResource uxui_toggle_heading}">
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            MinWidth="0"
+                            Padding="8,0"
+                            Margin="4,1,0,1"
+                            Content="{DynamicResource uxui_icon_theme}"
+                            Click="ToggleIconReset_OnClick" />
+                    <Button DockPanel.Dock="Right"
+                            MinWidth="0"
+                            Padding="8,0"
+                            Margin="4,1,0,1"
+                            Content="{DynamicResource uxui_icon_choose}"
+                            Click="ToggleIconChoose_OnClick" />
+                    <Label>
+                        <AccessText Text="{DynamicResource uxui_toggle_image}" />
+                    </Label>
+                    <TextBlock x:Name="txtToggleIcon"
+                               TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+                <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayToggleFlip, UpdateSourceTrigger=PropertyChanged}">
+                    <Label Content="{DynamicResource uxui_toggle_flip}" />
+                </CheckBox>
+                <DockPanel>
+                    <TextBox x:Name="txtToggleMargin"
+                             DockPanel.Dock="Right"
+                             Width="110"
+                             VerticalAlignment="Center"
+                             ToolTip="{DynamicResource uxui_toggle_margin_tip}"
+                             TextChanged="TxtToggleMargin_TextChanged" />
+                    <CheckBox x:Name="chkToggleMargin"
+                              IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayToggleCustomMargin, UpdateSourceTrigger=PropertyChanged}">
+                        <Label Content="{DynamicResource uxui_toggle_margin}" />
+                    </CheckBox>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
         <!-- UX-014: task buttons for all apps, and remembered per-app settings -->
         <GroupBox Header="{DynamicResource uxui_taskbuttons_heading}">
             <StackPanel Orientation="Vertical">

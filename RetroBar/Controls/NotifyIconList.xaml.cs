@@ -46,6 +46,11 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (IsToggleSetting(e.PropertyName)) // UXUI-Extreme (UX-016)
+            {
+                ApplyToggleOverrides();
+            }
+
             if (e.PropertyName == nameof(Settings.CollapseNotifyIcons))
             {
                 if (Settings.Instance.CollapseNotifyIcons)
@@ -178,6 +183,7 @@ namespace RetroBar.Controls
         private void NotifyIconList_Loaded(object sender, RoutedEventArgs e)
         {
             SetNotificationAreaCollections();
+            ApplyToggleOverrides(); // UXUI-Extreme (UX-016)
 
             // Set up drag/drop handler
             if (dropHandler == null)

@@ -77,6 +77,7 @@ namespace RetroBar.Controls
             sldClockSpacing.Value = s.ClockLineSpacing > 0 ? s.ClockLineSpacing : SpacingSamePosition;
 
             ShowStartIcon(); // UX-015
+            ShowToggleSettings(); // UX-016
 
             // UX-014
             cboTaskWidth.SelectedIndex = s.TaskButtonWidthPx > 0 ? 1 : 0;
