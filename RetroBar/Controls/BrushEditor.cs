@@ -11,9 +11,9 @@ namespace RetroBar.Controls
     // UXUI-Extreme (UX-004): edits one style property (e.g. the task button background) in the
     // Colours tab: theme default, a colour, or a linear gradient (angle + colour stops).
     // Colours are picked with the classic Windows colour dialog or typed as #rrggbb / #aarrggbb.
-    public class BrushEditor : StackPanel
+    public partial class BrushEditor : StackPanel // UXUI-Extreme (UX-011): texture controls in BrushEditor.Textures.cs.
     {
-        private const int MODE_THEME = 0, MODE_COLOUR = 1, MODE_GRADIENT = 2;
+        private const int MODE_THEME = 0, MODE_COLOUR = 1, MODE_GRADIENT = 2, MODE_TEXTURE = 3;
         private const int MAX_STOPS = 6;
 
         private readonly ComboBox _mode = new ComboBox { Width = 110, HorizontalAlignment = HorizontalAlignment.Right };
@@ -25,11 +25,12 @@ namespace RetroBar.Controls
         // Raised when the user changes the brush; Value is null for the theme default.
         public event EventHandler Changed;
 
-        public BrushEditor(string labelResourceKey, BrushSpec value, Func<BrushSpec> themeSeed, bool usedByTheme)
+        public BrushEditor(string labelResourceKey, BrushSpec value, Func<BrushSpec> themeSeed, bool usedByTheme, Func<Color?[]> paletteSource = null)
         {
             Orientation = Orientation.Vertical;
             _themeSeed = themeSeed;
             _value = value?.Clone();
+            _paletteSource = paletteSource; // UXUI-Extreme (UX-011): always read the current style's palette.
 
             var row = new DockPanel();
             var label = new Label { VerticalAlignment = VerticalAlignment.Center, Target = _mode };
@@ -37,7 +38,7 @@ namespace RetroBar.Controls
             text.SetResourceReference(AccessText.TextProperty, labelResourceKey);
             label.Content = text;
 
-            _mode.SetResourceReference(ItemsControl.ItemsSourceProperty, "uxui_style_mode_values");
+            InitializeTextureModeLabels(); // UXUI-Extreme (UX-011): retain translated original modes.
             _mode.SelectionChanged += Mode_SelectionChanged;
             DockPanel.SetDock(_mode, Dock.Right);
             row.Children.Add(_mode);
@@ -55,7 +56,7 @@ namespace RetroBar.Controls
             Children.Add(_details);
 
             _updating = true;
-            _mode.SelectedIndex = _value == null ? MODE_THEME : _value.IsGradient ? MODE_GRADIENT : MODE_COLOUR;
+            _mode.SelectedIndex = CurrentMode;
             _updating = false;
             BuildDetails();
         }
@@ -78,10 +79,13 @@ namespace RetroBar.Controls
                     _value = null;
                     break;
                 case MODE_COLOUR:
-                    _value = BrushSpec.Solid(seed.IsGradient ? seed.Stops.OrderBy(s => s.Offset).First().Color : seed.Color);
+                    _value = BrushSpec.Solid(seed.IsTexture ? SeedColours(seed)[0] : seed.IsGradient ? seed.Stops.OrderBy(s => s.Offset).First().Color : seed.Color);
                     break;
                 case MODE_GRADIENT:
-                    _value = seed.IsGradient ? seed.Clone() : BrushSpec.Gradient(90, Lighten(seed.Color, 0.25), seed.Color);
+                    _value = seed.IsGradient ? seed.Clone() : seed.IsTexture ? BrushSpec.Gradient(90, SeedColours(seed)) : BrushSpec.Gradient(90, Lighten(seed.Color, 0.25), seed.Color);
+                    break;
+                case MODE_TEXTURE: // UXUI-Extreme (UX-011)
+                    _value = seed.IsTexture ? seed.Clone() : new BrushSpec { Texture = new TextureSpec { Lut = SeedColours(seed).ToList() } };
                     break;
             }
 
@@ -97,9 +101,16 @@ namespace RetroBar.Controls
         private void BuildDetails()
         {
             _details.Children.Clear();
+            _refreshTexturePreview = null; // UXUI-Extreme (UX-011)
 
             if (_value == null)
             {
+                return;
+            }
+
+            if (_value.IsTexture) // UXUI-Extreme (UX-011)
+            {
+                BuildTextureDetails();
                 return;
             }
 
