@@ -17,8 +17,10 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Image Grid.Column="0"
+                   x:Name="StartIconImage"
                    Style="{DynamicResource StartIcon}" />
             <TextBlock Grid.Column="1"
+                       x:Name="StartLabelText"
                        Style="{DynamicResource StartLabel}" />
         </Grid>
     </ToggleButton>

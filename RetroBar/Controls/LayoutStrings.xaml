@@ -1,0 +1,50 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+    <!-- UXUI-Extreme (UX-012): English defaults for the Layout tab. They load before the
+         language dictionaries, so translations can override them. -->
+    <system:String x:Key="uxui_layout_tab">Layout</system:String>
+    <system:String x:Key="uxui_layout_start_heading">Start button</system:String>
+    <system:String x:Key="uxui_layout_orientation">_Orientation:</system:String>
+    <x:Array x:Key="uxui_layout_orientation_values" Type="system:String">
+        <system:String>Horizontal (theme)</system:String>
+        <system:String>Vertical, reading up</system:String>
+        <system:String>Vertical, reading down</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_length">_Length:</system:String>
+    <system:String x:Key="uxui_layout_thickness">T_hickness:</system:String>
+    <x:Array x:Key="uxui_layout_size_mode_values" Type="system:String">
+        <system:String>Automatic</system:String>
+        <system:String>Custom</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_anchor">Pos_ition:</system:String>
+    <x:Array x:Key="uxui_layout_anchor_values" Type="system:String">
+        <system:String>Top</system:String>
+        <system:String>Centre</system:String>
+        <system:String>Bottom</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_show_icon">Show icon</system:String>
+    <system:String x:Key="uxui_layout_show_text">Show "start" text</system:String>
+    <system:String x:Key="uxui_layout_show_desktop_heading">Show desktop button</system:String>
+    <system:String x:Key="uxui_layout_position">P_lace:</system:String>
+    <x:Array x:Key="uxui_layout_show_desktop_values" Type="system:String">
+        <system:String>End of the taskbar</system:String>
+        <system:String>Beside the Start button</system:String>
+        <system:String>Under the Start button</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_show_desktop_on">Show the Show desktop button</system:String>
+    <system:String x:Key="uxui_layout_clock_heading">Clock</system:String>
+    <system:String x:Key="uxui_layout_clock_orientation">Orie_ntation:</system:String>
+    <system:String x:Key="uxui_layout_clock_font">_Font:</system:String>
+    <system:String x:Key="uxui_layout_clock_weight">_Weight:</system:String>
+    <system:String x:Key="uxui_layout_clock_italic">It_alic:</system:String>
+    <x:Array x:Key="uxui_layout_clock_italic_values" Type="system:String">
+        <system:String>Same as taskbar</system:String>
+        <system:String>Italic</system:String>
+        <system:String>Upright</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_clock_size">Si_ze (at 100%):</system:String>
+    <system:String x:Key="uxui_layout_clock_spacing">Line _spacing:</system:String>
+    <system:String x:Key="uxui_layout_same_as_taskbar">Same as taskbar</system:String>
+    <system:String x:Key="uxui_layout_note">Automatic length fills the taskbar's height when the Start button is vertical. Turning applies to taskbars at the top or bottom of the screen.</system:String>
+</ResourceDictionary>

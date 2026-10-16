@@ -474,6 +474,117 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideItalic, value);
         }
 
+        // UXUI-Extreme (UX-012): Start button layout. Defaults = the theme's own look.
+        private ElementOrientationOption _startButtonOrientation = ElementOrientationOption.Horizontal;
+        public ElementOrientationOption StartButtonOrientation
+        {
+            get => _startButtonOrientation;
+            set => SetEnum(ref _startButtonOrientation, value);
+        }
+
+        // Length along the button's text: Automatic = fill the taskbar height when vertical,
+        // the theme's size when horizontal. Custom = StartButtonLengthPx (at 100% scale).
+        private SizeModeOption _startButtonLengthMode = SizeModeOption.Automatic;
+        public SizeModeOption StartButtonLengthMode
+        {
+            get => _startButtonLengthMode;
+            set => SetEnum(ref _startButtonLengthMode, value);
+        }
+
+        private double _startButtonLengthPx = 80;
+        public double StartButtonLengthPx
+        {
+            get => _startButtonLengthPx;
+            set => Set(ref _startButtonLengthPx, value);
+        }
+
+        // Thickness across the text: Automatic = keep the button's proportions.
+        private SizeModeOption _startButtonThicknessMode = SizeModeOption.Automatic;
+        public SizeModeOption StartButtonThicknessMode
+        {
+            get => _startButtonThicknessMode;
+            set => SetEnum(ref _startButtonThicknessMode, value);
+        }
+
+        private double _startButtonThicknessPx = 30;
+        public double StartButtonThicknessPx
+        {
+            get => _startButtonThicknessPx;
+            set => Set(ref _startButtonThicknessPx, value);
+        }
+
+        private VerticalAnchorOption _startButtonAnchor = VerticalAnchorOption.Centre;
+        public VerticalAnchorOption StartButtonAnchor
+        {
+            get => _startButtonAnchor;
+            set => SetEnum(ref _startButtonAnchor, value);
+        }
+
+        private bool _startButtonShowIcon = true;
+        public bool StartButtonShowIcon
+        {
+            get => _startButtonShowIcon;
+            set => Set(ref _startButtonShowIcon, value);
+        }
+
+        private bool _startButtonShowText = true;
+        public bool StartButtonShowText
+        {
+            get => _startButtonShowText;
+            set => Set(ref _startButtonShowText, value);
+        }
+
+        // UXUI-Extreme (UX-012)
+        private ShowDesktopPositionOption _showDesktopPosition = ShowDesktopPositionOption.TaskbarEnd;
+        public ShowDesktopPositionOption ShowDesktopPosition
+        {
+            get => _showDesktopPosition;
+            set => SetEnum(ref _showDesktopPosition, value);
+        }
+
+        // UXUI-Extreme (UX-012): clock layout and its own font. Empty/0 = same as the taskbar font.
+        private ElementOrientationOption _clockOrientation = ElementOrientationOption.Horizontal;
+        public ElementOrientationOption ClockOrientation
+        {
+            get => _clockOrientation;
+            set => SetEnum(ref _clockOrientation, value);
+        }
+
+        private string _clockFontFamily = "";
+        public string ClockFontFamily
+        {
+            get => _clockFontFamily;
+            set => Set(ref _clockFontFamily, value ?? "");
+        }
+
+        private double _clockFontSize = 0; // px at 100% scale
+        public double ClockFontSize
+        {
+            get => _clockFontSize;
+            set => Set(ref _clockFontSize, value);
+        }
+
+        private int _clockFontWeight = 0; // OpenType weight 100-900
+        public int ClockFontWeight
+        {
+            get => _clockFontWeight;
+            set => Set(ref _clockFontWeight, value);
+        }
+
+        private ClockItalicOption _clockFontItalic = ClockItalicOption.SameAsTaskbar;
+        public ClockItalicOption ClockFontItalic
+        {
+            get => _clockFontItalic;
+            set => SetEnum(ref _clockFontItalic, value);
+        }
+
+        private double _clockLineSpacing = 0; // multiple of font size
+        public double ClockLineSpacing
+        {
+            get => _clockLineSpacing;
+            set => Set(ref _clockLineSpacing, value);
+        }
+
         private bool _showTaskBadges = true;
         public bool ShowTaskBadges
         {
@@ -618,6 +729,45 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-012): rotation for the Start button and clock on horizontal taskbars
+    public enum ElementOrientationOption
+    {
+        Horizontal,
+        VerticalUp,   // turned 90° anticlockwise: reads bottom to top
+        VerticalDown  // turned 90° clockwise: reads top to bottom
+    }
+
+    // UXUI-Extreme (UX-012)
+    public enum SizeModeOption
+    {
+        Automatic,
+        Custom
+    }
+
+    // UXUI-Extreme (UX-012): where the Start button sits along the taskbar's height
+    public enum VerticalAnchorOption
+    {
+        Top,
+        Centre,
+        Bottom
+    }
+
+    // UXUI-Extreme (UX-012)
+    public enum ShowDesktopPositionOption
+    {
+        TaskbarEnd,
+        BesideStart,
+        UnderStart
+    }
+
+    // UXUI-Extreme (UX-012): clock italic, independent of the taskbar font
+    public enum ClockItalicOption
+    {
+        SameAsTaskbar,
+        Italic,
+        Upright
+    }
+
     // UXUI-Extreme (UX-008)
     public enum ClockLinesOption
     {
