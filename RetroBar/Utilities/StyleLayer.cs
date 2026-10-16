@@ -33,6 +33,7 @@ namespace RetroBar.Utilities
     // gradient: { "angle": degrees (0 = left to right, 90 = top to bottom, the default),
     // "stops": [ "#colour", ... ] } with stops spaced evenly, or
     // [ { "color": "#colour", "offset": 0.0-1.0 }, ... ].
+    // UXUI-Extreme (UX-011): textures use { "texture": "brushed", "lut": ["#222", "#888"] }.
     public static partial class StyleLayer // UXUI-Extreme (UX-010): original-resource lookup in StyleLayer.Start.cs.
     {
         public const string FILE_NAME = "Style.json";
@@ -79,6 +80,7 @@ namespace RetroBar.Utilities
             {
                 ShellLogger.Warning($"UXUI-Extreme: style file watching is off, restart RetroBar to apply style changes: {e.Message}");
             }
+            if (_reloadTimer != null) InitializeTextureWatching(); // UXUI-Extreme (UX-011)
         }
 
         private static void Watcher_Event(object sender, FileSystemEventArgs e)
@@ -149,15 +151,9 @@ namespace RetroBar.Utilities
 
             StyleMap.Family family = StyleMap.Detect();
             var dictionary = new ResourceDictionary();
-            int applied = 0;
-
-            foreach (var part in style.Parts)
-            {
-                foreach (var property in part.Value)
-                {
-                    applied += ApplyProperty(dictionary, family, $"{part.Key}.{property.Key}", property.Value);
-                }
-            }
+            // UXUI-Extreme (UX-011): resolve palette references, isolating failures by property.
+            int applied = ApplyBrushOverrides(dictionary, style, family,
+                warning => ShellLogger.Warning($"UXUI-Extreme: {warning}"));
 
             // UXUI-Extreme (UX-010): bitmap overrides sit beside the brush overrides.
             applied += StartButtonColourways.Apply(dictionary, style.StartRecolour, ThemeResource,
@@ -167,15 +163,18 @@ namespace RetroBar.Utilities
             return dictionary;
         }
 
-        private static int ApplyProperty(ResourceDictionary dictionary, StyleMap.Family family, string name, BrushSpec fill)
+        private static int ApplyProperty(ResourceDictionary dictionary, StyleMap.Family family, string name, BrushSpec fill, Color?[] palette)
         {
             int count = 0;
+            // UXUI-Extreme (UX-011): a property shares one immutable brush per orientation.
+            Brush horizontal = null, vertical = null;
+            Brush normal() => horizontal ??= fill.ToBrush(palette: palette);
 
             if (name == StyleMap.TaskButtonStyleBackground && family != StyleMap.Family.Modern &&
                 Application.Current.TryFindResource("TaskButton") is Style baseStyle)
             {
                 var style = new Style(typeof(Button), baseStyle);
-                style.Setters.Add(new Setter(Control.BackgroundProperty, fill.ToBrush()));
+                style.Setters.Add(new Setter(Control.BackgroundProperty, normal()));
                 style.Seal();
                 dictionary["TaskButton"] = style;
                 count++;
@@ -192,8 +191,8 @@ namespace RetroBar.Utilities
                 dictionary[target.Key] = target.Role switch
                 {
                     StyleMap.Role.Clear => Brushes.Transparent,
-                    StyleMap.Role.FillVertical => fill.ToBrush(-90),
-                    _ => fill.ToBrush(),
+                    StyleMap.Role.FillVertical => vertical ??= fill.ToBrush(-90, palette),
+                    _ => normal(),
                 };
                 count++;
             }
