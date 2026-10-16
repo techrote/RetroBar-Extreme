@@ -1,0 +1,46 @@
+// RetroBar-Extreme example style (UX-003): steel and gunmetal with one warm accent.
+// To use it, copy this file to %LOCALAPPDATA%\RetroBar\Style.json. It applies at once over
+// whatever theme is selected; delete the file to get the plain theme back.
+// Parts left out keep the theme's own look. Classic themes (95-98, 2000, ...) draw the bar and
+// tray with one colour, so "tray" only changes XP, Vista, Longhorn and Watercolor.
+{
+  "name": "Ratrod",
+  "parts": {
+    "bar": {
+      "background": { "angle": 90, "stops": [ "#5a6066", "#3d4247", "#2b2f33" ] },
+      "border": "#71777d"
+    },
+    "tray": {
+      "background": { "angle": 90, "stops": [ "#33373b", "#24272a" ] },
+      "border": "#1a1c1e"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#4e545a", "#3a3f44" ] },
+      "border": "#24272a",
+      "foreground": "#e8e4dc"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#5d646b", "#474d53" ] },
+      "border": "#2b2f33"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#26292c", "#33373b" ] },
+      "border": "#141617",
+      "foreground": "#ffb35c"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#c8661e", "#8f4512" ] },
+      "border": "#5e2d0b",
+      "foreground": "#fff4e6"
+    },
+    "clock": {
+      "foreground": "#ff9a3c"
+    },
+    "bevel": {
+      "highlight": "#8a9096",
+      "light": "#6b7177",
+      "shadow": "#1f2225",
+      "darkShadow": "#0e0f10"
+    }
+  }
+}

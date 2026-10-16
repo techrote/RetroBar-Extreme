@@ -44,6 +44,8 @@ namespace RetroBar.Utilities
             {
                 SetTheme(Settings.Instance.Theme);
             }
+
+            StyleLayer.Apply(); // UXUI-Extreme (UX-003): custom colours go over the theme just loaded
         }
 
         private void SetSystemThemeParams()

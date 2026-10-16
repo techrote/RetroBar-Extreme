@@ -1,0 +1,9 @@
+// Test fixture (UX-003): a deliberately broken style. Copy to %LOCALAPPDATA%\RetroBar\Style.json;
+// RetroBar must keep running with the plain theme and log a warning.
+{
+  "name": "Broken",
+  "parts": {
+    "bar": { "background": "#notacolour" },
+    "button": { "background": { "angle": "sideways", "stops": [ ] } },
+    "nonsense": { "background": "#ff0000" }
+

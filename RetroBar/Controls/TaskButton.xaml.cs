@@ -89,6 +89,7 @@ namespace RetroBar.Controls
             Window = DataContext as ApplicationWindow;
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            StyleLayer.Changed += StyleLayer_Changed; // UXUI-Extreme (UX-003)
 
             dragHandler = new DelayedActivationHandler(() =>
             {
@@ -141,6 +142,7 @@ namespace RetroBar.Controls
             }
 
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            StyleLayer.Changed -= StyleLayer_Changed; // UXUI-Extreme (UX-003)
             dragHandler?.Dispose();
 
             if (Window != null)
@@ -314,6 +316,13 @@ namespace RetroBar.Controls
             {
                 SetStyle();
             }
+        }
+
+        // UXUI-Extreme (UX-003): the style layer can replace the TaskButton style, which the
+        // converter only looks up when the binding updates.
+        private void StyleLayer_Changed(object sender, EventArgs e)
+        {
+            SetStyle();
         }
 
         private void AppButton_OnDragEnter(object sender, DragEventArgs e)
