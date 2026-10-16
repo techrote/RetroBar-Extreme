@@ -137,6 +137,14 @@
                     <ContentControl x:Name="hostAccent"
                                     Focusable="False" />
                 </StackPanel>
+                <!-- UXUI-Extreme (UX-010): extraction feeds the existing, confirmed generator. -->
+                <Button x:Name="btnFromStart"
+                        HorizontalAlignment="Right"
+                        Margin="4,1,0,2"
+                        Style="{StaticResource CompactButton}"
+                        Content="{DynamicResource uxui_start_extract}"
+                        ToolTip="{DynamicResource uxui_start_extract_note}"
+                        Click="ColoursFromStart_OnClick" />
             </StackPanel>
         </GroupBox>
         <GroupBox Header="{DynamicResource uxui_style_part_heading}">
@@ -151,8 +159,15 @@
                             Content="{DynamicResource uxui_style_reset_part}"
                             Click="ResetPart_OnClick" />
                     <ComboBox x:Name="cboPart"
-                              ItemsSource="{DynamicResource uxui_style_part_values}"
-                              SelectionChanged="CboPart_SelectionChanged" />
+                              SelectionChanged="CboPart_SelectionChanged">
+                        <!-- UXUI-Extreme (UX-010): preserve all existing translations and indices. -->
+                        <ComboBox.ItemsSource>
+                            <CompositeCollection>
+                                <CollectionContainer Collection="{DynamicResource uxui_style_part_values}" />
+                                <ComboBoxItem Content="{DynamicResource uxui_start_part}" />
+                            </CompositeCollection>
+                        </ComboBox.ItemsSource>
+                    </ComboBox>
                 </DockPanel>
                 <StackPanel x:Name="panelProperties"
                             Orientation="Vertical"
