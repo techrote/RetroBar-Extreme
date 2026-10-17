@@ -136,11 +136,21 @@
     <s:String x:Key="uxui_colourway_base">Base:</s:String>
     <s:String x:Key="uxui_colourway_accent">A_ccent:</s:String>
     <s:String x:Key="uxui_colourway_apply">Appl_y colourway</s:String>
-    <s:String x:Key="uxui_colourway_note">Fills in task buttons, notification area, clock and 3D edges to match the base and accent colours. The taskbar background is kept. Fine-tune any part below.</s:String>
+    <s:String x:Key="uxui_colourway_note">Fills in task buttons, notification area, clock and 3D edges to match palette slot 1 (base) and slot 2 (accent). The taskbar background is kept. Fine-tune any part below.</s:String>
     <s:String x:Key="uxui_colourway_replace_confirm">Replace the current colours of the task buttons, notification area, clock and 3D edges with this colourway?</s:String>
     <s:String x:Key="uxui_palette_button">Palette...</s:String>
     <s:String x:Key="uxui_palette_title">Palette</s:String>
     <s:String x:Key="uxui_palette_note">Copy colours in and out of the slots to carry them between parts. The palette is saved with the style.</s:String>
+    <!-- UXUI-Extreme (UX-009 palette rework) -->
+    <s:String x:Key="uxui_palette_heading">Palette</s:String>
+    <s:String x:Key="uxui_palette_apply">Appl_y to parts</s:String>
+    <s:String x:Key="uxui_palette_clear">Clear</s:String>
+    <s:String x:Key="uxui_palette_preset_note">Puts the preset's base and accent colours into slots 1 and 2.</s:String>
+    <s:String x:Key="uxui_palette_slot_base">Slot {0}: base colour (used by Apply to parts and the Start button)</s:String>
+    <s:String x:Key="uxui_palette_slot_accent">Slot {0}: accent colour (used by Apply to parts and the Start button)</s:String>
+    <s:String x:Key="uxui_palette_slot">Slot {0}</s:String>
+    <s:String x:Key="uxui_palette_need_base">Put a colour in palette slot 1 (the base colour) first, or choose a preset.</s:String>
+    <s:String x:Key="uxui_palette_clear_confirm">Empty all 12 palette slots? Textures that use the palette fall back to the theme.</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_Allow font smoothing in menus</s:String>
     <s:String x:Key="collapse_tray_icons">Collapse _notification area icons</s:String>
     <s:String x:Key="customize">_Customize...</s:String>

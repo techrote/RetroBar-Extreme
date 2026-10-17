@@ -18,7 +18,7 @@ namespace RetroBar.Utilities
         public const int MaxDimension = 512, MaxFileBytes = 4 * 1024 * 1024;
         private const int TileSize = 64, CacheLimit = 16;
         public static IReadOnlyList<string> BuiltInNames { get; } = Array.AsReadOnly(new[]
-            { "brushed", "carbon", "noise", "scanlines", "checker", "diamond" });
+            { "brushed", "carbon", "noise", "scanlines", "checker", "diamond", "clouds", "cells", "marble" }); // UX-013: last three are coherent noise
         public static string TexturesFolder => "Textures".InLocalAppData();
 
         private static readonly object CacheLock = new object();
@@ -221,6 +221,13 @@ namespace RetroBar.Utilities
                             if (((x / 16 + y / 16) & 1) != 0) u = -u;
                             double along = (u + v) / Math.Sqrt(2), cross = (u - v) / Math.Sqrt(2);
                             level = 0.3 + 0.6 * Math.Max(0, 1 - along * along / 36 - cross * cross / 3);
+                            break;
+                        // UXUI-Extreme (UX-013): coherent noise, periodic on the tile so it repeats seamlessly.
+                        case "clouds": level = 0.5 + 1.3 * CoherentNoise.Fractal(x, y, TileSize, 4, 4); break;
+                        case "cells": level = CoherentNoise.Cells(x, y, TileSize, 6); break;
+                        case "marble":
+                            double turbulence = CoherentNoise.Turbulence(x, y, TileSize, 4, 4);
+                            level = 0.5 + 0.5 * Math.Sin(2 * Math.PI * (2.0 * x / TileSize + 1.0 * y / TileSize + 1.6 * turbulence));
                             break;
                         default: throw new ArgumentException("unknown procedural texture", nameof(name));
                     }

@@ -1,0 +1,41 @@
+// RetroBar-Extreme example style: Neon Night.
+// Shows: a clouds texture on the bar, neon gradients on the buttons, a cyan clock, a palette
+// that drives everything, thicker tray borders and a purple Start recolour (XP / Vista themes).
+// Use it from Properties > Colours > Import..., or copy it to %LOCALAPPDATA%\RetroBar\Style.json.
+{
+  "name": "Neon Night",
+  "parts": {
+    "bar": {
+      "background": { "texture": "clouds", "lut": [ "#12052a", "#3b1a6e", "#8c24ff", "#42fffb" ], "scale": 2, "contrast": 1.2 },
+      "border": "#42fffb"
+    },
+    "tray": {
+      "background": { "angle": 90, "stops": [ "#1a0633", "#0b0218" ] },
+      "border": "#8c24ff"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#3b1a6e", "#22104a" ] },
+      "border": "#8c24ff",
+      "foreground": "#e8e0ff"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#5a2aa8", "#3b1a6e" ] },
+      "border": "#42fffb"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#12052a", "#2a0c58" ] },
+      "border": "#42fffb",
+      "foreground": "#42fffb"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ff40c0", "#a01070" ] },
+      "border": "#ffe0f4",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#42fffb" },
+    "bevel": { "highlight": "#a070ff", "light": "#6a40c0", "shadow": "#0b0218", "darkShadow": "#000000" }
+  },
+  "palette": [ "#3b1a6e", "#42fffb", "#12052a", "#8c24ff", "#ff40c0", "#e8e0ff", null, null, null, null, null, null ],
+  "start": { "recolour": "#8c24ff" },
+  "borders": { "tray": 2 }
+}

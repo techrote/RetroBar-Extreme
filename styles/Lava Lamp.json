@@ -1,0 +1,39 @@
+// RetroBar-Extreme example style: Lava Lamp.
+// Shows: a hot marble texture turned 30° across the bar, with dark glass buttons and a
+// glowing clock.
+{
+  "name": "Lava Lamp",
+  "parts": {
+    "bar": {
+      "background": { "texture": "marble", "lut": [ "#300400", "#a01800", "#ff6a00", "#ffd040" ], "scale": 2, "contrast": 1, "angle": 30 },
+      "border": "#ffd040"
+    },
+    "tray": {
+      "background": { "angle": 90, "stops": [ "#3a0800", "#1a0200" ] },
+      "border": "#ff6a00"
+    },
+    "button": {
+      "background": "#a0100200",
+      "border": "#ff6a00",
+      "foreground": "#ffe8c0"
+    },
+    "buttonHover": {
+      "background": "#c0200400",
+      "border": "#ffd040"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#ff6a00", "#a01800" ] },
+      "border": "#ffd040",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#fff080", "#ffc000" ] },
+      "border": "#7a3a00",
+      "foreground": "#300400"
+    },
+    "clock": { "foreground": "#ffd040" },
+    "bevel": { "highlight": "#ff9a40", "light": "#c04010", "shadow": "#300400", "darkShadow": "#100000" }
+  },
+  "palette": [ "#3a0800", "#ff6a00", "#ffd040", "#a01800", "#300400", null, null, null, null, null, null, null ],
+  "start": { "recolour": "#ff4a00" }
+}

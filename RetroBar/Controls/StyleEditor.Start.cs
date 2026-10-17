@@ -22,15 +22,13 @@ namespace RetroBar.Controls
             }
             if (_style.Palette.Any(c => c.HasValue) && !Confirm(Text("uxui_start_palette_replace"))) return;
 
-            cboPreset.SelectedIndex = -1;
-            _base.Value = colours[0];
-            _accent.Value = colours.Length > 1 ? colours[1] : Colourways.Lighter(colours[0], 0.30);
             Array.Clear(_style.Palette, 0, _style.Palette.Length);
             for (int i = 0; i < colours.Length && i < _style.Palette.Length; i++) _style.Palette[i] = colours[i];
-            _palette?.ShowPalette(_style.Palette);
+            // Slot 1 becomes the base and slot 2 the accent (UX-009 palette rework).
+            cboPreset.SelectedIndex = -1;
+            ShowPaletteFields();
             // UXUI-Extreme (UX-011): palette-backed textures also use extracted Start colours.
-            foreach (object child in panelProperties.Children)
-                if (child is BrushEditor editor) editor.RefreshTexturePreview();
+            RefreshTexturePreviews();
             SaveActive();
             // Applying a generated scheme remains the existing, separately confirmed action.
         }
@@ -78,7 +76,7 @@ namespace RetroBar.Controls
                 button.SetResourceReference(ContentControl.ContentProperty, accent ? "uxui_start_use_accent" : "uxui_start_use_base");
                 button.Click += (s, e) =>
                 {
-                    if ((accent ? _accent.Value : _base.Value) is Color colour)
+                    if ((accent ? PaletteAccent : PaletteBase) is Color colour)
                     {
                         _style.StartRecolour = colour;
                         SaveActive();
@@ -88,6 +86,7 @@ namespace RetroBar.Controls
                 row.Children.Add(button);
             }
             panelProperties.Children.Add(row);
+            AddBorderRow("start"); // UXUI-Extreme (UX-013)
         }
     }
 }

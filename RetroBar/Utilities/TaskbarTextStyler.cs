@@ -57,6 +57,13 @@ namespace RetroBar.Utilities
             nameof(Settings.ClockTimeAlignment),
             nameof(Settings.RowCount), // themes change clock margins/lines per row count
             nameof(Settings.Edge),
+            // UX-012: the clock's own font and its orientation
+            nameof(Settings.ClockFontFamily),
+            nameof(Settings.ClockFontSize),
+            nameof(Settings.ClockFontWeight),
+            nameof(Settings.ClockFontItalic),
+            nameof(Settings.ClockLineSpacing),
+            nameof(Settings.ClockOrientation),
         };
 
         // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
@@ -158,7 +165,13 @@ namespace RetroBar.Utilities
                    s.FontOverrideSize > 0 ||
                    s.FontOverrideWeight > 0 ||
                    s.FontOverrideItalic ||
-                   s.FontOverrideLineSpacing > 0;
+                   s.FontOverrideLineSpacing > 0 ||
+                   // UX-012: clock font settings
+                   !string.IsNullOrWhiteSpace(s.ClockFontFamily) ||
+                   s.ClockFontSize > 0 ||
+                   s.ClockFontWeight > 0 ||
+                   s.ClockFontItalic != ClockItalicOption.SameAsTaskbar ||
+                   s.ClockLineSpacing > 0;
         }
 
         private static void Apply(TextBlock textBlock)
@@ -206,12 +219,20 @@ namespace RetroBar.Utilities
 
             var s = Settings.Instance;
 
+            // UX-012: clock lines can have their own font; each setting falls back to the taskbar font.
+            bool clockLine = ClockFitter.IsClockLine(textBlock);
+            string fontFamily = clockLine && !string.IsNullOrWhiteSpace(s.ClockFontFamily) ? s.ClockFontFamily : s.FontOverrideFamily;
+            double fontSize = clockLine && s.ClockFontSize > 0 ? s.ClockFontSize : s.FontOverrideSize;
+            int weightSetting = clockLine && s.ClockFontWeight > 0 ? s.ClockFontWeight : s.FontOverrideWeight;
+            bool italic = clockLine && s.ClockFontItalic != ClockItalicOption.SameAsTaskbar ? s.ClockFontItalic == ClockItalicOption.Italic : s.FontOverrideItalic;
+            double lineSpacing = clockLine && s.ClockLineSpacing > 0 ? s.ClockLineSpacing : s.FontOverrideLineSpacing;
+
             // Family
-            if (!string.IsNullOrWhiteSpace(s.FontOverrideFamily) && !original.SymbolFont)
+            if (!string.IsNullOrWhiteSpace(fontFamily) && !original.SymbolFont)
             {
-                if (!original.FamilySet || textBlock.FontFamily.Source != s.FontOverrideFamily)
+                if (!original.FamilySet || textBlock.FontFamily.Source != fontFamily)
                 {
-                    textBlock.FontFamily = new FontFamily(s.FontOverrideFamily);
+                    textBlock.FontFamily = new FontFamily(fontFamily);
                     original.FamilySet = true;
                 }
             }
@@ -222,9 +243,9 @@ namespace RetroBar.Utilities
             }
 
             // Weight: text the theme made bold (e.g. "Start") stays at least bold.
-            if (s.FontOverrideWeight > 0 && !original.SymbolFont)
+            if (weightSetting > 0 && !original.SymbolFont)
             {
-                int weight = Math.Clamp(s.FontOverrideWeight, 1, 999);
+                int weight = Math.Clamp(weightSetting, 1, 999);
                 if (original.ThemeBold)
                 {
                     weight = Math.Max(weight, FontWeights.Bold.ToOpenTypeWeight());
@@ -243,7 +264,7 @@ namespace RetroBar.Utilities
             }
 
             // Italic
-            if (s.FontOverrideItalic && !original.SymbolFont)
+            if (italic && !original.SymbolFont)
             {
                 if (!original.StyleSet || textBlock.FontStyle != FontStyles.Italic)
                 {
@@ -258,7 +279,7 @@ namespace RetroBar.Utilities
             }
 
             // Size, and the UX-002 counter-scale
-            double baseSize = s.FontOverrideSize > 0 ? s.FontOverrideSize : original.BaseFontSize;
+            double baseSize = fontSize > 0 ? fontSize : original.BaseFontSize;
             double? targetSize = null;
             double? counterScale = null;
 
@@ -278,7 +299,7 @@ namespace RetroBar.Utilities
                 targetSize = size;
                 counterScale = 1.0 / scale;
             }
-            else if (s.FontOverrideSize > 0)
+            else if (fontSize > 0)
             {
                 targetSize = baseSize;
             }
@@ -317,9 +338,9 @@ namespace RetroBar.Utilities
             // UX-008: line spacing as a multiple of the (already set) font size. Many web fonts
             // reserve a big gap above/below the letters, which overflows stacked text such as
             // the multi-line clock.
-            if (s.FontOverrideLineSpacing > 0 && !original.SymbolFont)
+            if (lineSpacing > 0 && !original.SymbolFont)
             {
-                double lineHeight = Math.Max(1.0, Math.Round(textBlock.FontSize * s.FontOverrideLineSpacing));
+                double lineHeight = Math.Max(1.0, Math.Round(textBlock.FontSize * lineSpacing));
                 if (!original.LineSpacingSet ||
                     textBlock.LineStackingStrategy != LineStackingStrategy.BlockLineHeight ||
                     textBlock.LineHeight != lineHeight)

@@ -1,0 +1,40 @@
+// RetroBar-Extreme example style: Brushed Bronze.
+// Shows: the brushed texture turned to vertical brush strokes (angle 90), warm bronze
+// gradients, and triple-thick Start button borders.
+{
+  "name": "Brushed Bronze",
+  "parts": {
+    "bar": {
+      "background": { "texture": "brushed", "lut": [ "#4a2e14", "#8a5a2a", "#c89050" ], "scale": 1, "contrast": 1, "angle": 90 },
+      "border": "#e8b878"
+    },
+    "tray": {
+      "background": { "texture": "brushed", "lut": [ "#2a1a0a", "#5a3a1a" ], "scale": 1, "contrast": 1 },
+      "border": "#c89050"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#a87040", "#6a4420" ] },
+      "border": "#2a1a0a",
+      "foreground": "#fff0d8"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#c08850", "#8a5a2a" ] },
+      "border": "#e8b878"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#4a2e14", "#6a4420" ] },
+      "border": "#e8b878",
+      "foreground": "#ffd8a0"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#60c0ff", "#2080d0" ] },
+      "border": "#0a2a4a",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#ffe0b0" },
+    "bevel": { "highlight": "#e8b878", "light": "#c89050", "shadow": "#2a1a0a", "darkShadow": "#100800" }
+  },
+  "palette": [ "#8a5a2a", "#e8b878", "#4a2e14", "#c89050", null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#b07838" },
+  "borders": { "start": 3 }
+}

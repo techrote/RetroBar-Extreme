@@ -56,15 +56,22 @@
         </ContentControl.LayoutTransform>
         <DockPanel>
             <Button Visibility="Collapsed" x:Name="FocusDummyButton" />
-            <controls:StartButton x:Name="StartButton"
-                                  Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}">
+            <!-- UXUI-Extreme (UX-012): Start area — the Start button, plus the Show desktop button
+                 when it is tucked beside or under it (orientation and anchor set in code). -->
+            <StackPanel x:Name="StartArea"
+                        Orientation="Horizontal">
                 <DockPanel.Dock>
                     <Binding Converter="{StaticResource dockOrientationConverter}"
                              ConverterParameter="leading"
                              Path="Orientation"
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
-            </controls:StartButton>
+                <controls:StartButton x:Name="StartButton"
+                                      Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                <controls:ShowDesktopButton x:Name="ShowDesktopButtonStart"
+                                            TasksService="{Binding TasksService}"
+                                            Visibility="Collapsed" />
+            </StackPanel>
             <controls:Toolbar x:Name="QuickLaunchToolbar"
                               Visibility="Collapsed"
                               Path="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchPath}"
@@ -117,7 +124,11 @@
                                  RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                     </StackPanel.Orientation>
                     <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
-                    <controls:Clock VerticalAlignment="Center" />
+                    <!-- UXUI-Extreme (UX-012): turned by its host, so the clock fitter sees the turned room -->
+                    <Border x:Name="ClockHost"
+                            VerticalAlignment="Center">
+                        <controls:Clock VerticalAlignment="Center" />
+                    </Border>
                 </StackPanel>
             </GroupBox>
             <controls:InputLanguage VerticalAlignment="Stretch"

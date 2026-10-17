@@ -60,7 +60,15 @@ namespace RetroBar
             _dictionaryManager.SetLanguageFromSettings();
             loadTheme();
             TaskbarTextStyler.Initialize(); // UXUI-Extreme (UX-002, UX-005)
+            TaskbarImageQuality.Initialize(); // UXUI-Extreme: smooth icon scaling
             StyleLayer.Initialize(); // UXUI-Extreme (UX-003): reload when Style.json changes
+            // UXUI-Extreme (UX-013): per-part borders are baked into the theme, so a style that
+            // changes them needs the theme reloaded and the taskbars rebuilt.
+            StyleLayer.ThemeReloadNeeded += (s, args) => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                loadTheme();
+                _windowManager?.ReopenTaskbars();
+            }));
             _windowManager = new WindowManager(_dictionaryManager, _explorerMonitor, _shellManager, _startMenuMonitor, _updater, _hotkeyManager);
         }
 
@@ -100,6 +108,7 @@ namespace RetroBar
                 loadTheme();
                 _windowManager?.ReopenTaskbars();
             }
+
         }
 
         private double _loadedThemeScale = 1.0; // UXUI-Extreme (UX-006)

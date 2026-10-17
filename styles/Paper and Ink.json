@@ -1,0 +1,40 @@
+// RetroBar-Extreme example style: Paper and Ink.
+// Shows: a light, flat look for classic themes (95-98, 2000): cream paper, ink-black text and
+// double-thick bevels everywhere. Also works over XP and Vista.
+{
+  "name": "Paper and Ink",
+  "parts": {
+    "bar": {
+      "background": { "texture": "noise", "lut": [ "#ebe3d0", "#f6f0e2" ], "scale": 1, "contrast": 0.3 },
+      "border": "#1a1a1a"
+    },
+    "tray": {
+      "background": "#efe8d8",
+      "border": "#1a1a1a"
+    },
+    "button": {
+      "background": "#f6f0e2",
+      "border": "#1a1a1a",
+      "foreground": "#1a1a1a"
+    },
+    "buttonHover": {
+      "background": "#fffaf0",
+      "border": "#1a1a1a"
+    },
+    "buttonActive": {
+      "background": "#1a1a1a",
+      "border": "#1a1a1a",
+      "foreground": "#f6f0e2"
+    },
+    "buttonFlashing": {
+      "background": "#c02020",
+      "border": "#1a1a1a",
+      "foreground": "#ffffff"
+    },
+    "clock": { "foreground": "#1a1a1a" },
+    "bevel": { "highlight": "#ffffff", "light": "#f6f0e2", "shadow": "#8a8070", "darkShadow": "#1a1a1a" }
+  },
+  "palette": [ "#f6f0e2", "#c02020", "#1a1a1a", null, null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#c02020" },
+  "borders": { "bar": 2, "tray": 2, "button": 2, "buttonActive": 2, "buttonFlashing": 2, "start": 2 }
+}

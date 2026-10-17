@@ -74,10 +74,7 @@ namespace RetroBar
                 QuickLaunchToolbar.Visibility = Visibility.Visible;
             }
 
-            if (Settings.Instance.ShowDesktopButton)
-            {
-                ShowDesktopButtonTray.Visibility = Visibility.Visible;
-            }
+            InitLayoutOptions(); // UXUI-Extreme (UX-012): also places the Show desktop button
 
             UpdateStartButton();
 
@@ -173,14 +170,7 @@ namespace RetroBar
             }
             else if (e.PropertyName == nameof(Settings.ShowDesktopButton))
             {
-                if (Settings.Instance.ShowDesktopButton)
-                {
-                    ShowDesktopButtonTray.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    ShowDesktopButtonTray.Visibility = Visibility.Collapsed;
-                }
+                UpdateShowDesktopPlacement(); // UXUI-Extreme (UX-012): end of taskbar, or beside / under Start
             }
             else if (e.PropertyName == nameof(Settings.TaskbarScale))
             {

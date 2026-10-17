@@ -474,6 +474,201 @@ namespace RetroBar.Utilities
             set => Set(ref _fontOverrideItalic, value);
         }
 
+        // UXUI-Extreme (UX-015): user PNG icons (file names in %LOCALAPPDATA%RetroBarIcons; see CustomIcons).
+        private string _startButtonIcon = "";
+        public string StartButtonIcon
+        {
+            get => _startButtonIcon;
+            set => Set(ref _startButtonIcon, value ?? "");
+        }
+
+        private List<QuickLaunchIconSetting> _quickLaunchIcons = new List<QuickLaunchIconSetting>();
+        public List<QuickLaunchIconSetting> QuickLaunchIcons
+        {
+            get => _quickLaunchIcons;
+            set => Set(ref _quickLaunchIcons, value ?? new List<QuickLaunchIconSetting>());
+        }
+
+        // UXUI-Extreme (UX-016): notification area expand/collapse toggle. "" = theme image.
+        private string _trayToggleIcon = "";
+        public string TrayToggleIcon
+        {
+            get => _trayToggleIcon;
+            set => Set(ref _trayToggleIcon, value ?? "");
+        }
+
+        private bool _trayToggleFlip = true; // mirror the custom image while the area is expanded
+        public bool TrayToggleFlip
+        {
+            get => _trayToggleFlip;
+            set => Set(ref _trayToggleFlip, value);
+        }
+
+        private bool _trayToggleCustomMargin = false;
+        public bool TrayToggleCustomMargin
+        {
+            get => _trayToggleCustomMargin;
+            set => Set(ref _trayToggleCustomMargin, value);
+        }
+
+        // px at 100% scale; used when TrayToggleCustomMargin is on
+        private string _trayToggleMargin = "2,0,2,0";
+        public string TrayToggleMargin
+        {
+            get => _trayToggleMargin;
+            set => Set(ref _trayToggleMargin, value ?? "");
+        }
+
+        // UXUI-Extreme (UX-014): task buttons for all apps. 0 = theme width (px at 100% scale).
+        private double _taskButtonWidthPx = 0;
+        public double TaskButtonWidthPx
+        {
+            get => _taskButtonWidthPx;
+            set => Set(ref _taskButtonWidthPx, value);
+        }
+
+        private bool _taskButtonShowIcons = true;
+        public bool TaskButtonShowIcons
+        {
+            get => _taskButtonShowIcons;
+            set => Set(ref _taskButtonShowIcons, value);
+        }
+
+        private bool _taskButtonShowLabels = true;
+        public bool TaskButtonShowLabels
+        {
+            get => _taskButtonShowLabels;
+            set => Set(ref _taskButtonShowLabels, value);
+        }
+
+        // UXUI-Extreme (UX-014): per-app task button settings, remembered by app (see TaskButtonRules).
+        // Replaced as a whole list on every change so PropertyChanged fires.
+        private List<TaskButtonAppRule> _taskButtonAppRules = new List<TaskButtonAppRule>();
+        public List<TaskButtonAppRule> TaskButtonAppRules
+        {
+            get => _taskButtonAppRules;
+            set => Set(ref _taskButtonAppRules, value ?? new List<TaskButtonAppRule>());
+        }
+
+        // UXUI-Extreme (UX-012): Start button layout. Defaults = the theme's own look.
+        private ElementOrientationOption _startButtonOrientation = ElementOrientationOption.Horizontal;
+        public ElementOrientationOption StartButtonOrientation
+        {
+            get => _startButtonOrientation;
+            set => SetEnum(ref _startButtonOrientation, value);
+        }
+
+        // Length along the button's text: Automatic = fill the taskbar height when vertical,
+        // the theme's size when horizontal. Custom = StartButtonLengthPx (at 100% scale).
+        private SizeModeOption _startButtonLengthMode = SizeModeOption.Automatic;
+        public SizeModeOption StartButtonLengthMode
+        {
+            get => _startButtonLengthMode;
+            set => SetEnum(ref _startButtonLengthMode, value);
+        }
+
+        private double _startButtonLengthPx = 80;
+        public double StartButtonLengthPx
+        {
+            get => _startButtonLengthPx;
+            set => Set(ref _startButtonLengthPx, value);
+        }
+
+        // Thickness across the text: Automatic = keep the button's proportions.
+        // UXUI-Extreme (UX-012)
+        private StretchModeOption _startButtonStretchMode = StretchModeOption.KeepEnds;
+        public StretchModeOption StartButtonStretchMode
+        {
+            get => _startButtonStretchMode;
+            set => SetEnum(ref _startButtonStretchMode, value);
+        }
+
+        private SizeModeOption _startButtonThicknessMode = SizeModeOption.Automatic;
+        public SizeModeOption StartButtonThicknessMode
+        {
+            get => _startButtonThicknessMode;
+            set => SetEnum(ref _startButtonThicknessMode, value);
+        }
+
+        private double _startButtonThicknessPx = 30;
+        public double StartButtonThicknessPx
+        {
+            get => _startButtonThicknessPx;
+            set => Set(ref _startButtonThicknessPx, value);
+        }
+
+        private VerticalAnchorOption _startButtonAnchor = VerticalAnchorOption.Centre;
+        public VerticalAnchorOption StartButtonAnchor
+        {
+            get => _startButtonAnchor;
+            set => SetEnum(ref _startButtonAnchor, value);
+        }
+
+        private bool _startButtonShowIcon = true;
+        public bool StartButtonShowIcon
+        {
+            get => _startButtonShowIcon;
+            set => Set(ref _startButtonShowIcon, value);
+        }
+
+        private bool _startButtonShowText = true;
+        public bool StartButtonShowText
+        {
+            get => _startButtonShowText;
+            set => Set(ref _startButtonShowText, value);
+        }
+
+        // UXUI-Extreme (UX-012)
+        private ShowDesktopPositionOption _showDesktopPosition = ShowDesktopPositionOption.TaskbarEnd;
+        public ShowDesktopPositionOption ShowDesktopPosition
+        {
+            get => _showDesktopPosition;
+            set => SetEnum(ref _showDesktopPosition, value);
+        }
+
+        // UXUI-Extreme (UX-012): clock layout and its own font. Empty/0 = same as the taskbar font.
+        private ElementOrientationOption _clockOrientation = ElementOrientationOption.Horizontal;
+        public ElementOrientationOption ClockOrientation
+        {
+            get => _clockOrientation;
+            set => SetEnum(ref _clockOrientation, value);
+        }
+
+        private string _clockFontFamily = "";
+        public string ClockFontFamily
+        {
+            get => _clockFontFamily;
+            set => Set(ref _clockFontFamily, value ?? "");
+        }
+
+        private double _clockFontSize = 0; // px at 100% scale
+        public double ClockFontSize
+        {
+            get => _clockFontSize;
+            set => Set(ref _clockFontSize, value);
+        }
+
+        private int _clockFontWeight = 0; // OpenType weight 100-900
+        public int ClockFontWeight
+        {
+            get => _clockFontWeight;
+            set => Set(ref _clockFontWeight, value);
+        }
+
+        private ClockItalicOption _clockFontItalic = ClockItalicOption.SameAsTaskbar;
+        public ClockItalicOption ClockFontItalic
+        {
+            get => _clockFontItalic;
+            set => SetEnum(ref _clockFontItalic, value);
+        }
+
+        private double _clockLineSpacing = 0; // multiple of font size
+        public double ClockLineSpacing
+        {
+            get => _clockLineSpacing;
+            set => Set(ref _clockLineSpacing, value);
+        }
+
         private bool _showTaskBadges = true;
         public bool ShowTaskBadges
         {
@@ -618,6 +813,81 @@ namespace RetroBar.Utilities
     }
 
     #region Enums
+    // UXUI-Extreme (UX-014): a per-app override of an all-apps setting
+    public enum AppOverrideOption
+    {
+        Default,
+        Show,
+        Hide
+    }
+
+    // UXUI-Extreme (UX-015): a quick launch item's custom icon
+    public class QuickLaunchIconSetting
+    {
+        public string Item { get; set; } = "";  // shortcut file name, lower case
+        public string Icon { get; set; } = "";  // file name in the Icons folder
+    }
+
+    // UXUI-Extreme (UX-014): one app's remembered task button settings.
+    public class TaskButtonAppRule
+    {
+        public string App { get; set; } = "";   // exe file name (lower case) or AppUserModelID
+        public string Name { get; set; } = "";  // shown in the Layout tab
+        public double Width { get; set; }       // 0 = default; -1 = icon only; otherwise px at 100%
+        public AppOverrideOption Icon { get; set; }
+        public AppOverrideOption Label { get; set; }
+
+        public TaskButtonAppRule Clone() => (TaskButtonAppRule)MemberwiseClone();
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool IsEmpty => Width == 0 && Icon == AppOverrideOption.Default && Label == AppOverrideOption.Default;
+    }
+
+    // UXUI-Extreme (UX-012): rotation for the Start button and clock on horizontal taskbars
+    public enum ElementOrientationOption
+    {
+        Horizontal,
+        VerticalUp,   // turned 90° anticlockwise: reads bottom to top
+        VerticalDown  // turned 90° clockwise: reads top to bottom
+    }
+
+    // UXUI-Extreme (UX-012): how the Start button is made longer or shorter
+    public enum StretchModeOption
+    {
+        KeepEnds, // repeat a middle slice of the image (or widen a drawn button); ends not distorted
+        Scale     // scale the whole button
+    }
+
+    // UXUI-Extreme (UX-012)
+    public enum SizeModeOption
+    {
+        Automatic,
+        Custom
+    }
+
+    // UXUI-Extreme (UX-012): where the Start button sits along the taskbar's height
+    public enum VerticalAnchorOption
+    {
+        Top,
+        Centre,
+        Bottom
+    }
+
+    // UXUI-Extreme (UX-012)
+    public enum ShowDesktopPositionOption
+    {
+        TaskbarEnd,
+        BesideStart,
+        UnderStart
+    }
+
+    // UXUI-Extreme (UX-012): clock italic, independent of the taskbar font
+    public enum ClockItalicOption
+    {
+        SameAsTaskbar,
+        Italic,
+        Upright
+    }
+
     // UXUI-Extreme (UX-008)
     public enum ClockLinesOption
     {

@@ -1,0 +1,39 @@
+// RetroBar-Extreme example style: Green Phosphor.
+// Shows: noise texture glow on the bar, a palette-coloured texture on the tray (it follows the
+// palette slots), green-on-black terminal colours.
+{
+  "name": "Green Phosphor",
+  "parts": {
+    "bar": {
+      "background": { "texture": "noise", "lut": [ "#000800", "#002a08", "#004810" ], "scale": 1, "contrast": 0.5 },
+      "border": "#20ff60"
+    },
+    "tray": {
+      "background": { "texture": "scanlines", "lut": "palette", "scale": 0.5, "contrast": 1 },
+      "border": "#20ff60"
+    },
+    "button": {
+      "background": { "angle": 90, "stops": [ "#002a08", "#001404" ] },
+      "border": "#108030",
+      "foreground": "#40ff80"
+    },
+    "buttonHover": {
+      "background": { "angle": 90, "stops": [ "#004810", "#002a08" ] },
+      "border": "#40ff80"
+    },
+    "buttonActive": {
+      "background": { "angle": 90, "stops": [ "#40ff80", "#10a040" ] },
+      "border": "#c0ffd0",
+      "foreground": "#001404"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ffff60", "#a0a000" ] },
+      "border": "#000000",
+      "foreground": "#000000"
+    },
+    "clock": { "foreground": "#40ff80" },
+    "bevel": { "highlight": "#108030", "light": "#004810", "shadow": "#000000", "darkShadow": "#000000" }
+  },
+  "palette": [ "#000800", "#00300c", null, null, null, null, null, null, null, null, null, null ],
+  "start": { "recolour": "#20c050" }
+}

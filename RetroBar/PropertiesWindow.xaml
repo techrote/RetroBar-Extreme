@@ -659,6 +659,10 @@
                     </GroupBox>
                 </StackPanel>
             </TabItem>
+            <!-- UXUI-Extreme (UX-012): Layout tab — Start button, Show desktop and clock layout -->
+            <TabItem Header="{DynamicResource uxui_layout_tab}">
+                <controls:LayoutEditor Margin="8" />
+            </TabItem>
             <!-- UXUI-Extreme (UX-004): Colours tab, the style editor for the UX-003 style layer -->
             <TabItem Header="{DynamicResource uxui_colours_tab}">
                 <!-- UX-009: the window grows to fit this tab; it only scrolls if that would be

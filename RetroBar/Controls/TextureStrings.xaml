@@ -11,6 +11,7 @@
     <sys:String x:Key="uxui_texture_remove">Remove LUT colour</sys:String>
     <sys:String x:Key="uxui_texture_scale">Scale ×</sys:String>
     <sys:String x:Key="uxui_texture_contrast">Contrast ×</sys:String>
+    <sys:String x:Key="uxui_texture_angle">Angle °</sys:String> <!-- UX-013 -->
     <sys:String x:Key="uxui_texture_hint">LUT colours run from dark to light grey. PNG files: %LOCALAPPDATA%\RetroBar\Textures\ (reopen Texture mode to refresh the list).</sys:String>
     <sys:String x:Key="uxui_texture_fallback">Texture unavailable; this property uses the theme default.</sys:String>
 </ResourceDictionary>

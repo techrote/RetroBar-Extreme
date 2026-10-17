@@ -1,0 +1,39 @@
+// RetroBar-Extreme example style: Sunset Strip.
+// Shows: a horizontal (0°) gradient across the whole bar, semi-transparent buttons so the
+// sunset shows through (#aarrggbb colours), and warm accents.
+{
+  "name": "Sunset Strip",
+  "parts": {
+    "bar": {
+      "background": { "angle": 0, "stops": [ "#ff7a30", "#ff3a7a", "#8a2aa0", "#2a1a5a" ] },
+      "border": "#ffd0a0"
+    },
+    "tray": {
+      "background": { "angle": 90, "stops": [ "#3a1a6a", "#1a0a3a" ] },
+      "border": "#ff9a60"
+    },
+    "button": {
+      "background": "#40ffffff",
+      "border": "#80ffffff",
+      "foreground": "#ffffff"
+    },
+    "buttonHover": {
+      "background": "#60ffffff",
+      "border": "#c0ffffff"
+    },
+    "buttonActive": {
+      "background": "#60000000",
+      "border": "#ffd0a0",
+      "foreground": "#ffe0b0"
+    },
+    "buttonFlashing": {
+      "background": { "angle": 90, "stops": [ "#ffe060", "#ffa020" ] },
+      "border": "#7a3a00",
+      "foreground": "#2a1000"
+    },
+    "clock": { "foreground": "#ffd0a0" },
+    "bevel": { "highlight": "#ffd0a0", "light": "#ff9a60", "shadow": "#5a1a3a", "darkShadow": "#2a0a1a" }
+  },
+  "palette": [ "#ff3a7a", "#ffd0a0", "#ff7a30", "#8a2aa0", "#2a1a5a", null, null, null, null, null, null, null ],
+  "start": { "recolour": "#ff5a50" }
+}

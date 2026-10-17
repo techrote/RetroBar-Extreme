@@ -114,6 +114,7 @@ namespace RetroBar.Utilities
             }
 
             Changed?.Invoke(null, EventArgs.Empty);
+            CheckBorders(); // UXUI-Extreme (UX-013)
         }
 
         private static void Remove()

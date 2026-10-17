@@ -87,6 +87,7 @@ namespace RetroBar.Controls
         private void TaskButton_OnLoaded(object sender, RoutedEventArgs e)
         {
             Window = DataContext as ApplicationWindow;
+            ApplyAppRule(); // UXUI-Extreme (UX-014)
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
             StyleLayer.Changed += StyleLayer_Changed; // UXUI-Extreme (UX-003)
@@ -177,6 +178,7 @@ namespace RetroBar.Controls
                 CloseMenuItem.FontWeight = FontWeights.Bold;
                 RestoreMenuItem.FontWeight = FontWeights.Normal;
             }
+            UpdateAppButtonMenu(); // UXUI-Extreme (UX-014)
             MoveMenuItem.IsEnabled = wss == NativeMethods.WindowShowStyle.ShowNormal;
             SizeMenuItem.IsEnabled = wss == NativeMethods.WindowShowStyle.ShowNormal && (ws & (int)NativeMethods.WindowStyles.WS_MAXIMIZEBOX) != 0;
         }
@@ -312,6 +314,11 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (IsAppRuleSetting(e.PropertyName)) // UXUI-Extreme (UX-014)
+            {
+                ApplyAppRule();
+            }
+
             if (e.PropertyName == nameof(Settings.Theme))
             {
                 SetStyle();

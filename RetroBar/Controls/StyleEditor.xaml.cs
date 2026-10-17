@@ -24,10 +24,8 @@ namespace RetroBar.Controls
         private readonly DispatcherTimer _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         private bool _subscribed;
 
-        // UX-009: colourway pickers and the floating palette.
-        private readonly ColourField _base = new ColourField(Colourways.Presets[0].Base, compact: true);
-        private readonly ColourField _accent = new ColourField(Colourways.Presets[0].Accent, compact: true);
-        private PaletteWindow _palette;
+        // UX-009: the palette grid (StyleEditor.Palette.cs).
+        private readonly ColourField[] _paletteFields = new ColourField[StyleDocument.PALETTE_SIZE];
 
         public StyleEditor()
         {
@@ -36,67 +34,11 @@ namespace RetroBar.Controls
             _saveTimer.Tick += (s, e) => SaveActive();
             cboStyleName.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((s, e) => UpdateButtons()));
 
-            hostBase.Content = _base;
-            hostAccent.Content = _accent;
+            BuildPaletteGrid();
             foreach (Colourways.Preset preset in Colourways.Presets)
             {
                 cboPreset.Items.Add(preset.Name);
             }
-        }
-
-        // UX-009: a preset fills in the base and accent colours; Apply writes the colourway.
-        private void CboPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (cboPreset.SelectedIndex >= 0)
-            {
-                Colourways.Preset preset = Colourways.Presets[cboPreset.SelectedIndex];
-                _base.Value = preset.Base;
-                _accent.Value = preset.Accent;
-            }
-        }
-
-        private void ApplyColourway_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (!(_base.Value is Color baseColour) || !(_accent.Value is Color accent))
-            {
-                return;
-            }
-
-            bool replacing = false;
-            foreach (string part in Colourways.GeneratedParts)
-            {
-                replacing |= _style.Parts.ContainsKey(part);
-            }
-
-            if (replacing && !Confirm(Text("uxui_colourway_replace_confirm")))
-            {
-                return;
-            }
-
-            Colourways.Apply(_style, baseColour, accent);
-            SaveActive();
-            BuildPart();
-        }
-
-        private void Palette_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (_palette != null)
-            {
-                _palette.Activate();
-                return;
-            }
-
-            _palette = new PaletteWindow(Window.GetWindow(this), _style.Palette);
-            _palette.SlotChanged += (slot, colour) =>
-            {
-                _style.Palette[slot] = colour;
-                // UXUI-Extreme (UX-011): update previews without rebuilding focused controls.
-                foreach (object child in panelProperties.Children)
-                    if (child is BrushEditor editor) editor.RefreshTexturePreview();
-                ScheduleSave();
-            };
-            _palette.Closed += (s, args) => _palette = null;
-            _palette.Show();
         }
 
         private void StyleEditor_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -152,7 +94,7 @@ namespace RetroBar.Controls
 
             RefreshNames();
             cboStyleName.Text = _style.Name;
-            _palette?.ShowPalette(_style.Palette);
+            ShowPaletteFields();
 
             if (cboPart.SelectedIndex < 0)
             {
@@ -220,6 +162,8 @@ namespace RetroBar.Controls
                 };
                 panelProperties.Children.Add(editor);
             }
+
+            AddBorderRow(part); // UXUI-Extreme (UX-013)
         }
 
         private void CboStyleName_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -277,7 +221,7 @@ namespace RetroBar.Controls
 
             cboStyleName.Text = _style.Name;
             SaveActive();
-            _palette?.ShowPalette(_style.Palette);
+            ShowPaletteFields();
             BuildPart();
             UpdateButtons();
         }

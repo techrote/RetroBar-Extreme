@@ -11,14 +11,16 @@
                   MouseRightButtonUp="Start_OnMouseRightButtonUp"
                   Name="Start"
                   Style="{DynamicResource StartButton}">
-        <Grid>
+        <Grid x:Name="StartContentGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Image Grid.Column="0"
+                   x:Name="StartIconImage"
                    Style="{DynamicResource StartIcon}" />
             <TextBlock Grid.Column="1"
+                       x:Name="StartLabelText"
                        Style="{DynamicResource StartLabel}" />
         </Grid>
     </ToggleButton>

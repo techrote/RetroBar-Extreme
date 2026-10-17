@@ -29,6 +29,8 @@ namespace RetroBar.Utilities
 
         public void SetThemeFromSettings()
         {
+            StyleLayer.ReadBordersForTheme(); // UXUI-Extreme (UX-013): borders are baked in as the theme loads
+
             SetTheme(THEME_DEFAULT);
 
             if (Settings.Instance.Theme.StartsWith(THEME_DEFAULT))
@@ -95,7 +97,7 @@ namespace RetroBar.Utilities
             }
             _scaledThemeDictionaries.Clear();
 
-            if (ScaleModel.IsNative)
+            if (ScaleModel.IsNative || StyleLayer.HasBorders) // UX-013: rewritten in stretch mode too
             {
                 ResourceDictionary stale;
                 while ((stale = GetActualThemeDictionary()) != null)
@@ -114,8 +116,9 @@ namespace RetroBar.Utilities
         private bool TryAddScaledTheme(string dictionary, string dictDefault, string dictFilePath)
         {
             double scale = ScaleModel.ThemeScale;
+            StyleDocument borders = StyleLayer.LoadedBorders; // UXUI-Extreme (UX-013): per part, from Style.json
 
-            if (scale == 1.0)
+            if (scale == 1.0 && !StyleLayer.HasBorders)
             {
                 return false;
             }
@@ -140,8 +143,24 @@ namespace RetroBar.Utilities
                     xaml = File.ReadAllText(dictFilePath);
                 }
 
-                string scaledXaml = ThemeScaler.Scale(xaml, scale);
-                var scaledDictionary = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(scaledXaml);
+                // UX-013: pull in included base themes so the rewrites reach their templates too, and
+                // parse relative to the theme file so its images and anything not inlined still resolve.
+                string folder = dictionary == dictDefault ? null : Path.GetDirectoryName(Path.GetFullPath(dictFilePath));
+                string scaledXaml = ThemeBorders.InlineIncluded(xaml, folder);
+                if (scale != 1.0)
+                {
+                    scaledXaml = ThemeScaler.Scale(scaledXaml, scale);
+                }
+                if (StyleLayer.HasBorders)
+                {
+                    scaledXaml = ThemeBorders.ScaleBorders(scaledXaml, borders.BorderFactor);
+                }
+                var context = new System.Windows.Markup.ParserContext();
+                if (folder != null)
+                {
+                    context.BaseUri = new Uri(Path.GetFullPath(dictFilePath), UriKind.Absolute);
+                }
+                var scaledDictionary = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(scaledXaml, context);
                 GetMergedDictionaries().Add(scaledDictionary);
                 _scaledThemeDictionaries.Add(scaledDictionary);
                 return true;
@@ -216,7 +235,8 @@ namespace RetroBar.Utilities
             }
 
             // UXUI-Extreme (UX-006): native sizing for themes
-            if (dictType == 0 && ScaleModel.IsNative && TryAddScaledTheme(dictionary, dictDefault, dictFilePath))
+            // UXUI-Extreme (UX-013): also when borders are thickened or removed, in either scaling mode
+            if (dictType == 0 && (ScaleModel.IsNative || StyleLayer.HasBorders) && TryAddScaledTheme(dictionary, dictDefault, dictFilePath))
             {
                 return;
             }

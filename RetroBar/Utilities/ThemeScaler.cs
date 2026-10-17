@@ -133,7 +133,7 @@ namespace RetroBar.Utilities
             return key != null && SizeKey.IsMatch(key) && !NotSizeKey.IsMatch(key);
         }
 
-        private static string PropertyName(XElement setter)
+        internal static string PropertyName(XElement setter)
         {
             string property = (string)setter.Attribute("Property");
 
@@ -148,7 +148,7 @@ namespace RetroBar.Utilities
         }
 
         // Scales "16", "0,0,3,0", "2 1", "-1,0,0,0". Leaves anything else (Auto, *, bindings) alone.
-        private static bool TryScaleList(string text, double scale, out string result)
+        internal static bool TryScaleList(string text, double scale, out string result)
         {
             result = text;
 
