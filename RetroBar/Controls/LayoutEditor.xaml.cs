@@ -14,7 +14,6 @@ namespace RetroBar.Controls
     {
         private const double SpacingSamePosition = 0.5; // slider's leftmost = same as taskbar
         private bool _loading;
-        private List<string> _fontNames;
 
         public LayoutEditor()
         {
@@ -45,21 +44,8 @@ namespace RetroBar.Controls
             cboClockOrientation.SelectedIndex = (int)s.ClockOrientation;
             cboClockItalic.SelectedIndex = (int)s.ClockFontItalic;
 
-            // Fonts: "Same as taskbar" first, then installed fonts alphabetically.
-            _fontNames ??= System.Windows.Media.Fonts.SystemFontFamilies
-                .Select(f => f.Source)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct()
-                .OrderBy(name => name)
-                .ToList();
-            cboClockFont.Items.Clear();
-            cboClockFont.Items.Add(Text("uxui_layout_same_as_taskbar"));
-            foreach (string name in _fontNames)
-            {
-                cboClockFont.Items.Add(name);
-            }
-            int familyIndex = _fontNames.IndexOf(s.ClockFontFamily);
-            cboClockFont.SelectedIndex = familyIndex >= 0 ? familyIndex + 1 : 0;
+            // Fonts: "Same as taskbar" first, then the built-in fonts (UX-017), then installed fonts.
+            FontChoices.Fill(cboClockFont, Text("uxui_layout_same_as_taskbar"), s.ClockFontFamily);
 
             // Weights: the Style tab's list, with "Same as taskbar" in place of "Theme default".
             cboClockWeight.Items.Clear();
@@ -121,7 +107,7 @@ namespace RetroBar.Controls
             else if (combo == cboShowDesktopPosition) s.ShowDesktopPosition = (ShowDesktopPositionOption)i;
             else if (combo == cboClockOrientation) s.ClockOrientation = (ElementOrientationOption)i;
             else if (combo == cboClockItalic) s.ClockFontItalic = (ClockItalicOption)i;
-            else if (combo == cboClockFont) s.ClockFontFamily = i == 0 ? "" : combo.SelectedItem as string;
+            else if (combo == cboClockFont) s.ClockFontFamily = FontChoices.Selected(combo) ?? s.ClockFontFamily;
             else if (combo == cboClockWeight) s.ClockFontWeight = i * 100;
             else if (combo == cboTaskWidth) s.TaskButtonWidthPx = i == 0 ? 0 : Math.Round(sldTaskWidth.Value); // UX-014
 

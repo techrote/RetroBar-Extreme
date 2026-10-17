@@ -1,0 +1,93 @@
+// RetroBar-Extreme example style: Royal Velvet.
+// Shows: Crushed-velvet noise in deep red, gold-edged buttons, a gold active button, a
+// gold-veined marble tray and a thicker Start border.
+// Font to try: Pebble (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Royal Velvet",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "noise",
+        "lut": [
+          "#3a0612",
+          "#5a0a1e",
+          "#7a1028"
+        ],
+        "scale": 1,
+        "contrast": 0.6
+      },
+      "border": "#c9a227"
+    },
+    "tray": {
+      "background": {
+        "texture": "marble",
+        "lut": [
+          "#4a0816",
+          "#7a1028",
+          "#c9a227"
+        ],
+        "scale": 2
+      },
+      "border": "#c9a227"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#6e1024",
+          "#4a0816"
+        ]
+      },
+      "border": "#c9a227",
+      "foreground": "#f8e6b8"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#86162e",
+          "#5a0a1e"
+        ]
+      },
+      "border": "#f0d060"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#e0b840",
+          "#a07c14"
+        ]
+      },
+      "border": "#fff0b0",
+      "foreground": "#2a0408"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#fff4d8",
+          "#e8d4a0"
+        ]
+      },
+      "border": "#ffffff",
+      "foreground": "#4a0816"
+    },
+    "clock": {
+      "foreground": "#f8e6b8"
+    },
+    "bevel": {
+      "highlight": "#f0d060",
+      "light": "#c9a227",
+      "shadow": "#2a0408",
+      "darkShadow": "#140204"
+    }
+  },
+  "start": {
+    "recolour": "#8a0e2a"
+  },
+  "borders": {
+    "start": 2
+  }
+}

@@ -1,0 +1,88 @@
+// RetroBar-Extreme example style: Synthwave.
+// Shows: A checker turned 45 degrees into an argyle grid, magenta-to-violet buttons, a cyan
+// active button and a horizontal sunset gradient on the tray.
+// Font to try: Sling Arc (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Synthwave",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "checker",
+        "lut": [
+          "#1a0530",
+          "#400e6c"
+        ],
+        "scale": 2,
+        "angle": 45
+      },
+      "border": "#ff2a8a"
+    },
+    "tray": {
+      "background": {
+        "angle": 0,
+        "stops": [
+          "#3a0a5e",
+          "#c0207a",
+          "#ff7a3a"
+        ]
+      },
+      "border": "#ff2a8a"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#c0207a",
+          "#5a108a"
+        ]
+      },
+      "border": "#ff70c0",
+      "foreground": "#ffffff"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#e03090",
+          "#6a18a0"
+        ]
+      },
+      "border": "#ffffff"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#00f0ff",
+          "#1060c0"
+        ]
+      },
+      "border": "#c0fcff",
+      "foreground": "#08001a"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffe000",
+          "#ff7a00"
+        ]
+      },
+      "border": "#fff6b0",
+      "foreground": "#2a0830"
+    },
+    "clock": {
+      "foreground": "#00f0ff"
+    },
+    "bevel": {
+      "highlight": "#ff70c0",
+      "light": "#c0207a",
+      "shadow": "#1a0530",
+      "darkShadow": "#08001a"
+    }
+  },
+  "start": {
+    "recolour": "#ff2a8a"
+  }
+}

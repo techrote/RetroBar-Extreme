@@ -1,0 +1,70 @@
+// RetroBar-Extreme example style: Night Shift.
+// Shows: A low-glare dark style for late hours. The bar and tray textures take their colours
+// from the palette, so changing its four slots re-tints the whole bar.
+// Font to try: Knurled Swarf (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Night Shift",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "noise",
+        "lut": "palette",
+        "scale": 2,
+        "contrast": 0.5
+      },
+      "border": "#0b0e13"
+    },
+    "tray": {
+      "background": {
+        "texture": "clouds",
+        "lut": "palette",
+        "scale": 2,
+        "contrast": 0.7
+      },
+      "border": "#0b0e13"
+    },
+    "button": {
+      "background": "#161b22",
+      "border": "#262e3a",
+      "foreground": "#b8c2cc"
+    },
+    "buttonHover": {
+      "background": "#1c232c",
+      "border": "#3a4656"
+    },
+    "buttonActive": {
+      "background": "#262e3a",
+      "border": "#e6b450",
+      "foreground": "#e6b450"
+    },
+    "buttonFlashing": {
+      "background": "#5a3a10",
+      "border": "#e6b450",
+      "foreground": "#ffe0a0"
+    },
+    "clock": {
+      "foreground": "#e6b450"
+    },
+    "bevel": {
+      "highlight": "#2c3542",
+      "light": "#1f2630",
+      "shadow": "#07090c",
+      "darkShadow": "#000000"
+    }
+  },
+  "palette": [
+    "#0b0e13",
+    "#12161d",
+    "#1a2029",
+    "#222a35",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
+}

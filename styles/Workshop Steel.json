@@ -1,0 +1,95 @@
+// RetroBar-Extreme example style: Workshop Steel.
+// Shows: Horizontal brushed steel (the texture turned to 0 degrees), a safety-amber active
+// button, a vertically brushed tray and heavier Start and button borders.
+// Font to try: Rivet Condensed (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Workshop Steel",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "brushed",
+        "lut": [
+          "#3a3d40",
+          "#6b7075",
+          "#9aa0a6"
+        ],
+        "scale": 2,
+        "angle": 0
+      },
+      "border": "#2a2c2e"
+    },
+    "tray": {
+      "background": {
+        "texture": "brushed",
+        "lut": [
+          "#2e3134",
+          "#55595e"
+        ],
+        "scale": 1,
+        "angle": 90
+      },
+      "border": "#1a1c1e"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#2f3236",
+          "#1d1f22"
+        ]
+      },
+      "border": "#7a8085",
+      "foreground": "#e8e8e8"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#3d4146",
+          "#2a2d31"
+        ]
+      },
+      "border": "#b0b6bc"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffb000",
+          "#d08a00"
+        ]
+      },
+      "border": "#ffe0a0",
+      "foreground": "#1a1a1a"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ff6a2a",
+          "#c03a10"
+        ]
+      },
+      "border": "#ffd0b0",
+      "foreground": "#ffffff"
+    },
+    "clock": {
+      "foreground": "#ffb000"
+    },
+    "bevel": {
+      "highlight": "#c8ccd0",
+      "light": "#8a8f94",
+      "shadow": "#2a2c2e",
+      "darkShadow": "#101112"
+    }
+  },
+  "start": {
+    "recolour": "#7a8085"
+  },
+  "borders": {
+    "button": 2,
+    "buttonActive": 2,
+    "start": 2
+  }
+}

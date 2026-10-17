@@ -14,7 +14,7 @@ namespace RetroBar.Controls
 
         private void StartIconChoose_OnClick(object sender, RoutedEventArgs e)
         {
-            string icon = IconPicker.Choose(Window.GetWindow(this));
+            string icon = IconPicker.Choose(Window.GetWindow(this), @"start\16px");
             if (icon != null)
             {
                 Settings.Instance.StartButtonIcon = icon;

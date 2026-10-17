@@ -473,23 +473,8 @@ namespace RetroBar
         {
             _loadingStyleTab = true;
 
-            // Font list: "Theme default" first, then installed fonts alphabetically.
-            var fontNames = System.Windows.Media.Fonts.SystemFontFamilies
-                .Select(f => f.Source)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct()
-                .OrderBy(name => name)
-                .ToList();
-
-            cboFontFamily.Items.Clear();
-            cboFontFamily.Items.Add(FindResource("uxui_theme_default"));
-            foreach (string name in fontNames)
-            {
-                cboFontFamily.Items.Add(name);
-            }
-
-            int familyIndex = fontNames.IndexOf(Settings.Instance.FontOverrideFamily);
-            cboFontFamily.SelectedIndex = familyIndex >= 0 ? familyIndex + 1 : 0;
+            // Font list: "Theme default" first, then the built-in fonts (UX-017), then installed fonts.
+            Controls.FontChoices.Fill(cboFontFamily, FindResource("uxui_theme_default"), Settings.Instance.FontOverrideFamily);
 
             int weightIndex = Settings.Instance.FontOverrideWeight / 100;
             cboFontWeight.SelectedIndex = weightIndex >= 0 && weightIndex <= 9 ? weightIndex : 0;
@@ -503,12 +488,13 @@ namespace RetroBar
 
         private void CboFontFamily_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (_loadingStyleTab || cboFontFamily.SelectedIndex < 0)
+            string family = Controls.FontChoices.Selected(cboFontFamily);
+            if (_loadingStyleTab || family == null)
             {
                 return;
             }
 
-            Settings.Instance.FontOverrideFamily = cboFontFamily.SelectedIndex == 0 ? "" : cboFontFamily.SelectedItem as string;
+            Settings.Instance.FontOverrideFamily = family;
         }
 
         private void CboFontWeight_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

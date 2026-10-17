@@ -1,0 +1,40 @@
+name: Extras contracts
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Fonts, example styles and Extras (${{ matrix.framework }})
+    runs-on: windows-2025
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ net6.0-windows, net10.0-windows ]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            6.0.x
+            10.0.x
+      - name: Run built-in font, example style and Extras folder tests
+        shell: pwsh
+        run: |
+          dotnet run --project tests/RetroBar.Extras.Tests/RetroBar.Extras.Tests.csproj -c Release -f ${{ matrix.framework }} -- "$env:GITHUB_WORKSPACE/extras-evidence"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload test results and pixel-font renders
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Extras evidence ${{ matrix.framework }}
+          path: extras-evidence

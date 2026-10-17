@@ -12,7 +12,7 @@ namespace RetroBar.Controls
             // After the shell menu has closed.
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                string icon = IconPicker.Choose(Window.GetWindow(this));
+                string icon = IconPicker.Choose(Window.GetWindow(this), @"quicklaunch\16px");
                 if (icon != null)
                 {
                     CustomIcons.SetQuickLaunchIcon(itemPath, icon);

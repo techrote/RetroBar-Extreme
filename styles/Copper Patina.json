@@ -1,0 +1,91 @@
+// RetroBar-Extreme example style: Copper Patina.
+// Shows: Verdigris marble turned 60 degrees, polished copper buttons, a horizontally brushed
+// copper tray and a copper Start recolour.
+// Font to try: Flypress (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Copper Patina",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "marble",
+        "lut": [
+          "#2f6f62",
+          "#4f9a88",
+          "#8ccab8"
+        ],
+        "scale": 2,
+        "angle": 60
+      },
+      "border": "#1e4a40"
+    },
+    "tray": {
+      "background": {
+        "texture": "brushed",
+        "lut": [
+          "#7a4520",
+          "#b87333",
+          "#e0a060"
+        ],
+        "scale": 1,
+        "angle": 0
+      },
+      "border": "#5a3010"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#b87333",
+          "#8a4f20"
+        ]
+      },
+      "border": "#5a3010",
+      "foreground": "#fff2e0"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#cc8444",
+          "#9a5a28"
+        ]
+      },
+      "border": "#ffd0a0"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ecb070",
+          "#c08040"
+        ]
+      },
+      "border": "#fff0d8",
+      "foreground": "#2a1404"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#9cdac8",
+          "#5aa894"
+        ]
+      },
+      "border": "#e0fff6",
+      "foreground": "#0f2a24"
+    },
+    "clock": {
+      "foreground": "#fff2e0"
+    },
+    "bevel": {
+      "highlight": "#e0a060",
+      "light": "#b87333",
+      "shadow": "#3a1e08",
+      "darkShadow": "#1a0c02"
+    }
+  },
+  "start": {
+    "recolour": "#b87333"
+  }
+}

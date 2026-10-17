@@ -1,0 +1,104 @@
+// RetroBar-Extreme example style: Arcade Checker.
+// Shows: A chequered bar (the checker texture), arcade neon buttons, a tray texture coloured
+// from the palette, double-thick button borders and a hot-pink Start recolour.
+// Font to try: Pixel Cell (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Arcade Checker",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "checker",
+        "lut": [
+          "#101030",
+          "#26265e"
+        ],
+        "scale": 2
+      },
+      "border": "#00e5ff"
+    },
+    "tray": {
+      "background": {
+        "texture": "checker",
+        "lut": "palette",
+        "scale": 1,
+        "contrast": 0.6
+      },
+      "border": "#00e5ff"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#2c2c70",
+          "#1a1a46"
+        ]
+      },
+      "border": "#5a5ad0",
+      "foreground": "#ffe040"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#3a3a90",
+          "#24245c"
+        ]
+      },
+      "border": "#00e5ff"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ff2a6d",
+          "#b0104a"
+        ]
+      },
+      "border": "#ffd0e0",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffe040",
+          "#ff9a00"
+        ]
+      },
+      "border": "#fff6c0",
+      "foreground": "#1a1030"
+    },
+    "clock": {
+      "foreground": "#00e5ff"
+    },
+    "bevel": {
+      "highlight": "#8080ff",
+      "light": "#4a4ab0",
+      "shadow": "#0a0a24",
+      "darkShadow": "#000000"
+    }
+  },
+  "palette": [
+    "#14143a",
+    "#22225a",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "start": {
+    "recolour": "#ff2a6d"
+  },
+  "borders": {
+    "button": 2,
+    "buttonActive": 2,
+    "buttonFlashing": 2
+  }
+}

@@ -1,0 +1,91 @@
+// RetroBar-Extreme example style: Gunmetal Ops.
+// Shows: Dark cellular armour plate, gunmetal buttons, an ice-blue active button, red alert
+// flashing and double-thick bar and tray borders.
+// Font to try: Torque Plate (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Gunmetal Ops",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "cells",
+        "lut": [
+          "#1c2228",
+          "#2a323a",
+          "#384450"
+        ],
+        "scale": 1
+      },
+      "border": "#56636f"
+    },
+    "tray": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#222a31",
+          "#161b20"
+        ]
+      },
+      "border": "#56636f"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#3a444e",
+          "#28303a"
+        ]
+      },
+      "border": "#56636f",
+      "foreground": "#d8e4ee"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#46525e",
+          "#323c46"
+        ]
+      },
+      "border": "#8a9aa8"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#18c8ff",
+          "#0a7ab0"
+        ]
+      },
+      "border": "#b0ecff",
+      "foreground": "#001018"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ff3a3a",
+          "#a01010"
+        ]
+      },
+      "border": "#ffc0c0",
+      "foreground": "#ffffff"
+    },
+    "clock": {
+      "foreground": "#18c8ff"
+    },
+    "bevel": {
+      "highlight": "#8a9aa8",
+      "light": "#56636f",
+      "shadow": "#101418",
+      "darkShadow": "#000000"
+    }
+  },
+  "start": {
+    "recolour": "#3a5a74"
+  },
+  "borders": {
+    "bar": 2,
+    "tray": 2
+  }
+}
