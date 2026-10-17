@@ -17,7 +17,7 @@ namespace RetroBar.Controls
 
         private void ToggleIconChoose_OnClick(object sender, RoutedEventArgs e)
         {
-            string icon = IconPicker.Choose(Window.GetWindow(this));
+            string icon = IconPicker.Choose(Window.GetWindow(this), @"toggle\100%");
             if (icon != null)
             {
                 Settings.Instance.TrayToggleIcon = icon;

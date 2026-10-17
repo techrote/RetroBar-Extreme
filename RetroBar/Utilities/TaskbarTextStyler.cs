@@ -227,21 +227,6 @@ namespace RetroBar.Utilities
             bool italic = clockLine && s.ClockFontItalic != ClockItalicOption.SameAsTaskbar ? s.ClockFontItalic == ClockItalicOption.Italic : s.FontOverrideItalic;
             double lineSpacing = clockLine && s.ClockLineSpacing > 0 ? s.ClockLineSpacing : s.FontOverrideLineSpacing;
 
-            // Family
-            if (!string.IsNullOrWhiteSpace(fontFamily) && !original.SymbolFont)
-            {
-                if (!original.FamilySet || textBlock.FontFamily.Source != fontFamily)
-                {
-                    textBlock.FontFamily = new FontFamily(fontFamily);
-                    original.FamilySet = true;
-                }
-            }
-            else if (original.FamilySet)
-            {
-                RestoreValue(textBlock, TextBlock.FontFamilyProperty, original.FontFamilyLocal);
-                original.FamilySet = false;
-            }
-
             // Weight: text the theme made bold (e.g. "Start") stays at least bold.
             if (weightSetting > 0 && !original.SymbolFont)
             {
@@ -302,6 +287,33 @@ namespace RetroBar.Utilities
             else if (fontSize > 0)
             {
                 targetSize = baseSize;
+            }
+
+            // Family (UX-017: built-in fonts by name). The built-in pixel font has one face per
+            // size, so it gets the face for the text's on-screen size, drawn at exactly that size.
+            bool setFamily = !string.IsNullOrWhiteSpace(fontFamily) && !original.SymbolFont;
+            double devicePixels = 12;
+            if (setFamily && BundledFonts.IsPixelFont(fontFamily))
+            {
+                // On-screen px per FontSize unit: DPI, times the taskbar's stretch unless the text is counter-scaled.
+                double toScreen = VisualTreeHelper.GetDpi(textBlock).PixelsPerDip * (counterScale.HasValue ? 1.0 : ScaleModel.TransformScale);
+                devicePixels = (targetSize ?? baseSize) * toScreen;
+                targetSize = BundledFonts.PixelSize(devicePixels) / toScreen;
+            }
+
+            if (setFamily)
+            {
+                FontFamily resolved = BundledFonts.Resolve(fontFamily, devicePixels);
+                if (!original.FamilySet || !Equals(textBlock.FontFamily, resolved))
+                {
+                    textBlock.FontFamily = resolved;
+                    original.FamilySet = true;
+                }
+            }
+            else if (original.FamilySet)
+            {
+                RestoreValue(textBlock, TextBlock.FontFamilyProperty, original.FontFamilyLocal);
+                original.FamilySet = false;
             }
 
             if (targetSize.HasValue)
@@ -389,7 +401,7 @@ namespace RetroBar.Utilities
             {
                 FontFamily themeFamily = Application.Current.TryFindResource("GlobalFontFamily") as FontFamily ?? SystemFonts.CaptionFontFamily;
                 double themeSize = Application.Current.TryFindResource("GlobalFontSize") as double? ?? 11.0;
-                FontFamily family = string.IsNullOrWhiteSpace(s.FontOverrideFamily) ? themeFamily : new FontFamily(s.FontOverrideFamily);
+                FontFamily family = BundledFonts.Resolve(s.FontOverrideFamily) ?? themeFamily; // UX-017: built-in fonts too
                 double size = s.FontOverrideSize > 0 ? s.FontOverrideSize : themeSize;
 
                 double themeLine = themeFamily.LineSpacing * themeSize * s.TaskbarScale;

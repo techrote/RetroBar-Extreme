@@ -1,0 +1,89 @@
+// RetroBar-Extreme example style: Moss and Stone.
+// Shows: Mossy marble turned 15 degrees, river-stone buttons, a lichen tray made of cells,
+// and pale green text.
+// Font to try: Quoin Serif (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Moss and Stone",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "marble",
+        "lut": [
+          "#2a3326",
+          "#4a5e3c",
+          "#7a8c5c"
+        ],
+        "scale": 2,
+        "angle": 15
+      },
+      "border": "#1c2419"
+    },
+    "tray": {
+      "background": {
+        "texture": "cells",
+        "lut": [
+          "#2f3a2a",
+          "#556b45"
+        ],
+        "scale": 1
+      },
+      "border": "#1c2419"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#46523e",
+          "#323b2c"
+        ]
+      },
+      "border": "#6a7a58",
+      "foreground": "#eef2e0"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#56644c",
+          "#3e4936"
+        ]
+      },
+      "border": "#a8bc84"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#8aac5a",
+          "#64843c"
+        ]
+      },
+      "border": "#d8e8b0",
+      "foreground": "#10180a"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#e0b040",
+          "#b08420"
+        ]
+      },
+      "border": "#fff0c0",
+      "foreground": "#1e1606"
+    },
+    "clock": {
+      "foreground": "#d8e8b0"
+    },
+    "bevel": {
+      "highlight": "#a8bc84",
+      "light": "#6a7a58",
+      "shadow": "#1c2419",
+      "darkShadow": "#0c100a"
+    }
+  },
+  "start": {
+    "recolour": "#5a7a38"
+  }
+}

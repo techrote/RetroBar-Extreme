@@ -1,0 +1,87 @@
+// RetroBar-Extreme example style: Cherry Blossom.
+// Shows: Soft pink gradients, a petal-cloud tray texture, a rose active button and a pink
+// Start recolour; a light style with dark text.
+// Font to try: Camber Script (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Cherry Blossom",
+  "parts": {
+    "bar": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffe8f0",
+          "#f6c4d4"
+        ]
+      },
+      "border": "#d88aa4"
+    },
+    "tray": {
+      "background": {
+        "texture": "clouds",
+        "lut": [
+          "#fff0f5",
+          "#f0b0c6"
+        ],
+        "scale": 3,
+        "contrast": 0.9
+      },
+      "border": "#d88aa4"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#fff7fa",
+          "#ffe2ec"
+        ]
+      },
+      "border": "#d88aa4",
+      "foreground": "#5a2338"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffffff",
+          "#ffeef4"
+        ]
+      },
+      "border": "#c0607e"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#e45c8c",
+          "#c03a6a"
+        ]
+      },
+      "border": "#ffd0e0",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ffe070",
+          "#f4c030"
+        ]
+      },
+      "border": "#fff6d0",
+      "foreground": "#5a2338"
+    },
+    "clock": {
+      "foreground": "#8a2a50"
+    },
+    "bevel": {
+      "highlight": "#ffffff",
+      "light": "#ffe2ec",
+      "shadow": "#d88aa4",
+      "darkShadow": "#a05a74"
+    }
+  },
+  "start": {
+    "recolour": "#e05a88"
+  }
+}

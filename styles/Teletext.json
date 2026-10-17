@@ -1,0 +1,63 @@
+// RetroBar-Extreme example style: Teletext.
+// Shows: Flat black with the eight teletext colours: no gradients, square edges, and a
+// yellow-on-blue active button.
+// Font to try: Null Cartridge (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Teletext",
+  "parts": {
+    "bar": {
+      "background": "#000000",
+      "border": "#000000"
+    },
+    "tray": {
+      "background": "#000000",
+      "border": "#00ff00"
+    },
+    "button": {
+      "background": "#000000",
+      "border": "#00ffff",
+      "foreground": "#ffffff"
+    },
+    "buttonHover": {
+      "background": "#000080",
+      "border": "#ffffff"
+    },
+    "buttonActive": {
+      "background": "#0000ff",
+      "border": "#ffff00",
+      "foreground": "#ffff00"
+    },
+    "buttonFlashing": {
+      "background": "#ff0000",
+      "border": "#ffffff",
+      "foreground": "#ffffff"
+    },
+    "clock": {
+      "foreground": "#ffff00"
+    },
+    "bevel": {
+      "highlight": "#00ffff",
+      "light": "#0000ff",
+      "shadow": "#000000",
+      "darkShadow": "#000000"
+    }
+  },
+  "palette": [
+    "#000000",
+    "#ff0000",
+    "#00ff00",
+    "#ffff00",
+    "#0000ff",
+    "#ff00ff",
+    "#00ffff",
+    "#ffffff",
+    null,
+    null,
+    null,
+    null
+  ],
+  "borders": {
+    "bar": 0
+  }
+}

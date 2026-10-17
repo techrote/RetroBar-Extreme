@@ -1,0 +1,60 @@
+// RetroBar-Extreme example style: Blueprint.
+// Shows: A drafting grid (a soft, large checker) in blueprint blue, white linework and a
+// pencil-yellow flashing button.
+// Font to try: Latchline Mono (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Blueprint",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "checker",
+        "lut": [
+          "#0b3d91",
+          "#1454b0"
+        ],
+        "scale": 4,
+        "contrast": 0.8
+      },
+      "border": "#cfe3ff"
+    },
+    "tray": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#0f4aa8",
+          "#0b3d91"
+        ]
+      },
+      "border": "#cfe3ff"
+    },
+    "button": {
+      "background": "#0b3d91",
+      "border": "#cfe3ff",
+      "foreground": "#ffffff"
+    },
+    "buttonHover": {
+      "background": "#14509f",
+      "border": "#ffffff"
+    },
+    "buttonActive": {
+      "background": "#1a5fd0",
+      "border": "#ffffff",
+      "foreground": "#ffffff"
+    },
+    "buttonFlashing": {
+      "background": "#ffd23f",
+      "border": "#fff3c0",
+      "foreground": "#0b2a5e"
+    },
+    "clock": {
+      "foreground": "#cfe3ff"
+    },
+    "bevel": {
+      "highlight": "#cfe3ff",
+      "light": "#6a9ae0",
+      "shadow": "#07285e",
+      "darkShadow": "#041a40"
+    }
+  }
+}

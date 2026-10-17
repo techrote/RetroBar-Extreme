@@ -109,7 +109,7 @@ namespace RetroBar.Controls
         private void RefreshNames()
         {
             string text = cboStyleName.Text;
-            cboStyleName.ItemsSource = StyleDocument.SavedNames();
+            cboStyleName.ItemsSource = StyleDocument.ListedNames(); // UX-017: examples too
             cboStyleName.Text = text;
             UpdateButtons();
         }
@@ -117,7 +117,7 @@ namespace RetroBar.Controls
         private void UpdateButtons()
         {
             bool saved = !string.IsNullOrWhiteSpace(cboStyleName.Text) && File.Exists(StyleDocument.SavedPath(cboStyleName.Text));
-            btnLoad.IsEnabled = saved;
+            btnLoad.IsEnabled = saved || StyleDocument.IsExample(cboStyleName.Text); // UX-017: built-in examples load too
             btnDelete.IsEnabled = saved;
         }
 
@@ -227,12 +227,17 @@ namespace RetroBar.Controls
         }
 
         // Loads a style file, telling the user about anything skipped. Null if it can't be used.
-        private StyleDocument ReadStyle(string path)
+        private StyleDocument ReadStyle(string path) => ReadStyle(warn => StyleDocument.Load(path, warn));
+
+        // UX-017: a built-in example style.
+        private StyleDocument ReadExample(string name) => ReadStyle(warn => StyleDocument.Parse(StyleDocument.ExampleJson(name) ?? "", warn));
+
+        private StyleDocument ReadStyle(Func<Action<string>, StyleDocument> load)
         {
             var warnings = new List<string>();
             try
             {
-                StyleDocument style = StyleDocument.Load(path, warnings.Add);
+                StyleDocument style = load(warnings.Add);
                 if (warnings.Count > 0)
                 {
                     Show(string.Format(Text("uxui_style_load_warnings"), string.Join(Environment.NewLine, warnings)), MessageBoxImage.Warning);
@@ -285,7 +290,8 @@ namespace RetroBar.Controls
                 return;
             }
 
-            StyleDocument style = ReadStyle(StyleDocument.SavedPath(name));
+            string path = StyleDocument.SavedPath(name);
+            StyleDocument style = File.Exists(path) || !StyleDocument.IsExample(name) ? ReadStyle(path) : ReadExample(name);
             if (style != null)
             {
                 UseStyle(style, name);

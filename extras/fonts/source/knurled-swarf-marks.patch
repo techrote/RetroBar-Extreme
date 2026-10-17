@@ -1,0 +1,58 @@
+--- a/cmd-font-container/knurled-swarf/source/swarf.py	2026-10-17 01:35:50.760805300 +0100
++++ b/cmd-font-container/knurled-swarf/source/swarf.py	2026-10-17 01:43:56.931201200 +0100
+@@ -587,6 +587,14 @@
+             hl(cy, edge, stop)
+     return g
+ 
++# RetroBar cut: tiny letters for the (c), (R) and TM marks.
++TINY = {
++    'C': {3: ['###', '#..', '###'], 4: ['.##', '#..', '#..', '.##'], 5: ['.##', '#..', '#..', '#..', '.##']},
++    'R': {3: ['##.', '###', '#.#'], 4: ['##.', '#.#', '##.', '#.#'], 5: ['##.', '#.#', '##.', '#.#', '#.#']},
++    'T': {3: ['###', '.#.', '.#.'], 4: ['###', '.#.', '.#.', '.#.']},
++    'M': {3: ['#...#', '##.##', '#.#.#'], 4: ['#...#', '##.##', '#.#.#', '#...#']},
++}
++
+ def add_procedural(cells, ppem, asc, dsc, m):
+     H = asc + dsc
+     W = cells['0'].adv  # box cell = digit advance (tabular)
+@@ -644,6 +652,40 @@
+         return not circ_fill(i - 1, j - 1, n - 2)
+     cells['●'] = shape(circ_fill, s, y0)
+     cells['○'] = shape(circ_ring, s, y0)
++    # RetroBar cut: (c), (R) and TM, which window titles use ("HWiNFO(R) 64").
++    D = m.cap if m.cap % 2 else m.cap + 1
++    D = min(max(7, D), H if H % 2 else H - 1)
++    for ch, letter in (('©', 'C'), ('®', 'R')):
++        if D < 7:
++            # too small for a ring: a raised tiny letter, like a superscript mark
++            tiny = bmp(TINY[letter][3])
++            rows = blank(3, H)
++            for j, r in enumerate(tiny):
++                rows[asc - m.cap + j] = r[:]
++            cells[ch] = Cell(rows, 4)
++            continue
++        ry = max(0, min(asc - D, H - D))  # sits on the baseline; dips into the descender if short
++        h = min(5, D - 4)
++        rows = blank(D, H)
++        for j in range(D):
++            for i in range(D):
++                if circ_ring(i, j, D):
++                    rows[ry + j][i] = 1
++        tiny = bmp(TINY[letter][h])
++        lx, ly = (D - len(tiny[0])) // 2, ry + (D - h) // 2
++        for j, r in enumerate(tiny):
++            for i, v in enumerate(r):
++                if v:
++                    rows[ly + j][lx + i] = 1
++        cells[ch] = Cell(rows, D + 1)
++    th = 3 if m.cap < 10 else 4
++    t, mm = bmp(TINY['T'][th]), bmp(TINY['M'][th])
++    tw = len(t[0]) + 1 + len(mm[0])
++    rows = blank(tw, H)
++    top = asc - m.cap
++    for j in range(th):
++        rows[top + j] = t[j] + [0] + mm[j]
++    cells['™'] = Cell(rows, tw + 1)
+ 
+ def embolden(rows):
+     """VGA-style horizontal smear; first open every 1px counter so it survives."""

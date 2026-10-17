@@ -1,0 +1,88 @@
+// RetroBar-Extreme example style: Desert Sandstone.
+// Shows: Warm sandstone noise, light sun-bleached buttons with dark text, a terracotta
+// active button and a burnt-orange flash.
+// Font to try: Tallow Condensed (bundled; Properties > Style > Font).
+// Use it from Properties > Colours > Saved styles, or Import... this file.
+{
+  "name": "Desert Sandstone",
+  "parts": {
+    "bar": {
+      "background": {
+        "texture": "noise",
+        "lut": [
+          "#a87848",
+          "#c89a64",
+          "#e0b880"
+        ],
+        "scale": 3,
+        "contrast": 0.8
+      },
+      "border": "#7a4e28"
+    },
+    "tray": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#c08a58",
+          "#a06c3c"
+        ]
+      },
+      "border": "#7a4e28"
+    },
+    "button": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#f4dcb4",
+          "#dcbc8c"
+        ]
+      },
+      "border": "#8a5a30",
+      "foreground": "#3a2410"
+    },
+    "buttonHover": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#fae8c8",
+          "#e8cca0"
+        ]
+      },
+      "border": "#6a4020"
+    },
+    "buttonActive": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#9a5226",
+          "#743a16"
+        ]
+      },
+      "border": "#f4dcb4",
+      "foreground": "#fff0d8"
+    },
+    "buttonFlashing": {
+      "background": {
+        "angle": 90,
+        "stops": [
+          "#ee6a30",
+          "#c04a18"
+        ]
+      },
+      "border": "#ffe0c8",
+      "foreground": "#ffffff"
+    },
+    "clock": {
+      "foreground": "#3a2410"
+    },
+    "bevel": {
+      "highlight": "#fae8c8",
+      "light": "#dcbc8c",
+      "shadow": "#7a4e28",
+      "darkShadow": "#4a2c12"
+    }
+  },
+  "start": {
+    "recolour": "#c06a30"
+  }
+}
