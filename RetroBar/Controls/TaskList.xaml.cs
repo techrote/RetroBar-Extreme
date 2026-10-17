@@ -79,6 +79,30 @@ namespace RetroBar.Controls
             set { SetValue(TasksProperty, value); }
         }
 
+        // UXUI-Extreme: the grip left of the task buttons resizes the quick launch area.
+        private void QuickLaunchGrip_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Primitives.Thumb grip && Host != null)
+            {
+                grip.Cursor = Host.Orientation == Orientation.Horizontal ? System.Windows.Input.Cursors.SizeWE : System.Windows.Input.Cursors.SizeNS;
+            }
+        }
+
+        private void QuickLaunchGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            Host?.ResizeQuickLaunch(Host.Orientation == Orientation.Horizontal ? e.HorizontalChange : e.VerticalChange);
+        }
+
+        private void QuickLaunchGrip_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Settings.Instance.QuickLaunchLength = 0;
+        }
+
+        private void QuickLaunchGrip_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            Host?.FinishQuickLaunchResize();
+        }
+
         public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(TaskList), new PropertyMetadata(TasksChangedCallback));
 
         public Taskbar Host

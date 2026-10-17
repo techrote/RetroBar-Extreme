@@ -75,11 +75,17 @@ namespace RetroBar.Controls
                 Height = 36, Margin = new Thickness(0, 4, 0, 4), BorderThickness = new Thickness(1),
                 BorderBrush = SystemColors.ControlDarkDarkBrush, Name = "TexturePreview",
             };
+            Action<string> say = text =>
+            {
+                status.Text = text;
+                status.Foreground = SystemColors.ControlTextBrush;
+            };
             _refreshTexturePreview = () =>
             {
                 try
                 {
                     preview.Background = _value.ToBrush(palette: _paletteSource?.Invoke());
+                    if (_configBox != null && !_configBox.IsKeyboardFocusWithin) _configBox.Text = TextureConfig.ToText(_value.Texture);
                     status.Text = TextureText("uxui_texture_hint");
                     status.Foreground = SystemColors.ControlTextBrush;
                 }
@@ -102,6 +108,7 @@ namespace RetroBar.Controls
                 texture.Name = name;
                 RefreshTexturePreview();
                 RaiseChanged();
+                Dispatcher.BeginInvoke(new Action(BuildDetails)); // parameter rows differ per pattern
             };
             var patternRow = new DockPanel();
             var label = new Label { Content = TextureText("uxui_texture_pattern"), Target = pattern };
@@ -109,6 +116,7 @@ namespace RetroBar.Controls
             patternRow.Children.Add(label);
             patternRow.Children.Add(pattern);
             _details.Children.Add(patternRow);
+            _details.Children.Add(PresetRow(texture, say)); // UXUI-Extreme: presets, import / export
 
             var presets = new WrapPanel { Margin = new Thickness(0, 3, 0, 3) };
             var ratrod = new Button { Content = TextureText("uxui_texture_ratrod"), Margin = new Thickness(0, 0, 6, 0) };
@@ -168,14 +176,59 @@ namespace RetroBar.Controls
                     _details.Children.Add(add);
                 }
             }
-            _details.Children.Add(TextureNumber("uxui_texture_scale", "TextureScale", TextureSpec.MinScale, TextureSpec.MaxScale, 0.25,
+            var numbers = new System.Windows.Controls.Primitives.UniformGrid { Columns = 2, Margin = new Thickness(0, 2, 0, 2) };
+            // UXUI-Extreme: generator parameters, only the ones this pattern uses
+            TextureGenerators.Param uses = TextureGenerators.Uses(texture.Name);
+            if (uses.HasFlag(TextureGenerators.Param.Seed))
+                numbers.Children.Add(TextureNumber("uxui_texture_seed", "TextureSeed", 0, TextureSpec.MaxSeed, 1,
+                    () => texture.Seed, n => texture.Seed = (int)Math.Round(n)));
+            if (uses.HasFlag(TextureGenerators.Param.Octaves))
+                numbers.Children.Add(TextureNumber("uxui_texture_octaves", "TextureOctaves", 1, TextureSpec.MaxOctaves, 1,
+                    () => TextureGenerators.Octaves(texture), n => texture.Octaves = (int)Math.Round(n)));
+            if (uses.HasFlag(TextureGenerators.Param.Frequency))
+                numbers.Children.Add(TextureNumber("uxui_texture_frequency", "TextureFrequency", 1, texture.Name == "noise" ? 64 : 32, 1,
+                    () => TextureGenerators.Frequency(texture), n => texture.Frequency = (int)Math.Round(n)));
+            if (uses.HasFlag(TextureGenerators.Param.Strength))
+                numbers.Children.Add(TextureNumber("uxui_texture_strength", "TextureStrength", TextureSpec.MinStrength, TextureSpec.MaxStrength, 0.1,
+                    () => texture.Strength, n => texture.Strength = n));
+            numbers.Children.Add(TextureNumber("uxui_texture_scale", "TextureScale", TextureSpec.MinScale, TextureSpec.MaxScale, 0.25,
                 () => texture.Scale, n => texture.Scale = n));
-            _details.Children.Add(TextureNumber("uxui_texture_contrast", "TextureContrast", TextureSpec.MinContrast, TextureSpec.MaxContrast, 0.1,
+            numbers.Children.Add(TextureNumber("uxui_texture_contrast", "TextureContrast", TextureSpec.MinContrast, TextureSpec.MaxContrast, 0.1,
                 () => texture.Contrast, n => texture.Contrast = n));
+            // UXUI-Extreme: tone
+            numbers.Children.Add(TextureNumber("uxui_texture_brightness", "TextureBrightness", TextureSpec.MinBrightness, TextureSpec.MaxBrightness, 0.05,
+                () => texture.Brightness, n => texture.Brightness = n));
+            numbers.Children.Add(TextureNumber("uxui_texture_saturation", "TextureSaturation", TextureSpec.MinSaturation, TextureSpec.MaxSaturation, 0.05,
+                () => texture.Saturation, n => texture.Saturation = n));
+            numbers.Children.Add(TextureNumber("uxui_texture_white", "TextureWhite", TextureSpec.MinWhite, TextureSpec.MaxWhite, 0.05,
+                () => texture.WhiteLevel, n => texture.WhiteLevel = n));
+            // UXUI-Extreme: scaling quality and sharpening
+            var resample = new ComboBox { Width = 150, HorizontalAlignment = HorizontalAlignment.Left, Name = "TextureResample" };
+            resample.ItemsSource = TextureResampler.Methods.Select(m => TextureText("uxui_texture_resample_" + m)).ToList();
+            resample.SelectedIndex = Math.Max(0, TextureResampler.Methods.ToList().IndexOf(texture.Resample));
+            resample.SelectionChanged += (s, e) =>
+            {
+                if (resample.SelectedIndex < 0) return;
+                texture.Resample = TextureResampler.Methods[resample.SelectedIndex];
+                RefreshTexturePreview(); RaiseChanged();
+            };
+            var resampleRow = new DockPanel();
+            var resampleLabel = new Label { Content = TextureText("uxui_texture_resample"), Target = resample };
+            DockPanel.SetDock(resampleLabel, Dock.Left);
+            resampleRow.Children.Add(resampleLabel);
+            resampleRow.Children.Add(resample);
+            numbers.Children.Add(resampleRow);
+            numbers.Children.Add(TextureNumber("uxui_texture_sharpen", "TextureSharpen", 0, TextureSpec.MaxSharpen, 0.1,
+                () => texture.Sharpen, n => texture.Sharpen = n));
+            numbers.Children.Add(TextureNumber("uxui_texture_sharpen_radius", "TextureSharpenRadius", TextureSpec.MinRadius, TextureSpec.MaxRadius, 0.1,
+                () => texture.SharpenRadius, n => texture.SharpenRadius = n));
             // UXUI-Extreme (UX-013)
-            _details.Children.Add(TextureNumber("uxui_texture_angle", "TextureAngle", TextureSpec.MinAngle, TextureSpec.MaxAngle, 5,
+            numbers.Children.Add(TextureNumber("uxui_texture_angle", "TextureAngle", TextureSpec.MinAngle, TextureSpec.MaxAngle, 5,
                 () => texture.Angle, n => texture.Angle = n));
+            _details.Children.Add(numbers);
             _details.Children.Add(preview);
+            _details.Children.Add(ConfigRow(texture, say));
+            if (_texturePalette != null) _details.Children.Add(PaletteRow(texture, say));
             _details.Children.Add(status);
             RefreshTexturePreview();
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Windows;
@@ -70,10 +71,12 @@ namespace RetroBar.Controls
                 _paletteFields[i].Value = _style.Palette[i];
             }
             _showingPalette = false;
+            ShowTextureSlots();
         }
 
         private void RefreshTexturePreviews()
         {
+            ShowTextureSlots(); // palette-backed swatches follow the colours too
             foreach (object child in panelProperties.Children)
             {
                 if (child is BrushEditor editor)
@@ -98,6 +101,29 @@ namespace RetroBar.Controls
             Colourways.Preset preset = Colourways.Presets[cboPreset.SelectedIndex];
             _style.Palette[0] = preset.Base;
             _style.Palette[1] = preset.Accent;
+            ShowPaletteFields();
+            RefreshTexturePreviews();
+            ScheduleSave();
+        }
+
+        // Fills every empty slot with colours related to the ones already chosen (see PaletteFill).
+        private void FillComplementary_OnClick(object sender, RoutedEventArgs e)
+        {
+            var chosen = _style.Palette.Where(c => c.HasValue).Select(c => c.Value).ToList();
+            if (chosen.Count == 0)
+            {
+                Show(Text("uxui_palette_fill_need"), MessageBoxImage.Information);
+                return;
+            }
+
+            var empty = Enumerable.Range(0, _style.Palette.Length).Where(i => !_style.Palette[i].HasValue).ToList();
+            List<Color> added = PaletteFill.Generate(chosen, empty.Count);
+            for (int i = 0; i < added.Count && i < empty.Count; i++)
+            {
+                _style.Palette[empty[i]] = added[i];
+            }
+
+            cboPreset.SelectedIndex = -1;
             ShowPaletteFields();
             RefreshTexturePreviews();
             ScheduleSave();

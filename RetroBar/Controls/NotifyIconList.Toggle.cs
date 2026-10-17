@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using RetroBar.Utilities;
@@ -17,14 +18,74 @@ namespace RetroBar.Controls
     {
         private static bool IsToggleSetting(string name) =>
             name == nameof(Settings.TrayToggleIcon) ||
+            name == nameof(Settings.TrayTogglePlacement) ||
             name == nameof(Settings.TrayToggleFlip) ||
             name == nameof(Settings.TrayToggleCustomMargin) ||
             name == nameof(Settings.TrayToggleMargin) ||
             name == nameof(Settings.TaskbarScale) ||
             name == nameof(Settings.ScalingMode);
 
+        // True while the toggle is one of the icon area's own cells (First / Last).
+        public bool ToggleTucked { get; private set; }
+
+        // First / Last put the toggle inside the icon list as a cell of its own, so on a
+        // multi-row tray it wraps with the icons. Beside gives it back to the theme's place.
+        private void ApplyTogglePlacement()
+        {
+            var placement = Settings.Instance.TrayTogglePlacement;
+            bool tuck = placement != TrayTogglePlacementOption.Beside && collectionView != null;
+
+            if (tuck == ToggleTucked && (!tuck || ToggleFirst == (placement == TrayTogglePlacementOption.First)))
+            {
+                return;
+            }
+
+            try
+            {
+                if (tuck)
+                {
+                    ListPanel.Children.Remove(NotifyIconToggleButton);
+                    var items = new CompositeCollection();
+                    var icons = new CollectionContainer { Collection = collectionView };
+                    if (placement == TrayTogglePlacementOption.First)
+                    {
+                        items.Add(NotifyIconToggleButton);
+                        items.Add(icons);
+                    }
+                    else
+                    {
+                        items.Add(icons);
+                        items.Add(NotifyIconToggleButton);
+                    }
+                    NotifyIcons.ItemsSource = items;
+                    ToggleTucked = true;
+                    ToggleFirst = placement == TrayTogglePlacementOption.First;
+                }
+                else
+                {
+                    if (collectionView != null)
+                    {
+                        NotifyIcons.ItemsSource = collectionView; // releases the toggle from the icon list
+                    }
+                    if (!ListPanel.Children.Contains(NotifyIconToggleButton))
+                    {
+                        ListPanel.Children.Insert(0, NotifyIconToggleButton);
+                    }
+                    ToggleTucked = false;
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Warning($"UXUI-Extreme: notification area toggle placement not applied: {e.Message}");
+            }
+        }
+
+        public bool ToggleFirst { get; private set; }
+
         private void ApplyToggleOverrides()
         {
+            ApplyTogglePlacement();
+
             var s = Settings.Instance;
             double unit = ScaleModel.IsNative ? s.TaskbarScale : 1.0;
 

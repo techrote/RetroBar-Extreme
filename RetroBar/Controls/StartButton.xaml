@@ -12,14 +12,17 @@
                   Name="Start"
                   Style="{DynamicResource StartButton}">
         <Grid x:Name="StartContentGrid">
+            <!-- UXUI-Extreme: spacer columns let the icon and label sit left, centred or right -->
             <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="StartLeadColumn" Width="0" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="StartLabelColumn" Width="*" />
+                <ColumnDefinition x:Name="StartTrailColumn" Width="0" />
             </Grid.ColumnDefinitions>
-            <Image Grid.Column="0"
+            <Image Grid.Column="1"
                    x:Name="StartIconImage"
                    Style="{DynamicResource StartIcon}" />
-            <TextBlock Grid.Column="1"
+            <TextBlock Grid.Column="2"
                        x:Name="StartLabelText"
                        Style="{DynamicResource StartLabel}" />
         </Grid>

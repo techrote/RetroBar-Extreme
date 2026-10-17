@@ -56,7 +56,8 @@
     <Resource Include="..\extras\fonts\*.ttf" Link="Fonts\%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\styles\*.json" Exclude="..\styles\Broken.json" LogicalName="RetroBar.ExampleStyles.%(Filename).json" />
     <None Include="..\styles\*.json;..\styles\README.md;..\styles\preview.png" Exclude="..\styles\Broken.json" Link="Extras\Styles\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-    <None Include="..\extras\icons\**\*" Link="Extras\Icons\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\extras\icons\**\*" Exclude="..\extras\icons\source\**" Link="Extras\Icons\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="..\extras\startbuttons\**\*" Exclude="..\extras\startbuttons\source\**" Link="Extras\StartButtons\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\extras\fonts\*.ttf;..\extras\fonts\OFL.txt;..\extras\fonts\README.md" Link="Extras\Fonts\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 

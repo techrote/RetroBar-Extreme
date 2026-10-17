@@ -91,5 +91,28 @@
     "button": 2,
     "buttonActive": 2,
     "start": 2
-  }
+  },
+  "palette": [ "#2a2c2e", "#7a8085", "#ffb000", "#3a3d40", "#9aa0a6", "#55595e", "#e8e8e8", "#b0b6bc", null, null, null, null ],
+  "texturePalette": [
+    {"texture": "brushed", "lut": ["#3a3d40", "#6b7075", "#9aa0a6"], "scale": 2, "angle": 0},
+    {"texture": "brushed", "lut": ["#2e3134", "#55595e"], "scale": 1, "angle": 90},
+    {"texture": "marble", "lut": ["#2a2c2e", "#7a8085", "#b0b6bc"], "scale": 1, "contrast": 1, "frequency": 3, "strength": 1.5},
+    {"texture": "scanlines", "lut": ["#3a3d40", "#9aa0a6", "#e8e8e8"], "scale": 1, "contrast": 1, "frequency": 32},
+    {"texture": "weave", "lut": ["#b0b6bc", "#9aa0a6", "#55595e"], "scale": 1, "contrast": 1},
+    {"texture": "checker", "lut": ["#7a8085", "#ffb000", "#e8e8e8"], "scale": 1, "contrast": 0.6, "frequency": 16},
+    {"texture": "waves", "lut": ["#9aa0a6", "#ffb000", "#b0b6bc"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    {"texture": "bricks", "lut": ["#e8e8e8", "#b0b6bc", "#ffb000"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "dots", "lut": ["#2a2c2e", "#7a8085", "#b0b6bc"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "noise", "lut": ["#3a3d40", "#9aa0a6", "#e8e8e8"], "scale": 1, "contrast": 1, "strength": 0.6},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
 }

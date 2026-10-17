@@ -8,18 +8,35 @@
         <ResourceDictionary>
             <converters:CultureInfoToLocaleNameConverter x:Key="cultureInfoToLocaleNameConverter" />
             <converters:DockOrientationConverter x:Key="dockOrientationConverter" />
+            <converters:ThumbOverlayConverter x:Key="thumbOverlayConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
 
     <DockPanel>
-        <Thumb Style="{DynamicResource ToolbarThumb}">
+        <!-- UXUI-Extreme: the grip hangs over its neighbour's edge instead of taking room, so the unlocked
+             and locked taskbars are laid out identically -->
+        <Grid>
+            <Grid.Width>
+                <Binding Converter="{StaticResource thumbOverlayConverter}" ConverterParameter="width" Path="Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+            </Grid.Width>
+            <Grid.Height>
+                <Binding Converter="{StaticResource thumbOverlayConverter}" ConverterParameter="height" Path="Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+            </Grid.Height>
             <DockPanel.Dock>
                 <Binding Converter="{StaticResource dockOrientationConverter}"
                          ConverterParameter="leading"
                          Path="Orientation"
                          RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
             </DockPanel.Dock>
-        </Thumb>
+            <Thumb Style="{DynamicResource ToolbarThumb}">
+                <Thumb.HorizontalAlignment>
+                    <Binding Converter="{StaticResource thumbOverlayConverter}" ConverterParameter="h" Path="Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                </Thumb.HorizontalAlignment>
+                <Thumb.VerticalAlignment>
+                    <Binding Converter="{StaticResource thumbOverlayConverter}" ConverterParameter="v" Path="Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                </Thumb.VerticalAlignment>
+            </Thumb>
+        </Grid>
         <WrapPanel x:Name="InputLanguageDockPanel"
                    Style="{DynamicResource LanguageBar}">
             <Button Click="InputLanguageButton_Click"

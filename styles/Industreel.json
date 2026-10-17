@@ -1,0 +1,76 @@
+// RetroBar-Extreme example style: Industreel.
+// Shows: a stretched-cloud bar with a brushed-steel border, a cellular tray with a marble edge,
+// grainy noise buttons with a blue hover, thick bar and tray borders, and a borderless Start button.
+// The colour palette and texture palette hold the colours and textures this look is built from.
+{
+  "name": "Industreel",
+  "parts": {
+    "bar": {
+      "background": {"texture": "clouds", "lut": ["#ffffff", "#969696", "#6a6a6a", "#484848"], "scale": 8, "contrast": 2, "angle": 240, "octaves": 5, "brightness": -0.1, "resample": "box", "sharpen": 4, "sharpenRadius": 4},
+      "border": {"texture": "brushed", "lut": ["#2b2f33", "#5a6066", "#8a9096"], "scale": 1.25, "contrast": 1.4000000000000001, "angle": 155}
+    },
+    "tray": {
+      "background": {"texture": "cells", "lut": ["#000816", "#212630", "#525865", "#e9eaeb"], "scale": 1, "contrast": 1.2000000000000002, "angle": 75},
+      "border": {"texture": "marble", "lut": ["#000000", "#fbff4a"], "scale": 0.5, "contrast": 1.2000000000000002, "angle": 15}
+    },
+    "button": {
+      "background": {"texture": "noise", "lut": ["#000000", "#414141"], "scale": 1, "contrast": 1},
+      "border": "#00050e",
+      "foreground": "#d6d5c7"
+    },
+    "buttonHover": {
+      "background": {"angle": 90, "stops": ["#002b7b", "#000e29"]},
+      "border": "#000611"
+    },
+    "buttonActive": {
+      "background": {"texture": "noise", "lut": ["#666666", "#202020"], "scale": 1, "contrast": 1},
+      "border": "#00040c",
+      "foreground": "#f4f2ee"
+    },
+    "buttonFlashing": {
+      "background": {"texture": "noise", "lut": ["#364f68", "#1f2d3c"], "scale": 1, "contrast": 1},
+      "border": "#131b24",
+      "foreground": "#f4f2ee"
+    },
+    "clock": {
+      "foreground": "#f4f2ee"
+    },
+    "bevel": {
+      "highlight": "#000000",
+      "light": "#c0c0c0",
+      "shadow": "#000510",
+      "darkShadow": "#000309"
+    }
+  },
+  "start": {
+    "recolour": "#ffffff"
+  },
+  "borders": {
+    "bar": 4,
+    "tray": 4,
+    "start": 0
+  },
+  "palette": [ "#00091a", "#263749", "#f4f2ee", "#969696", "#6a6a6a", "#484848", "#353535", null, null, "#000817", null, null ],
+  "texturePalette": [
+    {"texture": "clouds", "lut": ["#ffffff", "#969696", "#6a6a6a", "#484848"], "scale": 8, "contrast": 2, "angle": 240, "octaves": 5, "brightness": -0.1, "resample": "box", "sharpen": 4, "sharpenRadius": 4},
+    {"texture": "brushed", "lut": ["#2b2f33", "#5a6066", "#8a9096"], "scale": 1.25, "contrast": 1.4000000000000001, "angle": 155},
+    {"texture": "cells", "lut": ["#000816", "#212630", "#525865", "#e9eaeb"], "scale": 1, "contrast": 1.2000000000000002, "angle": 75},
+    {"texture": "marble", "lut": ["#000000", "#fbff4a"], "scale": 0.5, "contrast": 1.2000000000000002, "angle": 15},
+    {"texture": "waves", "lut": ["#000817", "#353535", "#969696"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    {"texture": "bricks", "lut": ["#00091a", "#484848", "#f4f2ee"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "dots", "lut": ["#969696", "#484848", "#263749"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "noise", "lut": ["#353535", "#6a6a6a", "#f4f2ee"], "scale": 1, "contrast": 1, "strength": 0.6},
+    {"texture": "brushed", "lut": ["#484848", "#6a6a6a", "#969696"], "scale": 1, "contrast": 1.2, "strength": 0.6},
+    {"texture": "carbon", "lut": ["#f4f2ee", "#969696", "#6a6a6a"], "scale": 1, "contrast": 1},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
+}

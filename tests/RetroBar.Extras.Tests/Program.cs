@@ -144,7 +144,7 @@ internal static class Program
     private static void ExampleStyles()
     {
         List<string> names = StyleDocument.ExampleNames();
-        Check(names.Count == 26, $"26 example styles, found {names.Count}");
+        Check(names.Count == 27, $"27 example styles, found {names.Count}");
         Check(!names.Contains("Broken"), "the deliberately broken test style isn't an example");
         foreach (string name in names)
         {
@@ -153,6 +153,9 @@ internal static class Program
             Check(warnings.Count == 0, $"{name}: {string.Join("; ", warnings)}");
             Check(style.Name == name, $"{name}: its name inside is \"{style.Name}\"");
             foreach (var part in style.Parts) foreach (var prop in part.Value) prop.Value.ToBrush(0, style.Palette);
+            Check(style.Palette.Count(c => c.HasValue) >= 8, $"{name}: at least 8 colours in its palette");
+            Check(style.TexturePalette.Count(t => t != null) == 10, $"{name}: ten textures in its texture palette");
+            foreach (TextureSpec texture in style.TexturePalette.Where(t => t != null)) LutTextures.Create(texture, style.Palette);
         }
         Check(StyleDocument.ExampleJson("neon night") != null, "names are case-insensitive");
         Check(StyleDocument.ExampleJson("No Such Style") == null && !StyleDocument.IsExample("No Such Style"), "unknown names");
@@ -168,10 +171,24 @@ internal static class Program
     {
         string extras = Path.Combine(AppContext.BaseDirectory, "Extras");
         string[] styles = Directory.GetFiles(Path.Combine(extras, "Styles"), "*.json");
-        Check(styles.Length == 26 && !styles.Any(f => f.EndsWith("Broken.json")), $"Extras\\Styles: {styles.Length} styles");
+        Check(styles.Length == 27 && !styles.Any(f => f.EndsWith("Broken.json")), $"Extras\\Styles: {styles.Length} styles");
         Check(File.Exists(Path.Combine(extras, "Styles", "README.md")) && File.Exists(Path.Combine(extras, "Styles", "preview.png")), "styles README and preview");
         int icons = Directory.GetFiles(Path.Combine(extras, "Icons"), "*.png", SearchOption.AllDirectories).Count(f => !f.EndsWith("preview.png"));
-        Check(icons == 74, $"Extras\\Icons: {icons} icons");
+        Check(icons == 234, $"Extras\\Icons: {icons} icons (74 originals, 100 button symbols, 24 Show desktop, 36 notification area)");
+        foreach (string kind in new[] { "showdesktop", "tray", "start", "quicklaunch" })
+            Check(Directory.Exists(Path.Combine(extras, "Icons", kind)), $"Extras\\Icons\\{kind} exists (the Choose PNG buttons open it)");
+        Check(!Directory.Exists(Path.Combine(extras, "Icons", "startbuttons")), "Start buttons are not mixed in with the icons");
+        foreach (var (folder, height) in new[] { ("3state", 84), ("1state", 28) })
+        {
+            string[] buttons = Directory.GetFiles(Path.Combine(extras, "StartButtons", folder), "*.png");
+            Check(buttons.Length == 25, $"Extras StartButtons/{folder}: {buttons.Length} Start buttons");
+            foreach (string button in buttons)
+            {
+                var frame = new System.Windows.Media.Imaging.BitmapImage(new Uri(button));
+                Check(frame.PixelWidth == 96 && frame.PixelHeight == height, folder + "\\" + Path.GetFileName(button) + $" is 96 x {height}");
+            }
+        }
+        Check(File.Exists(Path.Combine(extras, "StartButtons", "README.md")) && File.Exists(Path.Combine(extras, "StartButtons", "template-3state.png")), "Start button guide and template");
         Check(Directory.Exists(Path.Combine(extras, "Icons", "start", "16px")) && Directory.Exists(Path.Combine(extras, "Icons", "toggle", "100%")), "icon pack folders");
         int fonts = Directory.GetFiles(Path.Combine(extras, "Fonts"), "*.ttf").Length;
         Check(fonts == 63, $"Extras\\Fonts: {fonts} font files");

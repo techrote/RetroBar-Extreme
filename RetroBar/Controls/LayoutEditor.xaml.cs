@@ -15,9 +15,34 @@ namespace RetroBar.Controls
         private const double SpacingSamePosition = 0.5; // slider's leftmost = same as taskbar
         private bool _loading;
 
+        // UXUI-Extreme: which groups this copy of the editor shows. "All" is everything; the Start/Quick tab
+        // and the Layout / Icons tabs each show their own part, from the same settings.
+        public static readonly DependencyProperty SectionsProperty = DependencyProperty.Register(
+            nameof(Sections), typeof(string), typeof(LayoutEditor), new PropertyMetadata("All", (d, e) => ((LayoutEditor)d).ApplySections()));
+
+        public string Sections
+        {
+            get => (string)GetValue(SectionsProperty);
+            set => SetValue(SectionsProperty, value);
+        }
+
+        private static Visibility Show(bool show) => show ? Visibility.Visible : Visibility.Collapsed;
+
+        private void ApplySections()
+        {
+            bool startQuick = Sections == "StartQuick", main = Sections == "Main", all = !startQuick && !main;
+            grpStart.Visibility = Show(all || startQuick);
+            grpDesktop.Visibility = Show(all || startQuick);
+            noteStart.Visibility = Show(all || startQuick);
+            grpToggle.Visibility = Show(all || main);
+            grpTaskButtons.Visibility = Show(all || main);
+        }
+        private bool _ready; // set once every control exists (sliders raise ValueChanged while the XAML loads)
+
         public LayoutEditor()
         {
             InitializeComponent();
+            _ready = true;
         }
 
         private void LayoutEditor_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -41,34 +66,18 @@ namespace RetroBar.Controls
             cboStartStretch.SelectedIndex = (int)s.StartButtonStretchMode;
             cboStartAnchor.SelectedIndex = (int)s.StartButtonAnchor;
             cboShowDesktopPosition.SelectedIndex = (int)s.ShowDesktopPosition;
-            cboClockOrientation.SelectedIndex = (int)s.ClockOrientation;
-            cboClockItalic.SelectedIndex = (int)s.ClockFontItalic;
+            cboTogglePlacement.SelectedIndex = (int)s.TrayTogglePlacement;
 
-            // Fonts: "Same as taskbar" first, then the built-in fonts (UX-017), then installed fonts.
-            FontChoices.Fill(cboClockFont, Text("uxui_layout_same_as_taskbar"), s.ClockFontFamily);
-
-            // Weights: the Style tab's list, with "Same as taskbar" in place of "Theme default".
-            cboClockWeight.Items.Clear();
-            cboClockWeight.Items.Add(Text("uxui_layout_same_as_taskbar"));
-            if (FindResource("uxui_font_weight_values") is Array weights)
-            {
-                foreach (object weight in weights.Cast<object>().Skip(1))
-                {
-                    cboClockWeight.Items.Add(weight);
-                }
-            }
-            int weightIndex = s.ClockFontWeight / 100;
-            cboClockWeight.SelectedIndex = weightIndex >= 0 && weightIndex < cboClockWeight.Items.Count ? weightIndex : 0;
-
-            sldClockSpacing.Value = s.ClockLineSpacing > 0 ? s.ClockLineSpacing : SpacingSamePosition;
-
-            ShowStartIcon(); // UX-015
             ShowToggleSettings(); // UX-016
 
             // UX-014
             cboTaskWidth.SelectedIndex = s.TaskButtonWidthPx > 0 ? 1 : 0;
+            cboTaskAlign.SelectedIndex = (int)s.TaskButtonAlign;
+            cboTaskVAlign.SelectedIndex = (int)s.TaskButtonVAlign;
             sldTaskWidth.Value = s.TaskButtonWidthPx > 0 ? s.TaskButtonWidthPx : 160;
             LoadApps();
+            LoadRows();
+            txtDesktopMargin.Text = s.ShowDesktopMargin;
 
             _loading = false;
             UpdateTexts();
@@ -105,13 +114,75 @@ namespace RetroBar.Controls
             else if (combo == cboStartStretch) s.StartButtonStretchMode = (StretchModeOption)i;
             else if (combo == cboStartAnchor) s.StartButtonAnchor = (VerticalAnchorOption)i;
             else if (combo == cboShowDesktopPosition) s.ShowDesktopPosition = (ShowDesktopPositionOption)i;
-            else if (combo == cboClockOrientation) s.ClockOrientation = (ElementOrientationOption)i;
-            else if (combo == cboClockItalic) s.ClockFontItalic = (ClockItalicOption)i;
-            else if (combo == cboClockFont) s.ClockFontFamily = FontChoices.Selected(combo) ?? s.ClockFontFamily;
-            else if (combo == cboClockWeight) s.ClockFontWeight = i * 100;
+            else if (combo == cboTogglePlacement) s.TrayTogglePlacement = (TrayTogglePlacementOption)i;
+            else if (combo == cboTaskAlign) s.TaskButtonAlign = (TaskButtonAlignOption)i;
+            else if (combo == cboTaskVAlign) s.TaskButtonVAlign = (VerticalPlaceOption)i;
             else if (combo == cboTaskWidth) s.TaskButtonWidthPx = i == 0 ? 0 : Math.Round(sldTaskWidth.Value); // UX-014
 
             UpdateTexts();
+        }
+
+        private void TxtDesktopMargin_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_loading)
+            {
+                return;
+            }
+
+            if (NotifyIconList.TryParseMargin(txtDesktopMargin.Text, out _))
+            {
+                txtDesktopMargin.ClearValue(Control.BorderBrushProperty);
+                Settings.Instance.ShowDesktopMargin = txtDesktopMargin.Text.Trim();
+            }
+            else
+            {
+                txtDesktopMargin.BorderBrush = System.Windows.Media.Brushes.Red;
+            }
+        }
+
+        // The width boxes take exact numbers (the sliders are only coarse); typing one switches to Custom.
+        private void TxtTaskWidth_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_loading || !_ready || !txtTaskWidth.IsKeyboardFocused)
+            {
+                return;
+            }
+
+            if (int.TryParse(txtTaskWidth.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int value) && value >= 16 && value <= 2000)
+            {
+                txtTaskWidth.ClearValue(Control.BorderBrushProperty);
+                _loading = true;
+                cboTaskWidth.SelectedIndex = 1;
+                sldTaskWidth.Value = Math.Min(value, sldTaskWidth.Maximum);
+                _loading = false;
+                Settings.Instance.TaskButtonWidthPx = value;
+            }
+            else
+            {
+                txtTaskWidth.BorderBrush = System.Windows.Media.Brushes.Red;
+            }
+        }
+
+        private void TxtAppWidth_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_loading || !_ready || _updatingApp || !txtAppWidth.IsKeyboardFocused || SelectedApp == null)
+            {
+                return;
+            }
+
+            if (int.TryParse(txtAppWidth.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int value) && value >= 16 && value <= 2000)
+            {
+                txtAppWidth.ClearValue(Control.BorderBrushProperty);
+                _updatingApp = true;
+                cboAppWidth.SelectedIndex = APP_CUSTOM;
+                sldAppWidth.Value = Math.Min(value, sldAppWidth.Maximum);
+                _updatingApp = false;
+                SaveApp(value);
+            }
+            else
+            {
+                txtAppWidth.BorderBrush = System.Windows.Media.Brushes.Red;
+            }
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -119,21 +190,9 @@ namespace RetroBar.Controls
             UpdateTexts();
         }
 
-        private void SldClockSpacing_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (_loading || sldClockSpacing == null)
-            {
-                return;
-            }
-
-            double value = sldClockSpacing.Value;
-            Settings.Instance.ClockLineSpacing = value < SpacingSamePosition + 0.025 ? 0 : Math.Round(value, 2);
-            UpdateTexts();
-        }
-
         private void UpdateTexts()
         {
-            if (_loading || txtClockSpacing == null)
+            if (_loading || !_ready)
             {
                 return;
             }
@@ -143,6 +202,7 @@ namespace RetroBar.Controls
 
             txtStartLength.Text = $"{Math.Round(s.StartButtonLengthPx)} px";
             txtStartThickness.Text = $"{Math.Round(s.StartButtonThicknessPx)} px";
+            txtStartGap.Text = $"{Math.Round(s.StartButtonEdgeGap)} px";
             rowStartLengthPx.IsEnabled = s.StartButtonLengthMode == SizeModeOption.Custom;
             rowStartThicknessPx.IsEnabled = s.StartButtonThicknessMode == SizeModeOption.Custom;
 
@@ -152,12 +212,10 @@ namespace RetroBar.Controls
 
             // UX-014
             rowTaskWidthPx.IsEnabled = s.TaskButtonWidthPx > 0;
-            txtTaskWidth.Text = $"{Math.Round(sldTaskWidth.Value)} px";
-            txtAppWidth.Text = $"{Math.Round(sldAppWidth.Value)} px";
+            if (!txtTaskWidth.IsKeyboardFocused) txtTaskWidth.Text = Math.Round(sldTaskWidth.Value).ToString(CultureInfo.CurrentCulture);
+            if (!txtAppWidth.IsKeyboardFocused) txtAppWidth.Text = Math.Round(sldAppWidth.Value).ToString(CultureInfo.CurrentCulture);
             rowAppWidthPx.IsEnabled = cboAppWidth.SelectedIndex == 4;
 
-            txtClockSize.Text = s.ClockFontSize > 0 ? $"{Math.Round(s.ClockFontSize)} px" : same;
-            txtClockSpacing.Text = s.ClockLineSpacing > 0 ? "× " + s.ClockLineSpacing.ToString("0.00", CultureInfo.CurrentCulture) : same;
         }
     }
 }

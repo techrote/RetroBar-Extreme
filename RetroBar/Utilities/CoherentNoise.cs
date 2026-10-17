@@ -30,13 +30,13 @@ namespace RetroBar.Utilities
 
         // Several octaves of gradient noise, each with twice the cells and half the strength
         // (cell counts stay whole divisors of the tile, so every octave still tiles).
-        public static double Fractal(double x, double y, int size, int baseCells, int octaves)
+        public static double Fractal(double x, double y, int size, int baseCells, int octaves, uint seed = 0)
         {
             double sum = 0, amplitude = 1, total = 0;
             int cells = baseCells;
             for (int o = 0; o < octaves && cells <= size; o++)
             {
-                sum += Gradient(x, y, size, cells, (uint)o * 7919u) * amplitude;
+                sum += Gradient(x, y, size, cells, seed + (uint)o * 7919u) * amplitude;
                 total += amplitude;
                 amplitude *= 0.5;
                 cells *= 2;
@@ -45,13 +45,13 @@ namespace RetroBar.Utilities
         }
 
         // |noise| summed over octaves: the "turbulence" that bends marble veins. Roughly 0..0.5.
-        public static double Turbulence(double x, double y, int size, int baseCells, int octaves)
+        public static double Turbulence(double x, double y, int size, int baseCells, int octaves, uint seed = 0)
         {
             double sum = 0, amplitude = 1, total = 0;
             int cells = baseCells;
             for (int o = 0; o < octaves && cells <= size; o++)
             {
-                sum += Math.Abs(Gradient(x, y, size, cells, 104729u + (uint)o * 7919u)) * amplitude;
+                sum += Math.Abs(Gradient(x, y, size, cells, seed + 104729u + (uint)o * 7919u)) * amplitude;
                 total += amplitude;
                 amplitude *= 0.5;
                 cells *= 2;
@@ -61,7 +61,7 @@ namespace RetroBar.Utilities
 
         // Cellular (Worley) noise: one feature point per cell; the level is the distance to the
         // nearest point, so cells read as smooth pebbles with dark centres and light edges. 0..1.
-        public static double Cells(double x, double y, int size, int cells)
+        public static double Cells(double x, double y, int size, int cells, uint seed = 0)
         {
             double cell = (double)size / cells;
             int cx = (int)Math.Floor(x / cell), cy = (int)Math.Floor(y / cell);
@@ -74,8 +74,8 @@ namespace RetroBar.Utilities
                     int ix = cx + dx, iy = cy + dy;
                     int wx = Wrap(ix, cells), wy = Wrap(iy, cells);
                     // Feature point inside the (unwrapped) neighbour cell, so distances cross the seam.
-                    double px = (ix + 0.15 + 0.7 * Hash(wx, wy, 31u)) * cell;
-                    double py = (iy + 0.15 + 0.7 * Hash(wx, wy, 977u)) * cell;
+                    double px = (ix + 0.15 + 0.7 * Hash(wx, wy, seed + 31u)) * cell;
+                    double py = (iy + 0.15 + 0.7 * Hash(wx, wy, seed + 977u)) * cell;
                     double d = Math.Sqrt((px - x) * (px - x) + (py - y) * (py - y));
                     if (d < nearest)
                     {

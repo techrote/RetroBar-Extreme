@@ -8,9 +8,10 @@ licence as RetroBar.
 
 | Folder | Use it for | Where to set it |
 |---|---|---|
-| `start/` | Start button emblem: chrome orb, neon orb, gold star, bolt, flame, gear, pixel heart, rocket | Properties → Layout → Start button → **Icon: Choose PNG...** |
+| `start/` | Start button emblem: chrome orb, neon orb, gold star, bolt, flame, gear, pixel heart, rocket | Properties → Icons → Start button → **Icon: Choose PNG...** |
+| `startbuttons/` | 25 whole Start button pictures with normal / hover / pressed states, plus a guide to making your own | Properties → Icons → Start button → **Button picture: Choose PNG...** (see `startbuttons/README.md`) |
 | `quicklaunch/` | Quick launch shortcuts: globe, folder, terminal, note, music, gamepad, camera, settings | Right-click a quick launch icon → **Change icon...** |
-| `toggle/` | Notification area expand/collapse button: steel chevron, neon chevron, amber triangle, pixel arrow, orb button | Properties → Layout → Notification area toggle → **Choose PNG...** |
+| `toggle/` | Notification area expand/collapse button: steel chevron, neon chevron, amber triangle, pixel arrow, orb button | Properties → Icons → Notification area toggle → **Choose PNG...** |
 
 ## Sizes
 

@@ -84,5 +84,28 @@
   },
   "start": {
     "recolour": "#ff2a8a"
-  }
+  },
+  "palette": [ "#ff2a8a", "#c0207a", "#1a0530", "#ff70c0", "#ffffff", "#00f0ff", "#08001a", "#400e6c", null, null, null, null ],
+  "texturePalette": [
+    {"texture": "checker", "lut": ["#1a0530", "#400e6c"], "scale": 2, "angle": 45},
+    {"texture": "carbon", "lut": ["#08001a", "#c0207a", "#00f0ff"], "scale": 1, "contrast": 1},
+    {"texture": "diamond", "lut": ["#1a0530", "#ff2a8a", "#ffffff"], "scale": 1, "contrast": 1},
+    {"texture": "clouds", "lut": ["#00f0ff", "#ff2a8a", "#400e6c"], "scale": 2, "contrast": 1, "octaves": 4},
+    {"texture": "cells", "lut": ["#c0207a", "#ff70c0", "#ffffff"], "scale": 1, "contrast": 1},
+    {"texture": "marble", "lut": ["#ff2a8a", "#ff70c0", "#00f0ff"], "scale": 1, "contrast": 1, "frequency": 3, "strength": 1.5},
+    {"texture": "scanlines", "lut": ["#ffffff", "#00f0ff", "#ff70c0"], "scale": 1, "contrast": 1, "frequency": 32},
+    {"texture": "weave", "lut": ["#08001a", "#c0207a", "#00f0ff"], "scale": 1, "contrast": 1},
+    {"texture": "checker", "lut": ["#1a0530", "#ff2a8a", "#ffffff"], "scale": 1, "contrast": 0.6, "frequency": 16},
+    {"texture": "waves", "lut": ["#00f0ff", "#ff2a8a", "#400e6c"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
 }

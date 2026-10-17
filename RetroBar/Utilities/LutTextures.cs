@@ -16,9 +16,10 @@ namespace RetroBar.Utilities
     public static class LutTextures
     {
         public const int MaxDimension = 512, MaxFileBytes = 4 * 1024 * 1024;
-        private const int TileSize = 64, CacheLimit = 16;
+        private const int TileSize = 64, CacheLimit = 16, PatternLimit = 48;
         public static IReadOnlyList<string> BuiltInNames { get; } = Array.AsReadOnly(new[]
-            { "brushed", "carbon", "noise", "scanlines", "checker", "diamond", "clouds", "cells", "marble" }); // UX-013: last three are coherent noise
+            { "brushed", "carbon", "noise", "scanlines", "checker", "diamond", "clouds", "cells", "marble", // UX-013: last three are coherent noise
+              "weave", "bricks", "dots", "waves" });
         public static string TexturesFolder => "Textures".InLocalAppData();
 
         private static readonly object CacheLock = new object();
@@ -40,6 +41,7 @@ namespace RetroBar.Utilities
             double rotate = 0, string texturesFolder = null)
         {
             if (spec == null) throw new ArgumentNullException(nameof(spec));
+            double ScaleFor(int w, int h) => ResamplesHere(spec, w, h) ? 1 : spec.Scale;
             Color[] lut = spec.ResolveLut(palette);
             if (!double.IsFinite(rotate)) throw new ArgumentOutOfRangeException(nameof(rotate));
             int width = TileSize, height = TileSize;
@@ -47,11 +49,14 @@ namespace RetroBar.Utilities
             string sourceKey;
             if (BuiltInNames.Contains(spec.Name))
             {
-                sourceKey = spec.Name;
+                sourceKey = TextureGenerators.Key(spec);
                 lock (CacheLock)
                 {
-                    if (!Patterns.TryGetValue(spec.Name, out pixels))
-                        Patterns[spec.Name] = pixels = Pattern(spec.Name);
+                    if (!Patterns.TryGetValue(sourceKey, out pixels))
+                    {
+                        if (Patterns.Count >= PatternLimit) Patterns.Clear(); // sliders make many one-off tiles
+                        Patterns[sourceKey] = pixels = TextureGenerators.Pattern(spec);
+                    }
                 }
             }
             else
@@ -61,11 +66,11 @@ namespace RetroBar.Utilities
                 // Do not key custom assets by timestamp/length: in-place replacements can
                 // preserve both. Read a bounded snapshot on every rebuild, never every frame.
                 pixels = null;
-                string candidateKey = ImageKey(sourceKey, lut, spec.Contrast);
+                string candidateKey = ImageKey(sourceKey, lut, spec);
                 lock (CacheLock)
                 {
                     if (Images.TryGetValue(candidateKey, out BitmapSource cached))
-                        return Brush(cached, spec.Scale, rotate);
+                        return Brush(cached, ScaleFor(width, height), rotate);
                 }
                 using var stream = new MemoryStream(png, false);
                 var decoder = new PngBitmapDecoder(stream,
@@ -82,19 +87,62 @@ namespace RetroBar.Utilities
                 }
             }
 
-            string key = ImageKey(sourceKey, lut, spec.Contrast);
+            string key = ImageKey(sourceKey, lut, spec);
             lock (CacheLock)
             {
-                if (Images.TryGetValue(key, out BitmapSource cached)) return Brush(cached, spec.Scale, rotate);
+                if (Images.TryGetValue(key, out BitmapSource cached)) return Brush(cached, ScaleFor(width, height), rotate);
             }
-            byte[] result = new byte[pixels.Length];
-            for (int i = 0; i < pixels.Length; i += 4)
+
+            // Grey level and coverage as floats, so scaling and sharpening do not round in between.
+            int count = width * height;
+            var grey = new float[count];
+            var coverage = new float[count];
+            for (int i = 0; i < count; i++)
             {
-                double level = Math.Clamp((pixels[i] / 255.0 - 0.5) * spec.Contrast + 0.5, 0, 1);
+                grey[i] = pixels[i * 4];
+                coverage[i] = pixels[i * 4 + 3];
+            }
+
+            bool resample = ResamplesHere(spec, width, height);
+            double brushScale = resample ? 1 : spec.Scale;
+            if (resample)
+            {
+                int newWidth = (int)Math.Round(width * spec.Scale), newHeight = (int)Math.Round(height * spec.Scale);
+                grey = TextureResampler.Scale(grey, width, height, newWidth, newHeight, spec.Resample);
+                coverage = TextureResampler.Scale(coverage, width, height, newWidth, newHeight, spec.Resample);
+                width = newWidth; height = newHeight;
+            }
+            if (spec.Sharpen > 0)
+            {
+                grey = TextureResampler.Sharpen(grey, width, height, spec.Sharpen, spec.SharpenRadius);
+            }
+
+            byte[] result = new byte[width * height * 4];
+            for (int i = 0; i < width * height; i++)
+            {
+                double level = Math.Clamp(((grey[i] / 255.0) - 0.5) * spec.Contrast + 0.5, 0, 1);
+                if (spec.WhiteLevel < 1) level = Math.Min(1, level / spec.WhiteLevel);
                 Color colour = Sample(lut, level);
-                result[i] = colour.B; result[i + 1] = colour.G; result[i + 2] = colour.R;
-                result[i + 3] = (byte)((colour.A * pixels[i + 3] + 127) / 255);
-                if (result[i + 3] == 0) result[i] = result[i + 1] = result[i + 2] = 0;
+                double r = colour.R, g = colour.G, b = colour.B;
+                if (spec.Saturation != 1)
+                {
+                    double luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                    r = luma + (r - luma) * spec.Saturation;
+                    g = luma + (g - luma) * spec.Saturation;
+                    b = luma + (b - luma) * spec.Saturation;
+                }
+                if (spec.Brightness != 0)
+                {
+                    double shift = spec.Brightness * 255;
+                    r += shift; g += shift; b += shift;
+                }
+                int o = i * 4;
+                result[o] = (byte)Math.Round(Math.Clamp(b, 0, 255));
+                result[o + 1] = (byte)Math.Round(Math.Clamp(g, 0, 255));
+                result[o + 2] = (byte)Math.Round(Math.Clamp(r, 0, 255));
+                byte coverageByte = (byte)Math.Round(Math.Clamp(coverage[i], 0, 255));
+                result[o + 3] = (byte)((colour.A * coverageByte + 127) / 255);
+                if (result[o + 3] == 0) result[o] = result[o + 1] = result[o + 2] = 0;
             }
             // Discard input PNG DPI: one source pixel is one DIP at texture scale 1.
             var image = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, result, width * 4);
@@ -109,11 +157,22 @@ namespace RetroBar.Utilities
                 }
                 else image = Images[key];
             }
-            return Brush(image, spec.Scale, rotate);
+            return Brush(image, brushScale, rotate);
         }
 
-        private static string ImageKey(string source, Color[] lut, double contrast) => source + ":" +
-            contrast.ToString("R", CultureInfo.InvariantCulture) + ":" + string.Join(",", lut.Select(BrushSpec.FormatColor));
+        // Scaling is done here (and the brush shows the tile 1:1) unless the method is "smooth",
+        // the scale is 1, or the scaled tile would be unreasonably large; then WPF scales it.
+        private static bool ResamplesHere(TextureSpec spec, int width, int height) =>
+            spec.Resample != TextureResampler.Smooth && spec.Scale != 1 && TextureResampler.CanResample(width, height, spec.Scale);
+
+        private static string ImageKey(string source, Color[] lut, TextureSpec spec)
+        {
+            var c = CultureInfo.InvariantCulture;
+            string tone = spec.Brightness == 0 && spec.Saturation == 1 && spec.WhiteLevel == 1 && spec.Sharpen == 0 && spec.Resample == TextureResampler.Smooth ? "" :
+                ":" + spec.Brightness.ToString("R", c) + "," + spec.Saturation.ToString("R", c) + "," + spec.WhiteLevel.ToString("R", c) + "," +
+                spec.Sharpen.ToString("R", c) + "," + spec.SharpenRadius.ToString("R", c) + "," + spec.Resample + "," + spec.Scale.ToString("R", c);
+            return source + ":" + spec.Contrast.ToString("R", c) + ":" + string.Join(",", lut.Select(BrushSpec.FormatColor)) + tone;
+        }
 
         private static ImageBrush Brush(BitmapSource image, double scale, double rotate)
         {
@@ -186,56 +245,6 @@ namespace RetroBar.Utilities
             for (string current = Path.GetFullPath(path); current != null; current = Path.GetDirectoryName(current))
                 if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
                     throw new IOException("linked files and folders are not supported for textures");
-        }
-
-        private static byte[] Pattern(string name)
-        {
-            var pixels = new byte[TileSize * TileSize * 4];
-            double wave(double n, double period) => Math.Cos(2 * Math.PI * n / period);
-            double noise(int x, int y)
-            {
-                uint n = unchecked((uint)((x & 63) + (y & 63) * 64) + 0x9e3779b9u);
-                n = unchecked((n ^ (n >> 16)) * 0x7feb352du);
-                n = unchecked((n ^ (n >> 15)) * 0x846ca68bu);
-                return ((n ^ (n >> 16)) & 65535) / 65535.0 - 0.5;
-            }
-            for (int y = 0; y < TileSize; y++)
-                for (int x = 0; x < TileSize; x++)
-                {
-                    double level;
-                    switch (name)
-                    {
-                        case "brushed":
-                            level = 0.50 + 0.16 * wave(y, 64) + 0.23 * noise(0, y) +
-                                0.04 * wave(x + y, 64) + 0.035 * noise(x, y);
-                            break;
-                        case "carbon":
-                            bool across = ((x / 8 + y / 8) & 1) == 0;
-                            level = 0.25 + 0.34 * (1 + wave(across ? y : x, 8)) / 2 + 0.07 * wave(across ? x : y, 4);
-                            break;
-                        case "noise": level = 0.5 + 0.8 * noise(x, y); break;
-                        case "scanlines": level = y % 4 < 2 ? 0.2 : 0.8; break;
-                        case "checker": level = ((x / 8 + y / 8) & 1) == 0 ? 0.25 : 0.75; break;
-                        case "diamond":
-                            double u = (x % 16) - 7.5, v = (y % 16) - 7.5;
-                            if (((x / 16 + y / 16) & 1) != 0) u = -u;
-                            double along = (u + v) / Math.Sqrt(2), cross = (u - v) / Math.Sqrt(2);
-                            level = 0.3 + 0.6 * Math.Max(0, 1 - along * along / 36 - cross * cross / 3);
-                            break;
-                        // UXUI-Extreme (UX-013): coherent noise, periodic on the tile so it repeats seamlessly.
-                        case "clouds": level = 0.5 + 1.3 * CoherentNoise.Fractal(x, y, TileSize, 4, 4); break;
-                        case "cells": level = CoherentNoise.Cells(x, y, TileSize, 6); break;
-                        case "marble":
-                            double turbulence = CoherentNoise.Turbulence(x, y, TileSize, 4, 4);
-                            level = 0.5 + 0.5 * Math.Sin(2 * Math.PI * (2.0 * x / TileSize + 1.0 * y / TileSize + 1.6 * turbulence));
-                            break;
-                        default: throw new ArgumentException("unknown procedural texture", nameof(name));
-                    }
-                    int i = (y * TileSize + x) * 4;
-                    pixels[i] = pixels[i + 1] = pixels[i + 2] = (byte)Math.Round(Math.Clamp(level, 0, 1) * 255);
-                    pixels[i + 3] = 255;
-                }
-            return pixels;
         }
     }
 }

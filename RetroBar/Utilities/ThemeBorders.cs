@@ -33,6 +33,15 @@ namespace RetroBar.Utilities
 
                 if (name == "Setter")
                 {
+                    // The strip an unlocked taskbar adds along its edge (the resize handle) keeps its own width: the
+                    // window grows by exactly TaskbarUnlockedSize for it, so scaling it would squeeze the buttons
+                    // (and they would jump when the taskbar is locked).
+                    string target = (string)element.Attribute("TargetName");
+                    if (target != null && target.StartsWith("TaskbarUnlocked", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
                     if (ThemeScaler.PropertyName(element) == "BorderThickness" && FactorFor(element, factorFor) is double factor && factor != 1)
                     {
                         XAttribute value = element.Attribute("Value");

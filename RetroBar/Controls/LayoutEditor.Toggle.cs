@@ -10,25 +10,7 @@ namespace RetroBar.Controls
     {
         private void ShowToggleSettings()
         {
-            string icon = Settings.Instance.TrayToggleIcon;
-            txtToggleIcon.Text = string.IsNullOrEmpty(icon) ? Text("uxui_icon_theme_current") : icon;
             txtToggleMargin.Text = Settings.Instance.TrayToggleMargin;
-        }
-
-        private void ToggleIconChoose_OnClick(object sender, RoutedEventArgs e)
-        {
-            string icon = IconPicker.Choose(Window.GetWindow(this), @"toggle\100%");
-            if (icon != null)
-            {
-                Settings.Instance.TrayToggleIcon = icon;
-                ShowToggleSettings();
-            }
-        }
-
-        private void ToggleIconReset_OnClick(object sender, RoutedEventArgs e)
-        {
-            Settings.Instance.TrayToggleIcon = "";
-            ShowToggleSettings();
         }
 
         private void TxtToggleMargin_TextChanged(object sender, TextChangedEventArgs e)

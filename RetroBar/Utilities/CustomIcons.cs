@@ -212,6 +212,28 @@ namespace RetroBar.Utilities
             return key == null ? null : Settings.Instance.QuickLaunchIcons?.FirstOrDefault(i => i.Item == key)?.Icon;
         }
 
+        // Notification area icons are remembered by the identifier the show/hide behaviour uses.
+        public static string TrayIcon(string identifier) =>
+            string.IsNullOrEmpty(identifier) ? null : Settings.Instance.TrayIconReplacements?.FirstOrDefault(i => i.Identifier == identifier)?.Icon;
+
+        public static void SetTrayIcon(string identifier, string title, string icon)
+        {
+            if (string.IsNullOrEmpty(identifier))
+            {
+                return;
+            }
+
+            var list = (Settings.Instance.TrayIconReplacements ?? new List<TrayIconReplacementSetting>())
+                .Where(i => i.Identifier != identifier)
+                .Select(i => new TrayIconReplacementSetting { Identifier = i.Identifier, Title = i.Title, Icon = i.Icon })
+                .ToList();
+            if (!string.IsNullOrEmpty(icon))
+            {
+                list.Add(new TrayIconReplacementSetting { Identifier = identifier, Title = title ?? "", Icon = icon });
+            }
+            Settings.Instance.TrayIconReplacements = list;
+        }
+
         public static void SetQuickLaunchIcon(string itemPath, string icon)
         {
             string key = QuickLaunchKey(itemPath);

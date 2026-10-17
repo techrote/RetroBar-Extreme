@@ -25,8 +25,9 @@ namespace RetroBar.Controls
         // Raised when the user changes the brush; Value is null for the theme default.
         public event EventHandler Changed;
 
-        public BrushEditor(string labelResourceKey, BrushSpec value, Func<BrushSpec> themeSeed, bool usedByTheme, Func<Color?[]> paletteSource = null)
+        public BrushEditor(string labelResourceKey, BrushSpec value, Func<BrushSpec> themeSeed, bool usedByTheme, Func<Color?[]> paletteSource = null, TexturePaletteHost texturePalette = null)
         {
+            _texturePalette = texturePalette; // UXUI-Extreme: the style's texture palette, when the editor has one
             Orientation = Orientation.Vertical;
             _themeSeed = themeSeed;
             _value = value?.Clone();
@@ -102,6 +103,7 @@ namespace RetroBar.Controls
         {
             _details.Children.Clear();
             _refreshTexturePreview = null; // UXUI-Extreme (UX-011)
+            _configBox = null;
 
             if (_value == null)
             {

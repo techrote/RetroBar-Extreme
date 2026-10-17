@@ -16,6 +16,17 @@ namespace RetroBar.Utilities
 
         void IDropTarget.DragOver(IDropInfo dropInfo)
         {
+            if (_notifyIconList.ToggleTucked)
+            {
+                // The list holds the toggle as well, which the default handler can't place icons among.
+                if (dropInfo.Data is ManagedShell.WindowsTray.NotifyIcon)
+                {
+                    dropInfo.Effects = System.Windows.DragDropEffects.Move;
+                    dropInfo.DropTargetAdorner = DropTargetAdorners.Insert;
+                }
+                return;
+            }
+
             DragDrop.DefaultDropHandler.DragOver(dropInfo);
         }
 
@@ -34,7 +45,10 @@ namespace RetroBar.Utilities
         void IDropTarget.Drop(IDropInfo dropInfo)
         {
             DropInFlight = dropInfo;
-            DragDrop.DefaultDropHandler.Drop(dropInfo);
+            if (!_notifyIconList.ToggleTucked)
+            {
+                DragDrop.DefaultDropHandler.Drop(dropInfo);
+            }
 
             // Save post-drop state
             _notifyIconList.UpdateIconOrder(dropInfo);

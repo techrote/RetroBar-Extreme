@@ -36,6 +36,7 @@
         <system:String>End of the taskbar</system:String>
         <system:String>Beside the Start button</system:String>
         <system:String>Under the Start button</system:String>
+        <system:String>Inside the quick launch area</system:String>
     </x:Array>
     <system:String x:Key="uxui_layout_show_desktop_on">Show the Show desktop button</system:String>
     <system:String x:Key="uxui_layout_clock_heading">Clock</system:String>
@@ -60,6 +61,102 @@
     <system:String x:Key="uxui_icon_failed">This icon can't be used: {0}</system:String>
     <system:String x:Key="uxui_ql_change_icon">Change &amp;icon...</system:String>
     <system:String x:Key="uxui_ql_reset_icon">&amp;Reset icon</system:String>
+    <system:String x:Key="uxui_layout_clock_margins">Margins:</system:String>
+    <x:Array x:Key="uxui_layout_clock_margin_values" Type="system:String">
+        <system:String>Automatic (even when turned)</system:String>
+        <system:String>Theme's own</system:String>
+        <system:String>Even left / right and top / bottom</system:String>
+        <system:String>None around the clock</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_layout_clock_outer">Extra space around clock (px at 100%):</system:String>
+    <system:String x:Key="uxui_layout_clock_outer_tip">As seen on screen: left, top, right, bottom (e.g. 0,0,-2,0), or one or two numbers. Negative values move the clock toward the edge.</system:String>
+    <system:String x:Key="uxui_toggle_placement">Position:</system:String>
+    <x:Array x:Key="uxui_toggle_placement_values" Type="system:String">
+        <system:String>Beside the icons (theme)</system:String>
+        <system:String>Inside the icons, first</system:String>
+        <system:String>Inside the icons, last</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_quicklaunch_grip_tip">Drag to resize the quick launch area (double-click to reset)</system:String>
+    <system:String x:Key="uxui_layout_edge_gap">Gap to edge:</system:String>
+    <system:String x:Key="uxui_layout_clock_mono">Equal-width digits</system:String>
+    <system:String x:Key="uxui_layout_clock_mono_default">Consolas if needed</system:String>
+    <system:String x:Key="uxui_layout_clock_mono_tip">Uses tabular numerals; if the clock font has none, this monospaced font stands in.</system:String>
+    <system:String x:Key="uxui_icons_icon_position">Icon position:</system:String>
+    <system:String x:Key="uxui_icons_desktop_heading">Show desktop button</system:String>
+    <system:String x:Key="uxui_clock_tab">Clock</system:String>
+    <system:String x:Key="uxui_clock_position_heading">Position and margins</system:String>
+    <system:String x:Key="uxui_clock_digits_heading">Digits</system:String>
+    <system:String x:Key="uxui_clock_font_heading">Font</system:String>
+    <system:String x:Key="uxui_clock_mono_font">Stand-in font:</system:String>
+    <system:String x:Key="uxui_clock_note">Turning applies to taskbars at the top or bottom of the screen. The clock's format and seconds are on the Taskbar tab.</system:String>
+    <system:String x:Key="uxui_icons_start_1state">1 state...</system:String>
+    <system:String x:Key="uxui_icons_start_1state_tip">Load a Start button picture with one look for every state (opens Extras\StartButtons\1state)</system:String>
+    <system:String x:Key="uxui_icons_start_3state">3 state...</system:String>
+    <system:String x:Key="uxui_icons_start_3state_tip">Load a Start button picture with normal, hover and pressed looks stacked (opens Extras\StartButtons\3state)</system:String>
+    <system:String x:Key="uxui_layout_desktop_border">Show its translucent background and border</system:String>
+    <system:String x:Key="uxui_layout_desktop_margin">Custom margins (px at 100%):</system:String>
+    <system:String x:Key="uxui_layout_desktop_margin_tip">Space around the button: left, top, right, bottom (e.g. 1,0,0,0), or one or two numbers. Without this, its gap to the Start button equals the Start button's gap to the taskbar edge.</system:String>
+    <system:String x:Key="uxui_icons_ql_fill">Box each icon like a task button (fill and borders)</system:String>
+    <system:String x:Key="uxui_border_none">None</system:String>
+    <system:String x:Key="uxui_border_theme">Theme</system:String>
+    <system:String x:Key="uxui_taskbuttons_width_tip">Type an exact width in pixels (at 100% scale)</system:String>
+    <system:String x:Key="uxui_rows_row">Ro_w:</system:String>
+    <x:Array x:Key="uxui_rows_values" Type="system:String">
+        <system:String>Row 1 (top)</system:String>
+        <system:String>Row 2</system:String>
+        <system:String>Row 3</system:String>
+        <system:String>Row 4</system:String>
+        <system:String>Row 5</system:String>
+        <system:String>Row 6</system:String>
+        <system:String>Lowest row</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_rows_align">Alig_n row:</system:String>
+    <system:String x:Key="uxui_rows_height">Row _height +/-:</system:String>
+    <system:String x:Key="uxui_taskbuttons_valign">Vertical _position:</system:String>
+    <x:Array x:Key="uxui_valign_values" Type="system:String">
+        <system:String>Top</system:String>
+        <system:String>Centre</system:String>
+        <system:String>Bottom</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_startquick_tab">Start/Quick</system:String>
+    <system:String x:Key="uxui_quick_heading">Quick launch area</system:String>
+    <system:String x:Key="uxui_quick_show">Show quick launch</system:String>
+    <system:String x:Key="uxui_quick_first">Put it before the Start button</system:String>
+    <system:String x:Key="uxui_quick_first_tip">Swaps the quick launch area and the Start button area. The Show desktop button stays with the Start button.</system:String>
+    <system:String x:Key="uxui_quick_align_h">Icons, across:</system:String>
+    <system:String x:Key="uxui_quick_align_v">Icons, up and down:</system:String>
+    <system:String x:Key="uxui_quick_length">Length (px, 0 = automatic):</system:String>
+    <system:String x:Key="uxui_quick_length_auto">Automatic</system:String>
+    <system:String x:Key="uxui_quick_length_tip">How long the area is along the taskbar. Unlock the taskbar and drag the grip beside the task buttons to set it by hand.</system:String>
+    <system:String x:Key="uxui_quick_note">Where the Show desktop button goes (including inside this area) is set under Show desktop button.</system:String>
+    <system:String x:Key="uxui_rows_apps">Apps on it:</system:String>
+    <system:String x:Key="uxui_rows_apps_tip">Program names separated by commas, for example claude, codex, calc, hwinfo64 (.exe is optional). Their buttons go to this row.</system:String>
+    <system:String x:Key="uxui_rows_only">Only these apps may use this row</system:String>
+    <system:String x:Key="uxui_rows_end">Put last:</system:String>
+    <system:String x:Key="uxui_rows_end_tip">Programs whose buttons go after all the others, for example WindowsTerminal, cmd, powershell</system:String>
+    <system:String x:Key="uxui_rows_end_bottom">...in the lowest row</system:String>
+    <!-- UXUI-Extreme: Icons tab -->
+    <system:String x:Key="uxui_icons_tab">Icons</system:String>
+    <system:String x:Key="uxui_icons_start_heading">Start button</system:String>
+    <system:String x:Key="uxui_icons_start_graphic">Button picture:</system:String>
+    <system:String x:Key="uxui_icons_start_states">Picture holds:</system:String>
+    <x:Array x:Key="uxui_icons_start_states_values" Type="system:String">
+        <system:String>One picture for every state</system:String>
+        <system:String>Normal, hover and pressed, stacked</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_icons_start_note">The picture replaces the theme's Start button (the Vista orb keeps its own). Load one with 1 state (one look) or 3 state (normal, hover and pressed stacked); samples are in Extras\StartButtons. The symbol is the Icon below; tick Show icon under Start button (left) to display it.</system:String>
+    <system:String x:Key="uxui_icons_start_icon_heading">Start icon</system:String>
+    <system:String x:Key="uxui_icons_original">Original</system:String>
+    <system:String x:Key="uxui_icons_ql_heading">Quick launch icons</system:String>
+    <system:String x:Key="uxui_icons_ql_item">Shortcut:</system:String>
+    <system:String x:Key="uxui_icons_ql_none">The quick launch folder has no shortcuts yet.</system:String>
+    <system:String x:Key="uxui_icons_ql_hint">Also available from a quick launch item's right-click menu.</system:String>
+    <system:String x:Key="uxui_icons_tray_heading">Notification area icons</system:String>
+    <system:String x:Key="uxui_icons_tray_item">Icon:</system:String>
+    <system:String x:Key="uxui_icons_tray_none">No notification area icons are showing yet.</system:String>
+    <system:String x:Key="uxui_icons_tray_hint">Replaces how RetroBar draws that icon; the program itself is unaffected. Remembered even while the program isn't running.</system:String>
+    <system:String x:Key="uxui_icons_custom">(custom)</system:String>
+    <system:String x:Key="uxui_icons_current">Current:</system:String>
     <!-- UXUI-Extreme (UX-016): notification area toggle -->
     <system:String x:Key="uxui_toggle_heading">Notification area toggle</system:String>
     <system:String x:Key="uxui_toggle_image">Image:</system:String>
@@ -91,6 +188,24 @@
         <system:String>Show</system:String>
         <system:String>Hide</system:String>
     </x:Array>
+    <system:String x:Key="uxui_taskbuttons_align">Ali_gnment:</system:String>
+    <x:Array x:Key="uxui_taskbuttons_align_values" Type="system:String">
+        <system:String>Left</system:String>
+        <system:String>Centre</system:String>
+        <system:String>Right</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_taskbuttons_app_align">Alignment:</system:String>
+    <x:Array x:Key="uxui_taskbuttons_app_align_values" Type="system:String">
+        <system:String>Default</system:String>
+        <system:String>Left</system:String>
+        <system:String>Centre</system:String>
+        <system:String>Right</system:String>
+    </x:Array>
+    <system:String x:Key="uxui_taskbutton_align">Ali_gnment</system:String>
+    <system:String x:Key="uxui_taskbutton_align_default">_Default</system:String>
+    <system:String x:Key="uxui_taskbutton_align_left">_Left</system:String>
+    <system:String x:Key="uxui_taskbutton_align_centre">_Centre</system:String>
+    <system:String x:Key="uxui_taskbutton_align_right">_Right</system:String>
     <system:String x:Key="uxui_taskbuttons_forget">Forget this app</system:String>
     <system:String x:Key="uxui_taskbuttons_hint">To set one app's button, right-click it on the taskbar and use Button. Apps set that way are listed here.</system:String>
     <system:String x:Key="uxui_taskbutton_menu">B_utton</system:String>

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,12 +19,77 @@ namespace RetroBar.Controls
             TaskButtonAppRule rule = TaskButtonRules.Find(Window);
             TaskIconImage.Visibility = TaskButtonRules.ShowIcon(rule) ? Visibility.Visible : Visibility.Collapsed;
             TaskLabelText.Visibility = TaskButtonRules.ShowLabel(rule) ? Visibility.Visible : Visibility.Collapsed;
+            ApplyAlignment(TaskButtonRules.Alignment(rule));
+        }
+
+        private bool _alignHooked;
+
+        // Left keeps the theme's layout (label fills the button). Centre / Right shrink the icon +
+        // label to their natural size and align that group, limiting the label to the room left.
+        private void ApplyAlignment(TaskButtonAlignOption align)
+        {
+            if (!_alignHooked && ContentGrid.Parent is FrameworkElement host)
+            {
+                _alignHooked = true;
+                host.SizeChanged += (s, e) => LimitLabel();
+            }
+
+            ContentGrid.VerticalAlignment = Settings.Instance.TaskButtonVAlign switch
+            {
+                VerticalPlaceOption.Top => VerticalAlignment.Top,
+                VerticalPlaceOption.Bottom => VerticalAlignment.Bottom,
+                _ => VerticalAlignment.Center,
+            };
+
+            bool iconOnly = TaskIconImage.Visibility == Visibility.Visible && TaskLabelText.Visibility != Visibility.Visible;
+            if (align == TaskButtonAlignOption.Left)
+            {
+                ContentGrid.HorizontalAlignment = HorizontalAlignment.Stretch;
+                LabelColumn.Width = new GridLength(1, GridUnitType.Star);
+                TaskLabelText.ClearValue(FrameworkElement.MaxWidthProperty);
+                TaskIconImage.ClearValue(FrameworkElement.MarginProperty);
+                return;
+            }
+
+            ContentGrid.HorizontalAlignment = align == TaskButtonAlignOption.Centre ? HorizontalAlignment.Center : HorizontalAlignment.Right;
+            LabelColumn.Width = GridLength.Auto;
+            if (iconOnly)
+            {
+                TaskIconImage.Margin = new Thickness(0); // the theme's gap after the icon would push it off centre
+            }
+            else
+            {
+                TaskIconImage.ClearValue(FrameworkElement.MarginProperty);
+            }
+            LimitLabel();
+        }
+
+        private void LimitLabel()
+        {
+            if (LabelColumn.Width.IsStar || !(ContentGrid.Parent is FrameworkElement host) || host.ActualWidth <= 0)
+            {
+                return;
+            }
+
+            double used = 0;
+            if (TaskIconImage.Visibility == Visibility.Visible)
+            {
+                used = TaskIconImage.Width + TaskIconImage.Margin.Left + TaskIconImage.Margin.Right;
+                if (double.IsNaN(used))
+                {
+                    used = 19;
+                }
+            }
+            Thickness m = TaskLabelText.Margin;
+            TaskLabelText.MaxWidth = Math.Max(0, host.ActualWidth - used - m.Left - m.Right);
         }
 
         private static bool IsAppRuleSetting(string name) =>
             name == nameof(Settings.TaskButtonAppRules) ||
             name == nameof(Settings.TaskButtonShowIcons) ||
-            name == nameof(Settings.TaskButtonShowLabels);
+            name == nameof(Settings.TaskButtonShowLabels) ||
+            name == nameof(Settings.TaskButtonAlign) ||
+            name == nameof(Settings.TaskButtonVAlign);
 
         private string MenuText(string key) => TryFindResource(key) as string ?? key;
 
@@ -82,6 +148,14 @@ namespace RetroBar.Controls
             label.SetResourceReference(HeaderedItemsControl.HeaderProperty, "uxui_taskbutton_show_label");
             label.Click += (s, e) => TaskButtonRules.Update(app, name, r => r.Label = labelShown ? AppOverrideOption.Hide : AppOverrideOption.Show);
             _appButtonMenu.Items.Add(label);
+
+            var align = new MenuItem();
+            align.SetResourceReference(HeaderedItemsControl.HeaderProperty, "uxui_taskbutton_align");
+            align.Items.Add(Choice("uxui_taskbutton_align_default", rule.Align == TaskButtonAppAlignOption.Default, () => TaskButtonRules.Update(app, name, r => r.Align = TaskButtonAppAlignOption.Default)));
+            align.Items.Add(Choice("uxui_taskbutton_align_left", rule.Align == TaskButtonAppAlignOption.Left, () => TaskButtonRules.Update(app, name, r => r.Align = TaskButtonAppAlignOption.Left)));
+            align.Items.Add(Choice("uxui_taskbutton_align_centre", rule.Align == TaskButtonAppAlignOption.Centre, () => TaskButtonRules.Update(app, name, r => r.Align = TaskButtonAppAlignOption.Centre)));
+            align.Items.Add(Choice("uxui_taskbutton_align_right", rule.Align == TaskButtonAppAlignOption.Right, () => TaskButtonRules.Update(app, name, r => r.Align = TaskButtonAppAlignOption.Right)));
+            _appButtonMenu.Items.Add(align);
 
             _appButtonMenu.Items.Add(new Separator());
             var reset = new MenuItem { IsEnabled = TaskButtonRules.Find(app) != null };

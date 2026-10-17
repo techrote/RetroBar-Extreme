@@ -661,7 +661,32 @@
             </TabItem>
             <!-- UXUI-Extreme (UX-012): Layout tab — Start button, Show desktop and clock layout -->
             <TabItem Header="{DynamicResource uxui_layout_tab}">
-                <controls:LayoutEditor Margin="8" />
+                <controls:LayoutEditor Margin="8" Sections="Main" />
+            </TabItem>
+            <!-- UXUI-Extreme: Start/Quick tab: the Start button, Show desktop button and quick launch area -->
+            <TabItem Header="{DynamicResource uxui_startquick_tab}">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="6" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <controls:LayoutEditor Grid.Column="0" Sections="StartQuick" VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="2" Orientation="Vertical">
+                        <controls:QuickLayoutEditor />
+                        <controls:IconsEditor Sections="StartQuick" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <!-- UXUI-Extreme: Clock tab (moved from Layout) -->
+            <TabItem Header="{DynamicResource uxui_clock_tab}">
+                <controls:ClockEditor Margin="8" />
+            </TabItem>
+            <!-- UXUI-Extreme: Icons tab — Start button picture and icon, quick launch, notification area icons and toggle -->
+            <TabItem Header="{DynamicResource uxui_icons_tab}">
+                <controls:IconsEditor x:Name="IconsTab"
+                                      Margin="8"
+                                      Sections="Main" />
             </TabItem>
             <!-- UXUI-Extreme (UX-004): Colours tab, the style editor for the UX-003 style layer -->
             <TabItem Header="{DynamicResource uxui_colours_tab}">

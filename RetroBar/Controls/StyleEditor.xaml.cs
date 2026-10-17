@@ -24,6 +24,9 @@ namespace RetroBar.Controls
         private readonly DispatcherTimer _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         private bool _subscribed;
 
+        // UXUI-Extreme: lets texture editors store to and use the style's texture palette.
+        private TexturePaletteHost _textureHost;
+
         // UX-009: the palette grid (StyleEditor.Palette.cs).
         private readonly ColourField[] _paletteFields = new ColourField[StyleDocument.PALETTE_SIZE];
 
@@ -34,6 +37,15 @@ namespace RetroBar.Controls
             _saveTimer.Tick += (s, e) => SaveActive();
             cboStyleName.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((s, e) => UpdateButtons()));
 
+            _textureHost = new TexturePaletteHost
+            {
+                Slots = () => _style.TexturePalette,
+                Changed = () =>
+                {
+                    ShowTextureSlots();
+                    ScheduleSave();
+                },
+            };
             BuildPaletteGrid();
             foreach (Colourways.Preset preset in Colourways.Presets)
             {
@@ -154,7 +166,8 @@ namespace RetroBar.Controls
                     _style.Get(part, p),
                     () => BrushSpec.FromBrush(StyleLayer.ThemeBrush(part, p)),
                     StyleLayer.IsUsed(part, p),
-                    () => _style.Palette); // UXUI-Extreme (UX-011): live palette, not a stale copy.
+                    () => _style.Palette, // UXUI-Extreme (UX-011): live palette, not a stale copy.
+                    _textureHost);
                 editor.Changed += (s, e) =>
                 {
                     _style.Set(part, p, ((BrushEditor)s).Value);
@@ -166,10 +179,36 @@ namespace RetroBar.Controls
             AddBorderRow(part); // UXUI-Extreme (UX-013)
         }
 
+        private bool _switchingStyle;
+
+        // Picking a style in the list loads it straight away (typing a name does not).
         private void CboStyleName_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateButtons();
+
+            if (!_switchingStyle && e.AddedItems.Count == 1 && e.AddedItems[0] is string name && cboStyleName.IsDropDownOpen)
+            {
+                LoadNamed(name);
+            }
         }
+
+        // Steps through the saved + example styles in list order (wrapping), loading each at once.
+        private void Step(int direction)
+        {
+            List<string> names = StyleDocument.ListedNames();
+            if (names.Count == 0)
+            {
+                return;
+            }
+
+            int at = names.FindIndex(n => string.Equals(n, cboStyleName.Text?.Trim(), StringComparison.OrdinalIgnoreCase));
+            int next = at < 0 ? (direction > 0 ? 0 : names.Count - 1) : (at + direction + names.Count) % names.Count;
+            LoadNamed(names[next]);
+        }
+
+        private void Prev_OnClick(object sender, RoutedEventArgs e) => Step(-1);
+
+        private void Next_OnClick(object sender, RoutedEventArgs e) => Step(1);
 
         private void ScheduleSave()
         {
@@ -282,9 +321,10 @@ namespace RetroBar.Controls
             RefreshNames();
         }
 
-        private void Load_OnClick(object sender, RoutedEventArgs e)
+        private void Load_OnClick(object sender, RoutedEventArgs e) => LoadNamed(cboStyleName.Text?.Trim());
+
+        private void LoadNamed(string name)
         {
-            string name = cboStyleName.Text?.Trim();
             if (string.IsNullOrEmpty(name))
             {
                 return;
@@ -294,7 +334,16 @@ namespace RetroBar.Controls
             StyleDocument style = File.Exists(path) || !StyleDocument.IsExample(name) ? ReadStyle(path) : ReadExample(name);
             if (style != null)
             {
-                UseStyle(style, name);
+                _switchingStyle = true;
+                try
+                {
+                    UseStyle(style, name);
+                    cboStyleName.Text = name; // a style file's own Name may differ; show the entry that was picked
+                }
+                finally
+                {
+                    _switchingStyle = false;
+                }
             }
         }
 
@@ -375,6 +424,7 @@ namespace RetroBar.Controls
             // The palette is a working set of colours, not part of the look, so it stays.
             var cleared = new StyleDocument();
             System.Array.Copy(_style.Palette, cleared.Palette, StyleDocument.PALETTE_SIZE);
+            for (int i = 0; i < StyleDocument.TEXTURE_PALETTE_SIZE; i++) cleared.TexturePalette[i] = _style.TexturePalette[i]; // saved textures stay too
             UseStyle(cleared, "");
         }
 

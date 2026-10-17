@@ -28,7 +28,7 @@ internal static partial class Program
 
     private static void Editor()
     {
-        foreach (string path in new[] { "Controls/StartColourwaysStrings.xaml", "Languages/English.xaml", "Themes/System.xaml" })
+        foreach (string path in new[] { "Controls/StartColourwaysStrings.xaml", "Controls/LayoutStrings.xaml", "Languages/English.xaml", "Themes/System.xaml" })
             Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/RetroBar;component/" + path, UriKind.Relative) });
         var seed = BrushSpec.Gradient(90, Colors.Indigo, Colors.Cyan);
         Color?[] palette = { Colors.Black, Colors.Red };

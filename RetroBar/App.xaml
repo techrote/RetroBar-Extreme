@@ -14,6 +14,7 @@
                 <ResourceDictionary Source="Controls/StartColourwaysStrings.xaml" />
                 <!-- UXUI-Extreme (UX-012): localisable defaults for the Layout tab. -->
                 <ResourceDictionary Source="Controls/LayoutStrings.xaml" />
+                <ResourceDictionary Source="Controls/TextureStrings.xaml" />
                 <ResourceDictionary Source="Languages/English.xaml" />
                 <ResourceDictionary Source="Themes/System.xaml" />
             </ResourceDictionary.MergedDictionaries>

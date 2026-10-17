@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -59,11 +60,14 @@ namespace RetroBar.Utilities
             nameof(Settings.Edge),
             // UX-012: the clock's own font and its orientation
             nameof(Settings.ClockFontFamily),
+            nameof(Settings.ClockMonospace),
+            nameof(Settings.ClockMonoFamily),
             nameof(Settings.ClockFontSize),
             nameof(Settings.ClockFontWeight),
             nameof(Settings.ClockFontItalic),
             nameof(Settings.ClockLineSpacing),
             nameof(Settings.ClockOrientation),
+            nameof(Settings.ClockMarginMode),
         };
 
         // UX-007: fonts whose "letters" are icons (e.g. the window menu's Restore/Minimise/Close
@@ -158,6 +162,41 @@ namespace RetroBar.Utilities
                    scale > 1.0;
         }
 
+        private static readonly Dictionary<string, bool> EqualDigits = new Dictionary<string, bool>();
+
+        // True when every digit takes the same width in this font (with tabular numerals on).
+        private static bool HasEqualDigits(FontFamily family, TextBlock like)
+        {
+            string key = family?.Source ?? "";
+            if (EqualDigits.TryGetValue(key, out bool known))
+            {
+                return known;
+            }
+
+            bool equal = true;
+            try
+            {
+                var probe = new TextBlock { FontFamily = family, FontSize = 40 };
+                Typography.SetNumeralAlignment(probe, FontNumeralAlignment.Tabular);
+                TextOptions.SetTextFormattingMode(probe, TextFormattingMode.Ideal);
+                double first = -1;
+                for (char digit = '0'; digit <= '9'; digit++)
+                {
+                    probe.Text = new string(digit, 4);
+                    probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                    if (first < 0) first = probe.DesiredSize.Width;
+                    else if (Math.Abs(probe.DesiredSize.Width - first) > 0.5) { equal = false; break; }
+                }
+            }
+            catch (Exception)
+            {
+                equal = false;
+            }
+
+            EqualDigits[key] = equal;
+            return equal;
+        }
+
         private static bool IsFontOverrideActive()
         {
             var s = Settings.Instance;
@@ -168,6 +207,7 @@ namespace RetroBar.Utilities
                    s.FontOverrideLineSpacing > 0 ||
                    // UX-012: clock font settings
                    !string.IsNullOrWhiteSpace(s.ClockFontFamily) ||
+                   s.ClockMonospace ||
                    s.ClockFontSize > 0 ||
                    s.ClockFontWeight > 0 ||
                    s.ClockFontItalic != ClockItalicOption.SameAsTaskbar ||
@@ -222,6 +262,24 @@ namespace RetroBar.Utilities
             // UX-012: clock lines can have their own font; each setting falls back to the taskbar font.
             bool clockLine = ClockFitter.IsClockLine(textBlock);
             string fontFamily = clockLine && !string.IsNullOrWhiteSpace(s.ClockFontFamily) ? s.ClockFontFamily : s.FontOverrideFamily;
+            if (clockLine)
+            {
+                // Equal-width digits: tabular numerals; the monospace font only where the font has none.
+                if (s.ClockMonospace)
+                {
+                    Typography.SetNumeralAlignment(textBlock, FontNumeralAlignment.Tabular);
+                    string effective = !string.IsNullOrWhiteSpace(fontFamily) ? fontFamily : null;
+                    FontFamily probeFamily = effective != null ? BundledFonts.Resolve(effective, 12) : textBlock.FontFamily;
+                    if (!HasEqualDigits(probeFamily, textBlock))
+                    {
+                        fontFamily = !string.IsNullOrWhiteSpace(s.ClockMonoFamily) ? s.ClockMonoFamily : "Consolas";
+                    }
+                }
+                else
+                {
+                    textBlock.ClearValue(Typography.NumeralAlignmentProperty);
+                }
+            }
             double fontSize = clockLine && s.ClockFontSize > 0 ? s.ClockFontSize : s.FontOverrideSize;
             int weightSetting = clockLine && s.ClockFontWeight > 0 ? s.ClockFontWeight : s.FontOverrideWeight;
             bool italic = clockLine && s.ClockFontItalic != ClockItalicOption.SameAsTaskbar ? s.ClockFontItalic == ClockItalicOption.Italic : s.FontOverrideItalic;
