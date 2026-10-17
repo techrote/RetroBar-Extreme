@@ -49,326 +49,358 @@
                     Value="True" />
         </Style>
     </UserControl.Resources>
-    <StackPanel Orientation="Vertical">
-        <GroupBox Header="{DynamicResource uxui_layout_start_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboStartOrientation}">
-                        <AccessText Text="{DynamicResource uxui_layout_orientation}" />
-                    </Label>
-                    <ComboBox x:Name="cboStartOrientation"
-                              ItemsSource="{DynamicResource uxui_layout_orientation_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboStartLength}">
-                        <AccessText Text="{DynamicResource uxui_layout_length}" />
-                    </Label>
-                    <ComboBox x:Name="cboStartLength"
-                              ItemsSource="{DynamicResource uxui_layout_size_mode_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel x:Name="rowStartLengthPx">
-                    <TextBlock x:Name="txtStartLength"
-                               DockPanel.Dock="Right"
-                               Width="60" />
-                    <Slider x:Name="sldStartLength"
-                            DockPanel.Dock="Right"
-                            Minimum="20"
-                            Maximum="300"
-                            TickFrequency="2"
-                            Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonLengthPx, UpdateSourceTrigger=PropertyChanged}"
-                            ValueChanged="Slider_ValueChanged" />
-                    <TextBlock />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboStartStretch}">
-                        <AccessText Text="{DynamicResource uxui_layout_stretch}" />
-                    </Label>
-                    <ComboBox x:Name="cboStartStretch"
-                              ItemsSource="{DynamicResource uxui_layout_stretch_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboStartThickness}">
-                        <AccessText Text="{DynamicResource uxui_layout_thickness}" />
-                    </Label>
-                    <ComboBox x:Name="cboStartThickness"
-                              ItemsSource="{DynamicResource uxui_layout_size_mode_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel x:Name="rowStartThicknessPx">
-                    <TextBlock x:Name="txtStartThickness"
-                               DockPanel.Dock="Right"
-                               Width="60" />
-                    <Slider x:Name="sldStartThickness"
-                            DockPanel.Dock="Right"
-                            Minimum="10"
-                            Maximum="150"
-                            TickFrequency="1"
-                            Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonThicknessPx, UpdateSourceTrigger=PropertyChanged}"
-                            ValueChanged="Slider_ValueChanged" />
-                    <TextBlock />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboStartAnchor}">
-                        <AccessText Text="{DynamicResource uxui_layout_anchor}" />
-                    </Label>
-                    <ComboBox x:Name="cboStartAnchor"
-                              ItemsSource="{DynamicResource uxui_layout_anchor_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <!-- UX-015: user PNG for the Start icon -->
-                <DockPanel>
-                    <Button DockPanel.Dock="Right"
-                            MinWidth="0"
-                            Padding="8,0"
-                            Margin="4,1,0,1"
-                            Content="{DynamicResource uxui_icon_theme}"
-                            Click="StartIconReset_OnClick" />
-                    <Button DockPanel.Dock="Right"
-                            MinWidth="0"
-                            Padding="8,0"
-                            Margin="4,1,0,1"
-                            Content="{DynamicResource uxui_icon_choose}"
-                            Click="StartIconChoose_OnClick" />
-                    <Label>
-                        <AccessText Text="{DynamicResource uxui_layout_start_icon}" />
-                    </Label>
-                    <TextBlock x:Name="txtStartIcon"
-                               TextTrimming="CharacterEllipsis" />
-                </DockPanel>
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonShowIcon, UpdateSourceTrigger=PropertyChanged}">
-                        <Label Content="{DynamicResource uxui_layout_show_icon}" />
-                    </CheckBox>
-                    <CheckBox Margin="16,3,0,3"
-                              IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonShowText, UpdateSourceTrigger=PropertyChanged}">
-                        <Label Content="{DynamicResource uxui_layout_show_text}" />
-                    </CheckBox>
-                </StackPanel>
-            </StackPanel>
-        </GroupBox>
-        <GroupBox Header="{DynamicResource uxui_layout_show_desktop_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboShowDesktopPosition}">
-                        <AccessText Text="{DynamicResource uxui_layout_position}" />
-                    </Label>
-                    <ComboBox x:Name="cboShowDesktopPosition"
-                              ItemsSource="{DynamicResource uxui_layout_show_desktop_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowDesktopButton, UpdateSourceTrigger=PropertyChanged}">
-                    <Label Content="{DynamicResource uxui_layout_show_desktop_on}" />
-                </CheckBox>
-            </StackPanel>
-        </GroupBox>
-        <!-- UX-016: notification area expand/collapse toggle: custom image and margins -->
-        <GroupBox Header="{DynamicResource uxui_toggle_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel>
-                    <Button DockPanel.Dock="Right"
-                            MinWidth="0"
-                            Padding="8,0"
-                            Margin="4,1,0,1"
-                            Content="{DynamicResource uxui_icon_theme}"
-                            Click="ToggleIconReset_OnClick" />
-                    <Button DockPanel.Dock="Right"
-                            MinWidth="0"
-                            Padding="8,0"
-                            Margin="4,1,0,1"
-                            Content="{DynamicResource uxui_icon_choose}"
-                            Click="ToggleIconChoose_OnClick" />
-                    <Label>
-                        <AccessText Text="{DynamicResource uxui_toggle_image}" />
-                    </Label>
-                    <TextBlock x:Name="txtToggleIcon"
-                               TextTrimming="CharacterEllipsis" />
-                </DockPanel>
-                <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayToggleFlip, UpdateSourceTrigger=PropertyChanged}">
-                    <Label Content="{DynamicResource uxui_toggle_flip}" />
-                </CheckBox>
-                <DockPanel>
-                    <TextBox x:Name="txtToggleMargin"
-                             DockPanel.Dock="Right"
-                             Width="110"
-                             VerticalAlignment="Center"
-                             ToolTip="{DynamicResource uxui_toggle_margin_tip}"
-                             TextChanged="TxtToggleMargin_TextChanged" />
-                    <CheckBox x:Name="chkToggleMargin"
-                              IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayToggleCustomMargin, UpdateSourceTrigger=PropertyChanged}">
-                        <Label Content="{DynamicResource uxui_toggle_margin}" />
-                    </CheckBox>
-                </DockPanel>
-            </StackPanel>
-        </GroupBox>
-        <!-- UX-014: task buttons for all apps, and remembered per-app settings -->
-        <GroupBox Header="{DynamicResource uxui_taskbuttons_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboTaskWidth}">
-                        <AccessText Text="{DynamicResource uxui_taskbuttons_width}" />
-                    </Label>
-                    <ComboBox x:Name="cboTaskWidth"
-                              ItemsSource="{DynamicResource uxui_taskbuttons_width_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel x:Name="rowTaskWidthPx">
-                    <TextBlock x:Name="txtTaskWidth"
-                               DockPanel.Dock="Right"
-                               Width="60" />
-                    <Slider x:Name="sldTaskWidth"
-                            DockPanel.Dock="Right"
-                            Minimum="30"
-                            Maximum="400"
-                            TickFrequency="5"
-                            ValueChanged="SldTaskWidth_ValueChanged" />
-                    <TextBlock />
-                </DockPanel>
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskButtonShowIcons, UpdateSourceTrigger=PropertyChanged}">
-                        <Label Content="{DynamicResource uxui_taskbuttons_show_icons}" />
-                    </CheckBox>
-                    <CheckBox Margin="16,3,0,3"
-                              IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskButtonShowLabels, UpdateSourceTrigger=PropertyChanged}">
-                        <Label Content="{DynamicResource uxui_taskbuttons_show_labels}" />
-                    </CheckBox>
-                </StackPanel>
-                <DockPanel Margin="0,4,0,0">
-                    <Label Target="{Binding ElementName=cboApp}">
-                        <AccessText Text="{DynamicResource uxui_taskbuttons_app}" />
-                    </Label>
-                    <ComboBox x:Name="cboApp"
-                              DisplayMemberPath="Name"
-                              SelectionChanged="CboApp_SelectionChanged" />
-                </DockPanel>
-                <StackPanel x:Name="panelApp"
-                            Orientation="Vertical"
-                            Margin="14,0,0,0">
+    <!-- UXUI-Extreme: two columns, so the tab is half as tall. (The clock settings have their own tab.) -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="6" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0"
+                    Orientation="Vertical">
+            <GroupBox x:Name="grpStart" Header="{DynamicResource uxui_layout_start_heading}">
+                <StackPanel Orientation="Vertical">
                     <DockPanel>
-                        <Label Target="{Binding ElementName=cboAppWidth}">
-                            <AccessText Text="{DynamicResource uxui_taskbuttons_app_width}" />
+                        <Label Target="{Binding ElementName=cboStartOrientation}">
+                            <AccessText Text="{DynamicResource uxui_layout_orientation}" />
                         </Label>
-                        <ComboBox x:Name="cboAppWidth"
-                                  Width="179"
-                                  ItemsSource="{DynamicResource uxui_taskbuttons_app_width_values}"
-                                  SelectionChanged="AppCombo_SelectionChanged" />
+                        <ComboBox x:Name="cboStartOrientation"
+                                  ItemsSource="{DynamicResource uxui_layout_orientation_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
                     </DockPanel>
-                    <DockPanel x:Name="rowAppWidthPx">
-                        <TextBlock x:Name="txtAppWidth"
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboStartLength}">
+                            <AccessText Text="{DynamicResource uxui_layout_length}" />
+                        </Label>
+                        <ComboBox x:Name="cboStartLength"
+                                  ItemsSource="{DynamicResource uxui_layout_size_mode_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel x:Name="rowStartLengthPx">
+                        <TextBlock x:Name="txtStartLength"
                                    DockPanel.Dock="Right"
                                    Width="60" />
-                        <Slider x:Name="sldAppWidth"
+                        <Slider x:Name="sldStartLength"
                                 DockPanel.Dock="Right"
-                                Minimum="30"
-                                Maximum="400"
-                                TickFrequency="5"
-                                ValueChanged="SldAppWidth_ValueChanged" />
+                                Minimum="20"
+                                Maximum="300"
+                                TickFrequency="2"
+                                Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonLengthPx, UpdateSourceTrigger=PropertyChanged}"
+                                ValueChanged="Slider_ValueChanged" />
                         <TextBlock />
                     </DockPanel>
                     <DockPanel>
-                        <Label Target="{Binding ElementName=cboAppIcon}">
-                            <AccessText Text="{DynamicResource uxui_taskbuttons_app_icon}" />
+                        <Label Target="{Binding ElementName=cboStartStretch}">
+                            <AccessText Text="{DynamicResource uxui_layout_stretch}" />
                         </Label>
-                        <ComboBox x:Name="cboAppIcon"
-                                  Width="179"
-                                  ItemsSource="{DynamicResource uxui_taskbuttons_override_values}"
-                                  SelectionChanged="AppCombo_SelectionChanged" />
+                        <ComboBox x:Name="cboStartStretch"
+                                  ItemsSource="{DynamicResource uxui_layout_stretch_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
                     </DockPanel>
                     <DockPanel>
-                        <Label Target="{Binding ElementName=cboAppLabel}">
-                            <AccessText Text="{DynamicResource uxui_taskbuttons_app_label}" />
+                        <Label Target="{Binding ElementName=cboStartThickness}">
+                            <AccessText Text="{DynamicResource uxui_layout_thickness}" />
                         </Label>
-                        <ComboBox x:Name="cboAppLabel"
-                                  Width="179"
-                                  ItemsSource="{DynamicResource uxui_taskbuttons_override_values}"
-                                  SelectionChanged="AppCombo_SelectionChanged" />
+                        <ComboBox x:Name="cboStartThickness"
+                                  ItemsSource="{DynamicResource uxui_layout_size_mode_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
                     </DockPanel>
-                    <Button HorizontalAlignment="Right"
-                            MinWidth="0"
-                            Padding="8,0"
-                            Margin="0,2,0,2"
-                            Content="{DynamicResource uxui_taskbuttons_forget}"
-                            Click="ForgetApp_OnClick" />
+                    <DockPanel x:Name="rowStartThicknessPx">
+                        <TextBlock x:Name="txtStartThickness"
+                                   DockPanel.Dock="Right"
+                                   Width="60" />
+                        <Slider x:Name="sldStartThickness"
+                                DockPanel.Dock="Right"
+                                Minimum="10"
+                                Maximum="150"
+                                TickFrequency="1"
+                                Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonThicknessPx, UpdateSourceTrigger=PropertyChanged}"
+                                ValueChanged="Slider_ValueChanged" />
+                        <TextBlock />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboStartAnchor}">
+                            <AccessText Text="{DynamicResource uxui_layout_anchor}" />
+                        </Label>
+                        <ComboBox x:Name="cboStartAnchor"
+                                  ItemsSource="{DynamicResource uxui_layout_anchor_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel x:Name="rowStartGap">
+                        <TextBlock x:Name="txtStartGap"
+                                   DockPanel.Dock="Right"
+                                   Width="60" />
+                        <Slider x:Name="sldStartGap"
+                                DockPanel.Dock="Right"
+                                Minimum="0"
+                                Maximum="8"
+                                TickFrequency="1"
+                                Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonEdgeGap, UpdateSourceTrigger=PropertyChanged}"
+                                ValueChanged="Slider_ValueChanged" />
+                        <Label>
+                            <AccessText Text="{DynamicResource uxui_layout_edge_gap}" />
+                        </Label>
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonShowIcon, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_layout_show_icon}" />
+                        </CheckBox>
+                        <CheckBox Margin="16,3,0,3"
+                                  IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonShowText, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_layout_show_text}" />
+                        </CheckBox>
+                    </StackPanel>
                 </StackPanel>
-                <TextBlock x:Name="txtNoApps"
-                           TextWrapping="Wrap"
-                           Margin="4,2,4,2"
-                           Text="{DynamicResource uxui_taskbuttons_hint}" />
-            </StackPanel>
-        </GroupBox>
-        <GroupBox Header="{DynamicResource uxui_layout_clock_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboClockOrientation}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_orientation}" />
-                    </Label>
-                    <ComboBox x:Name="cboClockOrientation"
-                              ItemsSource="{DynamicResource uxui_layout_orientation_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboClockFont}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_font}" />
-                    </Label>
-                    <ComboBox x:Name="cboClockFont"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboClockWeight}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_weight}" />
-                    </Label>
-                    <ComboBox x:Name="cboClockWeight"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=cboClockItalic}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_italic}" />
-                    </Label>
-                    <ComboBox x:Name="cboClockItalic"
-                              ItemsSource="{DynamicResource uxui_layout_clock_italic_values}"
-                              SelectionChanged="Combo_SelectionChanged" />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=sldClockSize}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_size}" />
-                    </Label>
-                    <TextBlock x:Name="txtClockSize"
-                               DockPanel.Dock="Right"
-                               Width="110" />
-                    <Slider x:Name="sldClockSize"
-                            DockPanel.Dock="Right"
-                            Width="83"
-                            Minimum="0"
-                            Maximum="40"
-                            TickFrequency="1"
-                            Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockFontSize, UpdateSourceTrigger=PropertyChanged}"
-                            ValueChanged="Slider_ValueChanged" />
-                    <TextBlock />
-                </DockPanel>
-                <DockPanel>
-                    <Label Target="{Binding ElementName=sldClockSpacing}">
-                        <AccessText Text="{DynamicResource uxui_layout_clock_spacing}" />
-                    </Label>
-                    <TextBlock x:Name="txtClockSpacing"
-                               DockPanel.Dock="Right"
-                               Width="110" />
-                    <Slider x:Name="sldClockSpacing"
-                            DockPanel.Dock="Right"
-                            Width="83"
-                            Minimum="0.5"
-                            Maximum="1.6"
-                            TickFrequency="0.05"
-                            ValueChanged="SldClockSpacing_ValueChanged" />
-                    <TextBlock />
-                </DockPanel>
-            </StackPanel>
-        </GroupBox>
-        <TextBlock TextWrapping="Wrap"
-                   MaxWidth="400"
-                   HorizontalAlignment="Left"
-                   Margin="4,0,4,0"
-                   Text="{DynamicResource uxui_layout_note}" />
-    </StackPanel>
+            </GroupBox>
+            <GroupBox x:Name="grpDesktop" Header="{DynamicResource uxui_layout_show_desktop_heading}">
+                <StackPanel Orientation="Vertical">
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboShowDesktopPosition}">
+                            <AccessText Text="{DynamicResource uxui_layout_position}" />
+                        </Label>
+                        <ComboBox x:Name="cboShowDesktopPosition"
+                                  ItemsSource="{DynamicResource uxui_layout_show_desktop_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowDesktopButton, UpdateSourceTrigger=PropertyChanged}">
+                        <Label Content="{DynamicResource uxui_layout_show_desktop_on}" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowDesktopBorder, UpdateSourceTrigger=PropertyChanged}">
+                        <Label Content="{DynamicResource uxui_layout_desktop_border}" />
+                    </CheckBox>
+                    <DockPanel>
+                        <TextBox x:Name="txtDesktopMargin"
+                                 DockPanel.Dock="Right"
+                                 Width="110"
+                                 VerticalAlignment="Center"
+                                 ToolTip="{DynamicResource uxui_layout_desktop_margin_tip}"
+                                 TextChanged="TxtDesktopMargin_TextChanged" />
+                        <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowDesktopCustomMargin, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_layout_desktop_margin}" />
+                        </CheckBox>
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
+            <TextBlock x:Name="noteStart" TextWrapping="Wrap"
+                       MaxWidth="400"
+                       HorizontalAlignment="Left"
+                       Margin="4,0,4,0"
+                       Text="{DynamicResource uxui_layout_note}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2"
+                    Orientation="Vertical">
+            <GroupBox x:Name="grpToggle" Header="{DynamicResource uxui_toggle_heading}">
+                <StackPanel Orientation="Vertical">
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboTogglePlacement}">
+                            <AccessText Text="{DynamicResource uxui_toggle_placement}" />
+                        </Label>
+                        <ComboBox x:Name="cboTogglePlacement"
+                                  ItemsSource="{DynamicResource uxui_toggle_placement_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBox x:Name="txtToggleMargin"
+                                 DockPanel.Dock="Right"
+                                 Width="110"
+                                 VerticalAlignment="Center"
+                                 ToolTip="{DynamicResource uxui_toggle_margin_tip}"
+                                 TextChanged="TxtToggleMargin_TextChanged" />
+                        <CheckBox x:Name="chkToggleMargin"
+                                  IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayToggleCustomMargin, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_toggle_margin}" />
+                        </CheckBox>
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox x:Name="grpTaskButtons" Header="{DynamicResource uxui_taskbuttons_heading}">
+                <StackPanel Orientation="Vertical">
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboTaskWidth}">
+                            <AccessText Text="{DynamicResource uxui_taskbuttons_width}" />
+                        </Label>
+                        <ComboBox x:Name="cboTaskWidth"
+                                  ItemsSource="{DynamicResource uxui_taskbuttons_width_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel x:Name="rowTaskWidthPx">
+                        <TextBlock Text="px"
+                                   DockPanel.Dock="Right"
+                                   Margin="2,0,2,0" />
+                        <TextBox x:Name="txtTaskWidth"
+                                 DockPanel.Dock="Right"
+                                 Width="46"
+                                 TextAlignment="Right"
+                                 ToolTip="{DynamicResource uxui_taskbuttons_width_tip}"
+                                 TextChanged="TxtTaskWidth_TextChanged" />
+                        <Slider x:Name="sldTaskWidth"
+                                DockPanel.Dock="Right"
+                                Minimum="30"
+                                Maximum="1000"
+                                TickFrequency="5"
+                                ValueChanged="SldTaskWidth_ValueChanged" />
+                        <TextBlock />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboTaskAlign}">
+                            <AccessText Text="{DynamicResource uxui_taskbuttons_align}" />
+                        </Label>
+                        <ComboBox x:Name="cboTaskAlign"
+                                  ItemsSource="{DynamicResource uxui_taskbuttons_align_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskButtonShowIcons, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_taskbuttons_show_icons}" />
+                        </CheckBox>
+                        <CheckBox Margin="16,3,0,3"
+                                  IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskButtonShowLabels, UpdateSourceTrigger=PropertyChanged}">
+                            <Label Content="{DynamicResource uxui_taskbuttons_show_labels}" />
+                        </CheckBox>
+                    </StackPanel>
+                    <DockPanel Margin="0,4,0,0">
+                        <Label Target="{Binding ElementName=cboApp}">
+                            <AccessText Text="{DynamicResource uxui_taskbuttons_app}" />
+                        </Label>
+                        <ComboBox x:Name="cboApp"
+                                  DisplayMemberPath="Name"
+                                  SelectionChanged="CboApp_SelectionChanged" />
+                    </DockPanel>
+                    <StackPanel x:Name="panelApp"
+                                Orientation="Vertical"
+                                Margin="14,0,0,0">
+                        <DockPanel>
+                            <Label Target="{Binding ElementName=cboAppWidth}">
+                                <AccessText Text="{DynamicResource uxui_taskbuttons_app_width}" />
+                            </Label>
+                            <ComboBox x:Name="cboAppWidth"
+                                      Width="179"
+                                      ItemsSource="{DynamicResource uxui_taskbuttons_app_width_values}"
+                                      SelectionChanged="AppCombo_SelectionChanged" />
+                        </DockPanel>
+                        <DockPanel x:Name="rowAppWidthPx">
+                            <TextBlock Text="px"
+                                       DockPanel.Dock="Right"
+                                       Margin="2,0,2,0" />
+                            <TextBox x:Name="txtAppWidth"
+                                     DockPanel.Dock="Right"
+                                     Width="46"
+                                     TextAlignment="Right"
+                                     ToolTip="{DynamicResource uxui_taskbuttons_width_tip}"
+                                     TextChanged="TxtAppWidth_TextChanged" />
+                            <Slider x:Name="sldAppWidth"
+                                    DockPanel.Dock="Right"
+                                    Minimum="30"
+                                    Maximum="400"
+                                    TickFrequency="5"
+                                    ValueChanged="SldAppWidth_ValueChanged" />
+                            <TextBlock />
+                        </DockPanel>
+                        <DockPanel>
+                            <Label Target="{Binding ElementName=cboAppIcon}">
+                                <AccessText Text="{DynamicResource uxui_taskbuttons_app_icon}" />
+                            </Label>
+                            <ComboBox x:Name="cboAppIcon"
+                                      Width="179"
+                                      ItemsSource="{DynamicResource uxui_taskbuttons_override_values}"
+                                      SelectionChanged="AppCombo_SelectionChanged" />
+                        </DockPanel>
+                        <DockPanel>
+                            <Label Target="{Binding ElementName=cboAppLabel}">
+                                <AccessText Text="{DynamicResource uxui_taskbuttons_app_label}" />
+                            </Label>
+                            <ComboBox x:Name="cboAppLabel"
+                                      Width="179"
+                                      ItemsSource="{DynamicResource uxui_taskbuttons_override_values}"
+                                      SelectionChanged="AppCombo_SelectionChanged" />
+                        </DockPanel>
+                        <DockPanel>
+                            <Label Target="{Binding ElementName=cboAppAlign}">
+                                <AccessText Text="{DynamicResource uxui_taskbuttons_app_align}" />
+                            </Label>
+                            <ComboBox x:Name="cboAppAlign"
+                                      Width="179"
+                                      ItemsSource="{DynamicResource uxui_taskbuttons_app_align_values}"
+                                      SelectionChanged="AppCombo_SelectionChanged" />
+                        </DockPanel>
+                        <Button HorizontalAlignment="Right"
+                                MinWidth="0"
+                                Padding="8,0"
+                                Margin="0,2,0,2"
+                                Content="{DynamicResource uxui_taskbuttons_forget}"
+                                Click="ForgetApp_OnClick" />
+                    </StackPanel>
+                    <!-- UXUI-Extreme: which rows particular apps use, and apps that go to the end of the list -->
+                    <Separator Margin="0,4,0,4" />
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboRowPick}">
+                            <AccessText Text="{DynamicResource uxui_rows_row}" />
+                        </Label>
+                        <ComboBox x:Name="cboRowPick"
+                                  ItemsSource="{DynamicResource uxui_rows_values}"
+                                  SelectionChanged="RowPick_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboRowAlign}">
+                            <AccessText Text="{DynamicResource uxui_rows_align}" />
+                        </Label>
+                        <ComboBox x:Name="cboRowAlign"
+                                  ItemsSource="{DynamicResource uxui_taskbuttons_align_values}"
+                                  SelectionChanged="RowAlign_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=sldRowHeight}">
+                            <AccessText Text="{DynamicResource uxui_rows_height}" />
+                        </Label>
+                        <TextBlock x:Name="txtRowHeight"
+                                   DockPanel.Dock="Right"
+                                   Width="30"
+                                   TextAlignment="Right" />
+                        <Slider x:Name="sldRowHeight"
+                                Minimum="-12"
+                                Maximum="24"
+                                TickFrequency="1"
+                                ValueChanged="RowHeight_ValueChanged" />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=cboTaskVAlign}">
+                            <AccessText Text="{DynamicResource uxui_taskbuttons_valign}" />
+                        </Label>
+                        <ComboBox x:Name="cboTaskVAlign"
+                                  ItemsSource="{DynamicResource uxui_valign_values}"
+                                  SelectionChanged="Combo_SelectionChanged" />
+                    </DockPanel>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=txtRowApps}">
+                            <AccessText Text="{DynamicResource uxui_rows_apps}" />
+                        </Label>
+                        <TextBox x:Name="txtRowApps"
+                                 ToolTip="{DynamicResource uxui_rows_apps_tip}"
+                                 VerticalAlignment="Center"
+                                 TextChanged="RowRule_Changed" />
+                    </DockPanel>
+                    <CheckBox x:Name="chkRowOnly"
+                              Click="RowRule_Clicked">
+                        <Label Content="{DynamicResource uxui_rows_only}" />
+                    </CheckBox>
+                    <DockPanel>
+                        <Label Target="{Binding ElementName=txtEndApps}">
+                            <AccessText Text="{DynamicResource uxui_rows_end}" />
+                        </Label>
+                        <TextBox x:Name="txtEndApps"
+                                 ToolTip="{DynamicResource uxui_rows_end_tip}"
+                                 VerticalAlignment="Center"
+                                 TextChanged="EndApps_Changed" />
+                    </DockPanel>
+                    <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskEndAppsBottomRow, UpdateSourceTrigger=PropertyChanged}">
+                        <Label Content="{DynamicResource uxui_rows_end_bottom}" />
+                    </CheckBox>
+                    <TextBlock x:Name="txtNoApps"
+                               TextWrapping="Wrap"
+                               Margin="4,2,4,2"
+                               Text="{DynamicResource uxui_taskbuttons_hint}" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </Grid>
 </UserControl>

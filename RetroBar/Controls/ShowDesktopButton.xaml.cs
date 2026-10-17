@@ -41,6 +41,43 @@ namespace RetroBar.Controls
             }
         }
 
+        // UXUI-Extreme: themes draw the Show desktop button with a (translucent) fill and border made of
+        // nested Border elements; with the option off every one of them loses its thickness and fill.
+        private void ApplyBorder()
+        {
+            ShowDesktop.ApplyTemplate();
+            bool show = Settings.Instance.ShowDesktopBorder;
+            foreach (System.Windows.Controls.Border border in Descendants<System.Windows.Controls.Border>(ShowDesktop))
+            {
+                if (show)
+                {
+                    border.ClearValue(System.Windows.Controls.Border.BorderThicknessProperty);
+                    border.ClearValue(System.Windows.Controls.Border.BackgroundProperty);
+                }
+                else
+                {
+                    border.BorderThickness = new Thickness(0);
+                    border.Background = System.Windows.Media.Brushes.Transparent;
+                }
+            }
+        }
+
+        private static System.Collections.Generic.IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is T match)
+                {
+                    yield return match;
+                }
+                foreach (T nested in Descendants<T>(child))
+                {
+                    yield return nested;
+                }
+            }
+        }
+
         private void SetIconSize()
         {
             if (DpiHelper.DpiScale > 1 || Settings.Instance.TaskbarScale > 1)
@@ -51,6 +88,18 @@ namespace RetroBar.Controls
             {
                 ShowDesktopIcon.Source = (System.Windows.Media.ImageSource)FindResource("ShowDesktopIconImageSmall");
             }
+
+            // UXUI-Extreme: a user's PNG in place of the theme's picture, and where it sits.
+            if (CustomIcons.Load(Settings.Instance.ShowDesktopIcon, CustomIcons.DevicePixels(ShowDesktopIcon)) is System.Windows.Media.Imaging.BitmapSource custom)
+            {
+                ShowDesktopIcon.Source = custom;
+            }
+            ShowDesktopIcon.HorizontalAlignment = Settings.Instance.ShowDesktopIconAlign switch
+            {
+                TaskButtonAlignOption.Left => HorizontalAlignment.Left,
+                TaskButtonAlignOption.Right => HorizontalAlignment.Right,
+                _ => HorizontalAlignment.Center,
+            };
         }
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
@@ -121,7 +170,14 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.TaskbarScale))
+            if (e.PropertyName == nameof(Settings.ShowDesktopBorder))
+            {
+                ApplyBorder();
+            }
+
+            if (e.PropertyName == nameof(Settings.TaskbarScale) ||
+                e.PropertyName == nameof(Settings.ShowDesktopIcon) ||
+                e.PropertyName == nameof(Settings.ShowDesktopIconAlign))
             {
                 SetIconSize();
             }
@@ -132,6 +188,7 @@ namespace RetroBar.Controls
             if (!isLoaded && TasksService != null)
             {
                 SetIconSize();
+                ApplyBorder();
                 TasksService.WindowActivated += HandleWindowActivated;
 
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;

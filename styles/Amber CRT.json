@@ -35,7 +35,29 @@
     "clock": { "foreground": "#ffb000" },
     "bevel": { "highlight": "#7a5200", "light": "#3a2400", "shadow": "#000000", "darkShadow": "#000000" }
   },
-  "palette": [ "#120a00", "#ffb000", "#7a5200", "#ffd060", null, null, null, null, null, null, null, null ],
   "start": { "recolour": "#ffb000" },
-  "borders": { "button": 0 }
+  "borders": { "button": 0 },
+  "palette": [ "#120a00", "#ffb000", "#7a5200", "#ffd060", "#3a2400", "#5a3800", "#000b1a", "#004fff", null, null, null, null ],
+  "texturePalette": [
+    {"texture": "scanlines", "lut": ["#0a0600", "#1c1000"], "scale": 0.5, "contrast": 1},
+    {"texture": "scanlines", "lut": ["#000000", "#140c00"], "scale": 0.5, "contrast": 1},
+    {"texture": "scanlines", "lut": ["#3a2400", "#5a3800"], "scale": 0.5, "contrast": 1, "angle": 45},
+    {"texture": "marble", "lut": ["#000b1a", "#5a3800", "#ffb000"], "scale": 1, "contrast": 1, "frequency": 3, "strength": 1.5},
+    {"texture": "scanlines", "lut": ["#120a00", "#004fff", "#ffd060"], "scale": 1, "contrast": 1, "frequency": 32},
+    {"texture": "weave", "lut": ["#ffb000", "#004fff", "#3a2400"], "scale": 1, "contrast": 1},
+    {"texture": "checker", "lut": ["#5a3800", "#7a5200", "#ffd060"], "scale": 1, "contrast": 0.6, "frequency": 16},
+    {"texture": "waves", "lut": ["#004fff", "#7a5200", "#ffb000"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    {"texture": "bricks", "lut": ["#ffd060", "#ffb000", "#7a5200"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "dots", "lut": ["#000b1a", "#5a3800", "#ffb000"], "scale": 1, "contrast": 1, "frequency": 12},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
 }

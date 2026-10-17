@@ -34,7 +34,29 @@
     "clock": { "foreground": "#ffcc00" },
     "bevel": { "highlight": "#d0d6dc", "light": "#8a9096", "shadow": "#1a1c1e", "darkShadow": "#000000" }
   },
-  "palette": [ "#5a6066", "#ffcc00", "#1a1c1e", "#d0d6dc", null, null, null, null, null, null, null, null ],
   "start": { "recolour": "#ffcc00" },
-  "borders": { "bar": 2, "tray": 3 }
+  "borders": { "bar": 2, "tray": 3 },
+  "palette": [ "#5a6066", "#ffcc00", "#1a1c1e", "#d0d6dc", "#3a3e42", "#000000", "#8a9096", "#ffffff", null, null, null, null ],
+  "texturePalette": [
+    {"texture": "diamond", "lut": ["#3a3e42", "#8a9096", "#d0d6dc"], "scale": 1, "contrast": 1},
+    {"texture": "scanlines", "lut": ["#000000", "#5a6066", "#d0d6dc"], "scale": 1, "contrast": 1, "frequency": 32},
+    {"texture": "weave", "lut": ["#1a1c1e", "#8a9096", "#ffffff"], "scale": 1, "contrast": 1},
+    {"texture": "checker", "lut": ["#d0d6dc", "#8a9096", "#3a3e42"], "scale": 1, "contrast": 0.6, "frequency": 16},
+    {"texture": "waves", "lut": ["#5a6066", "#ffcc00", "#ffffff"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    {"texture": "bricks", "lut": ["#8a9096", "#ffcc00", "#d0d6dc"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "dots", "lut": ["#ffffff", "#d0d6dc", "#ffcc00"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "noise", "lut": ["#000000", "#5a6066", "#d0d6dc"], "scale": 1, "contrast": 1, "strength": 0.6},
+    {"texture": "brushed", "lut": ["#1a1c1e", "#8a9096", "#ffffff"], "scale": 1, "contrast": 1.2, "strength": 0.6},
+    {"texture": "carbon", "lut": ["#d0d6dc", "#8a9096", "#3a3e42"], "scale": 1, "contrast": 1},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
 }

@@ -32,7 +32,11 @@ namespace RetroBar.Utilities
         public const int PALETTE_SIZE = 12;
         public readonly Color?[] Palette = new Color?[PALETTE_SIZE];
 
-        public bool IsEmpty => !StartRecolour.HasValue && Borders.Count == 0 && Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue);
+        // UXUI-Extreme: the texture palette, twelve saved textures kept with the style. Null = empty slot.
+        public const int TEXTURE_PALETTE_SIZE = 20;
+        public readonly TextureSpec[] TexturePalette = new TextureSpec[TEXTURE_PALETTE_SIZE];
+
+        public bool IsEmpty => !StartRecolour.HasValue && Borders.Count == 0 && Parts.Values.All(p => p.Count == 0) && Palette.All(c => !c.HasValue) && TexturePalette.All(t => t == null);
 
         public BrushSpec Get(string part, string property)
         {
@@ -66,6 +70,7 @@ namespace RetroBar.Utilities
             var copy = new StyleDocument { Name = Name, StartRecolour = StartRecolour };
             foreach (var border in Borders) copy.Borders[border.Key] = border.Value; // UX-013
             Array.Copy(Palette, copy.Palette, PALETTE_SIZE);
+            for (int i = 0; i < TEXTURE_PALETTE_SIZE; i++) copy.TexturePalette[i] = TexturePalette[i]?.Clone();
             foreach (var part in Parts)
             {
                 foreach (var property in part.Value)
@@ -169,6 +174,32 @@ namespace RetroBar.Utilities
                     }
                 }
 
+                // UXUI-Extreme: the texture palette. A bad slot is skipped, the rest are kept.
+                if (root.TryGetProperty("texturePalette", out JsonElement texturePalette) && texturePalette.ValueKind == JsonValueKind.Array)
+                {
+                    int slot = 0;
+                    foreach (JsonElement entry in texturePalette.EnumerateArray())
+                    {
+                        if (slot >= TEXTURE_PALETTE_SIZE)
+                        {
+                            break;
+                        }
+
+                        if (entry.ValueKind == JsonValueKind.Object)
+                        {
+                            try
+                            {
+                                style.TexturePalette[slot] = TextureSpec.Parse(entry);
+                            }
+                            catch (Exception e) when (e is FormatException || e is KeyNotFoundException)
+                            {
+                                warn($"texture palette slot {slot + 1} skipped: {e.Message}");
+                            }
+                        }
+                        slot++;
+                    }
+                }
+
                 return style;
             }
         }
@@ -207,6 +238,23 @@ namespace RetroBar.Utilities
                         if (colour is Color c)
                         {
                             writer.WriteStringValue(BrushSpec.FormatColor(c));
+                        }
+                        else
+                        {
+                            writer.WriteNullValue();
+                        }
+                    }
+                    writer.WriteEndArray();
+                }
+
+                if (TexturePalette.Any(t => t != null))
+                {
+                    writer.WriteStartArray("texturePalette");
+                    foreach (TextureSpec texture in TexturePalette)
+                    {
+                        if (texture != null)
+                        {
+                            texture.Write(writer);
                         }
                         else
                         {

@@ -60,114 +60,177 @@
                     Value="Center" />
         </Style>
     </UserControl.Resources>
-    <StackPanel Orientation="Vertical">
-        <GroupBox Header="{DynamicResource uxui_saved_styles}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel Margin="0,2,0,0">
-                    <Label VerticalAlignment="Center"
-                           Target="{Binding ElementName=cboStyleName}">
-                        <AccessText Text="{DynamicResource uxui_style_name}" />
-                    </Label>
-                    <Button x:Name="btnDelete"
-                            DockPanel.Dock="Right"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_delete}"
-                            Click="Delete_OnClick" />
-                    <Button x:Name="btnLoad"
-                            DockPanel.Dock="Right"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_load}"
-                            Click="Load_OnClick" />
-                    <Button DockPanel.Dock="Right"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_save}"
-                            Click="Save_OnClick" />
-                    <ComboBox x:Name="cboStyleName"
-                              IsEditable="True"
-                              SelectionChanged="CboStyleName_SelectionChanged" />
-                </DockPanel>
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            Margin="0,4,0,2">
-                    <Button Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_import}"
-                            Click="Import_OnClick" />
-                    <Button Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_export}"
-                            Click="Export_OnClick" />
-                    <Button Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_reset_all}"
-                            Click="ResetAll_OnClick" />
+    <!-- UXUI-Extreme: two columns (styles, palettes | the part being edited), so the tab is far shorter. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="6" />
+            <ColumnDefinition Width="Auto" MinWidth="540" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0"
+                    Width="480"
+                    Orientation="Vertical">
+            <GroupBox Header="{DynamicResource uxui_saved_styles}">
+                <StackPanel Orientation="Vertical">
+                    <DockPanel Margin="0,2,0,0">
+                        <Label VerticalAlignment="Center"
+                               Target="{Binding ElementName=cboStyleName}">
+                            <AccessText Text="{DynamicResource uxui_style_name}" />
+                        </Label>
+                        <Button x:Name="btnDelete"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_delete}"
+                                Click="Delete_OnClick" />
+                        <Button x:Name="btnNext"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="&#x25B6;"
+                                ToolTip="{DynamicResource uxui_style_next}"
+                                Click="Next_OnClick" />
+                        <Button x:Name="btnPrev"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="&#x25C0;"
+                                ToolTip="{DynamicResource uxui_style_prev}"
+                                Click="Prev_OnClick" />
+                        <Button x:Name="btnLoad"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_load}"
+                                Click="Load_OnClick" />
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_save}"
+                                Click="Save_OnClick" />
+                        <ComboBox x:Name="cboStyleName"
+                                  IsEditable="True"
+                                  SelectionChanged="CboStyleName_SelectionChanged" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,4,0,2">
+                        <Button Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_import}"
+                                Click="Import_OnClick" />
+                        <Button Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_export}"
+                                Click="Export_OnClick" />
+                        <Button Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_reset_all}"
+                                Click="ResetAll_OnClick" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </GroupBox>
-        <!-- UX-009 (reworked after owner feedback): the palette, right in the tab. Slot 1 is the
-             base colour and slot 2 the accent; presets and the Start button fill it, and Apply to
-             parts generates matching button / tray / clock / edge colours from those two. -->
-        <GroupBox Header="{DynamicResource uxui_palette_heading}">
-            <StackPanel Orientation="Vertical">
-                <Grid x:Name="gridPalette"
-                      Margin="0,2,0,2" />
-                <DockPanel Margin="0,2,0,0">
-                    <Label VerticalAlignment="Center"
-                           Target="{Binding ElementName=cboPreset}">
-                        <AccessText Text="{DynamicResource uxui_colourway_preset}" />
-                    </Label>
-                    <Button DockPanel.Dock="Right"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_palette_clear}"
-                            Click="ClearPalette_OnClick" />
-                    <ComboBox x:Name="cboPreset"
-                              ToolTip="{DynamicResource uxui_palette_preset_note}"
-                              SelectionChanged="CboPreset_SelectionChanged" />
-                </DockPanel>
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            Margin="0,3,0,2">
-                    <!-- UXUI-Extreme (UX-010): Start button colours fill the palette. -->
-                    <Button x:Name="btnFromStart"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_start_extract}"
-                            ToolTip="{DynamicResource uxui_start_extract_note}"
-                            Click="ColoursFromStart_OnClick" />
-                    <Button Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_palette_apply}"
-                            ToolTip="{DynamicResource uxui_colourway_note}"
-                            Click="ApplyColourway_OnClick" />
+            </GroupBox>
+            <!-- UX-009 (reworked after owner feedback): the palette, right in the tab. Slot 1 is the
+                 base colour and slot 2 the accent; presets and the Start button fill it, and Apply to
+                 parts generates matching button / tray / clock / edge colours from those two. -->
+            <GroupBox Header="{DynamicResource uxui_palette_heading}">
+                <StackPanel Orientation="Vertical">
+                    <Grid x:Name="gridPalette"
+                          Margin="0,2,0,2" />
+                    <DockPanel Margin="0,2,0,0">
+                        <Label VerticalAlignment="Center"
+                               Target="{Binding ElementName=cboPreset}">
+                            <AccessText Text="{DynamicResource uxui_colourway_preset}" />
+                        </Label>
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_palette_clear}"
+                                Click="ClearPalette_OnClick" />
+                        <ComboBox x:Name="cboPreset"
+                                  ToolTip="{DynamicResource uxui_palette_preset_note}"
+                                  SelectionChanged="CboPreset_SelectionChanged" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,3,0,2">
+                        <!-- UXUI-Extreme (UX-010): Start button colours fill the palette. -->
+                        <Button x:Name="btnFromStart"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_start_extract}"
+                                ToolTip="{DynamicResource uxui_start_extract_note}"
+                                Click="ColoursFromStart_OnClick" />
+                        <Button Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_palette_fill}"
+                                ToolTip="{DynamicResource uxui_palette_fill_tip}"
+                                Click="FillComplementary_OnClick" />
+                        <Button Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_palette_apply}"
+                                ToolTip="{DynamicResource uxui_colourway_note}"
+                                Click="ApplyColourway_OnClick" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </GroupBox>
-        <GroupBox Header="{DynamicResource uxui_style_part_heading}">
-            <StackPanel Orientation="Vertical">
-                <DockPanel Margin="0,2,0,0">
-                    <Label VerticalAlignment="Center"
-                           Target="{Binding ElementName=cboPart}">
-                        <AccessText Text="{DynamicResource uxui_style_part}" />
-                    </Label>
-                    <Button DockPanel.Dock="Right"
-                            Style="{StaticResource CompactButton}"
-                            Content="{DynamicResource uxui_style_reset_part}"
-                            Click="ResetPart_OnClick" />
-                    <ComboBox x:Name="cboPart"
-                              SelectionChanged="CboPart_SelectionChanged">
-                        <!-- UXUI-Extreme (UX-010): preserve all existing translations and indices. -->
-                        <ComboBox.ItemsSource>
-                            <CompositeCollection>
-                                <CollectionContainer Collection="{DynamicResource uxui_style_part_values}" />
-                                <ComboBoxItem Content="{DynamicResource uxui_start_part}" />
-                            </CompositeCollection>
-                        </ComboBox.ItemsSource>
-                    </ComboBox>
-                </DockPanel>
-                <StackPanel x:Name="panelProperties"
-                            Orientation="Vertical"
-                            Margin="0,2,0,2" />
-            </StackPanel>
-        </GroupBox>
-        <TextBlock TextWrapping="Wrap"
-                   MaxWidth="400"
-                   HorizontalAlignment="Left"
-                   Margin="4,0,4,0"
-                   Text="{DynamicResource uxui_style_note}" />
-    </StackPanel>
+            </GroupBox>
+            <!-- UXUI-Extreme: the texture palette, twelve saved textures kept with the style. Select a
+                 slot to see its config text; texture editors on the right can store to and use a slot. -->
+            <GroupBox Header="{DynamicResource uxui_texpal_heading}">
+                <StackPanel Orientation="Vertical">
+                    <WrapPanel x:Name="panelTextureSlots"
+                               Margin="0,2,0,2" />
+                    <TextBox x:Name="txtTextureSlotConfig"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             TextWrapping="Wrap"
+                             MinHeight="38"
+                             MaxHeight="64"
+                             VerticalScrollBarVisibility="Auto"
+                             ToolTip="{DynamicResource uxui_texture_config_tip}"
+                             KeyDown="TextureSlotConfig_KeyDown" />
+                    <DockPanel Margin="0,3,0,2">
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_texpal_clear}"
+                                Click="TextureSlotClear_OnClick" />
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_texture_config_paste}"
+                                ToolTip="{DynamicResource uxui_texpal_paste_tip}"
+                                Click="TextureSlotPaste_OnClick" />
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_texture_config_copy}"
+                                Click="TextureSlotCopy_OnClick" />
+                        <TextBlock x:Name="txtTextureSlotStatus"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
+            <TextBlock TextWrapping="Wrap"
+                       MaxWidth="400"
+                       HorizontalAlignment="Left"
+                       Margin="4,0,4,0"
+                       Text="{DynamicResource uxui_style_note}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2"
+                    Orientation="Vertical">
+            <GroupBox Header="{DynamicResource uxui_style_part_heading}">
+                <StackPanel Orientation="Vertical">
+                    <DockPanel Margin="0,2,0,0">
+                        <Label VerticalAlignment="Center"
+                               Target="{Binding ElementName=cboPart}">
+                            <AccessText Text="{DynamicResource uxui_style_part}" />
+                        </Label>
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource CompactButton}"
+                                Content="{DynamicResource uxui_style_reset_part}"
+                                Click="ResetPart_OnClick" />
+                        <ComboBox x:Name="cboPart"
+                                  SelectionChanged="CboPart_SelectionChanged">
+                            <!-- UXUI-Extreme (UX-010): preserve all existing translations and indices. -->
+                            <ComboBox.ItemsSource>
+                                <CompositeCollection>
+                                    <CollectionContainer Collection="{DynamicResource uxui_style_part_values}" />
+                                    <ComboBoxItem Content="{DynamicResource uxui_start_part}" />
+                                </CompositeCollection>
+                            </ComboBox.ItemsSource>
+                        </ComboBox>
+                    </DockPanel>
+                    <StackPanel x:Name="panelProperties"
+                                Orientation="Vertical"
+                                Margin="0,2,0,2" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </Grid>
 </UserControl>

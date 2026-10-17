@@ -84,6 +84,8 @@
     <s:String x:Key="uxui_style_name">_Name:</s:String>
     <s:String x:Key="uxui_style_save">_Save</s:String>
     <s:String x:Key="uxui_style_load">_Load</s:String>
+    <s:String x:Key="uxui_style_prev">Previous style</s:String>
+    <s:String x:Key="uxui_style_next">Next style</s:String>
     <s:String x:Key="uxui_style_delete">_Delete</s:String>
     <s:String x:Key="uxui_style_import">_Import...</s:String>
     <s:String x:Key="uxui_style_export">_Export...</s:String>

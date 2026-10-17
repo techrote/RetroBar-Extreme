@@ -50,6 +50,11 @@ namespace RetroBar.Controls
                 performInvert = invertByTheme || Settings.Instance.InvertIconsMode == InvertIconsOption.Always;
             }
 
+            if (_customTrayIcon)
+            {
+                performInvert = false; // a user's own picture is shown as drawn
+            }
+
             bool isInverted = NotifyIconImage.Effect != null;
 
             if (isInverted != performInvert)
@@ -69,6 +74,10 @@ namespace RetroBar.Controls
                 // resources before we read InvertSystemNotifyIcons.
                 Dispatcher.BeginInvoke(new Action(applyEffects));
             }
+            else if (e.PropertyName == nameof(Settings.TrayIconReplacements))
+            {
+                Dispatcher.BeginInvoke(new Action(ApplyCustomIcon));
+            }
         }
 
         private void NotifyIcon_OnLoaded(object sender, RoutedEventArgs e)
@@ -82,7 +91,7 @@ namespace RetroBar.Controls
                     return;
                 }
 
-                applyEffects();
+                ApplyCustomIcon(); // UXUI-Extreme: also applies the effects
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged; // UXUI-Extreme (UX-001)
 
                 TrayIcon.NotificationBalloonShown += TrayIcon_NotificationBalloonShown;

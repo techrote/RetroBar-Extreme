@@ -33,6 +33,16 @@ namespace RetroBar.Controls
                     return;
                 }
 
+                // Never narrower (or shorter) than one icon cell, so a shortened quick launch area doesn't
+                // cut off the icons or their boxes.
+                bool alongBar = Host == null || Host.Orientation == Orientation.Horizontal;
+                double cell = CellLength(alongBar);
+                if (cell > 0)
+                {
+                    if (alongBar) { MinWidth = cell; ClearValue(MinHeightProperty); }
+                    else { MinHeight = cell; ClearValue(MinWidthProperty); }
+                }
+
                 int count = ToolbarItems.Items.Count;
                 if (_iconPanel.Orientation != Orientation.Vertical || count == 0 ||
                     !(ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) is UIElement first))
@@ -79,6 +89,36 @@ namespace RetroBar.Controls
             {
                 _fitting = false;
             }
+        }
+
+        // The room one icon cell needs along the taskbar (with the items' margin), so a shortened quick
+        // launch area never clips the icons or their boxes.
+        public double CellLength(bool horizontal)
+        {
+            if (!(ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) is UIElement first))
+            {
+                return 0;
+            }
+
+            var unlimited = new Size(double.PositiveInfinity, double.PositiveInfinity);
+            first.Measure(unlimited);
+            Thickness margin = ToolbarItems.Margin;
+            double cell = horizontal ? first.DesiredSize.Width + margin.Left + margin.Right : first.DesiredSize.Height + margin.Top + margin.Bottom;
+
+            // Plus everything else in the area that takes room: the grip's strip and the Show desktop cell.
+            if (Content is Panel root)
+            {
+                foreach (UIElement other in root.Children)
+                {
+                    if (!ReferenceEquals(other, ToolbarItems) && other.Visibility != Visibility.Collapsed)
+                    {
+                        other.Measure(unlimited);
+                        cell += horizontal ? other.DesiredSize.Width : other.DesiredSize.Height;
+                    }
+                }
+            }
+
+            return cell + 1; // a pixel of slack, so rounding never shaves the last column
         }
 
         private bool _fitHooked;

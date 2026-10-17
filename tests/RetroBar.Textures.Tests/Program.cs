@@ -39,6 +39,14 @@ internal static partial class Program
             ("All part mappings, vertical brushes and per-property isolation", Resources),
             ("Overlay-only fallback, reserved filenames and linked directories", EdgeCases),
             ("Compiled editor, mode transitions, locale input and live palette", Editor),
+            ("Tone adjustments, resampling, sharpening and generator parameters", Adjustments),
+            ("Layout and Icons tabs build from XAML", Tabs),
+            ("Quick launch drop creates shortcuts", QuickLaunchDrop),
+            ("Presets, configs and the texture palette", Presets),
+            ("Clock and Colours tabs build", ClockAndStyleTabs),
+            ("Palette fill, texture palette size and row rule lists", PalettesAndRows),
+            ("Start/Quick sections, grips and row rules", SectionsAndDefaults),
+            ("Tabs render for review", RenderTabs),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }

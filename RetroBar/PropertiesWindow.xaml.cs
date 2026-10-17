@@ -77,6 +77,7 @@ namespace RetroBar
             _screen = screen;
 
             InitializeComponent();
+            IconsTab.NotificationArea = notificationArea; // UXUI-Extreme
 
             LoadPreviewHeight();
             LoadAutoStart();

@@ -459,6 +459,32 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _clockTimeAlignment, value);
         }
 
+        // UXUI-Extreme: the clock's own margins. Themes space the clock lines with uneven margins
+        // (the XP family: 8 left / 11 right, a few px under each line), which a turned clock shows
+        // as sitting off-centre and standing off the screen edge. Automatic evens them out when
+        // the clock is turned and leaves a horizontal clock as the theme draws it.
+        private ClockMarginOption _clockMarginMode = ClockMarginOption.Automatic;
+        public ClockMarginOption ClockMarginMode
+        {
+            get => _clockMarginMode;
+            set => SetEnum(ref _clockMarginMode, value);
+        }
+
+        // Extra room around the whole clock, as seen on screen: left, top, right, bottom (px at 100%).
+        private bool _clockCustomMargin = false;
+        public bool ClockCustomMargin
+        {
+            get => _clockCustomMargin;
+            set => Set(ref _clockCustomMargin, value);
+        }
+
+        private string _clockMargin = "0,0,0,0";
+        public string ClockMargin
+        {
+            get => _clockMargin;
+            set => Set(ref _clockMargin, value ?? "0,0,0,0");
+        }
+
         // UXUI-Extreme (UX-007): manual row height fine-tuning, px at 100% scale (-10..+20).
         private double _rowHeightAdjust = 0;
         public double RowHeightAdjust
@@ -497,6 +523,167 @@ namespace RetroBar.Utilities
             set => Set(ref _trayToggleIcon, value ?? "");
         }
 
+        // UXUI-Extreme: a PNG for the whole Start button (see StartButton.Layout), and per-icon
+        // replacements for notification area icons (see CustomIcons / NotifyIcon.Icons).
+        private string _startButtonImage = "";
+        public string StartButtonImage
+        {
+            get => _startButtonImage;
+            set => Set(ref _startButtonImage, value ?? "");
+        }
+
+        private StartImageStatesOption _startButtonImageStates = StartImageStatesOption.One;
+        public StartImageStatesOption StartButtonImageStates
+        {
+            get => _startButtonImageStates;
+            set => Set(ref _startButtonImageStates, value);
+        }
+
+        private List<TrayIconReplacementSetting> _trayIconReplacements = new List<TrayIconReplacementSetting>();
+        public List<TrayIconReplacementSetting> TrayIconReplacements
+        {
+            get => _trayIconReplacements;
+            set => Set(ref _trayIconReplacements, value ?? new List<TrayIconReplacementSetting>());
+        }
+
+        // UXUI-Extreme: where the Start icon (and label) sit on the Start button, and a custom
+        // picture for the Show desktop button with its own position.
+        private TaskButtonAlignOption _startButtonIconAlign = TaskButtonAlignOption.Left;
+        public TaskButtonAlignOption StartButtonIconAlign
+        {
+            get => _startButtonIconAlign;
+            set => Set(ref _startButtonIconAlign, value);
+        }
+
+        private string _showDesktopIcon = "";
+        public string ShowDesktopIcon
+        {
+            get => _showDesktopIcon;
+            set => Set(ref _showDesktopIcon, value ?? "");
+        }
+
+        private TaskButtonAlignOption _showDesktopIconAlign = TaskButtonAlignOption.Centre;
+        public TaskButtonAlignOption ShowDesktopIconAlign
+        {
+            get => _showDesktopIconAlign;
+            set => Set(ref _showDesktopIconAlign, value);
+        }
+
+        // UXUI-Extreme: which rows of the task list particular apps use (see TaskRowPanel). Replaced as a
+        // whole list on every change so PropertyChanged fires.
+        private List<TaskRowRule> _taskRowRules = new List<TaskRowRule>();
+        public List<TaskRowRule> TaskRowRules
+        {
+            get => _taskRowRules;
+            set => Set(ref _taskRowRules, value ?? new List<TaskRowRule>());
+        }
+
+        // Apps whose buttons are placed after all the others (for example terminals), comma separated.
+        private string _taskEndApps = "";
+        public string TaskEndApps
+        {
+            get => _taskEndApps;
+            set => Set(ref _taskEndApps, value ?? "");
+        }
+
+        private bool _taskEndAppsBottomRow = true;
+        public bool TaskEndAppsBottomRow
+        {
+            get => _taskEndAppsBottomRow;
+            set => Set(ref _taskEndAppsBottomRow, value);
+        }
+
+        // UXUI-Extreme: draw the task buttons' fill (colour or texture) behind each quick launch icon.
+        private bool _quickLaunchButtonFill = false;
+        public bool QuickLaunchButtonFill
+        {
+            get => _quickLaunchButtonFill;
+            set => Set(ref _quickLaunchButtonFill, value);
+        }
+
+        // UXUI-Extreme: the Show desktop button's own translucent border, and its margins (left, top,
+        // right, bottom; px at 100%). Without custom margins it keeps the Start button's edge gap
+        // between itself and the Start button.
+        private bool _showDesktopBorder = true;
+        public bool ShowDesktopBorder
+        {
+            get => _showDesktopBorder;
+            set => Set(ref _showDesktopBorder, value);
+        }
+
+        private bool _showDesktopCustomMargin = false;
+        public bool ShowDesktopCustomMargin
+        {
+            get => _showDesktopCustomMargin;
+            set => Set(ref _showDesktopCustomMargin, value);
+        }
+
+        private string _showDesktopMargin = "1,0,0,0";
+        public string ShowDesktopMargin
+        {
+            get => _showDesktopMargin;
+            set => Set(ref _showDesktopMargin, value ?? "1,0,0,0");
+        }
+
+        // UXUI-Extreme: space kept between the Start button and the taskbar's edge it is anchored to
+        // (px at 100%), when the button is customised (turned, resized or given a picture). The
+        // theme's own button overlaps the taskbar's border by a pixel, which only a custom shape shows.
+        private double _startButtonEdgeGap = 1;
+        public double StartButtonEdgeGap
+        {
+            get => _startButtonEdgeGap;
+            set => Set(ref _startButtonEdgeGap, value);
+        }
+
+        // UXUI-Extreme: swap the quick launch area and the Start button area (the Show desktop button
+        // stays with the Start button), and where the icons sit inside the quick launch area.
+        private bool _quickLaunchFirst = false;
+        public bool QuickLaunchFirst
+        {
+            get => _quickLaunchFirst;
+            set => Set(ref _quickLaunchFirst, value);
+        }
+
+        private TaskButtonAlignOption _quickLaunchAlignH = TaskButtonAlignOption.Left;
+        public TaskButtonAlignOption QuickLaunchAlignH
+        {
+            get => _quickLaunchAlignH;
+            set => Set(ref _quickLaunchAlignH, value);
+        }
+
+        private VerticalPlaceOption _quickLaunchAlignV = VerticalPlaceOption.Top;
+        public VerticalPlaceOption QuickLaunchAlignV
+        {
+            get => _quickLaunchAlignV;
+            set => Set(ref _quickLaunchAlignV, value);
+        }
+
+        // UXUI-Extreme: where a task button's icon and label sit from top to bottom of the button.
+        private VerticalPlaceOption _taskButtonVAlign = VerticalPlaceOption.Centre;
+        public VerticalPlaceOption TaskButtonVAlign
+        {
+            get => _taskButtonVAlign;
+            set => Set(ref _taskButtonVAlign, value);
+        }
+
+        // UXUI-Extreme: how long the quick launch area is along the taskbar (px at 100%); 0 = as long
+        // as its icons. Set by dragging the grip between it and the task buttons (taskbar unlocked).
+        private double _quickLaunchLength = 0;
+        public double QuickLaunchLength
+        {
+            get => _quickLaunchLength;
+            set => Set(ref _quickLaunchLength, value);
+        }
+
+        // UXUI-Extreme: where the expand/collapse toggle sits. Beside = the theme's place, before the
+        // icons; First / Last = tucked into the icon area itself, as its first or last cell.
+        private TrayTogglePlacementOption _trayTogglePlacement = TrayTogglePlacementOption.Beside;
+        public TrayTogglePlacementOption TrayTogglePlacement
+        {
+            get => _trayTogglePlacement;
+            set => SetEnum(ref _trayTogglePlacement, value);
+        }
+
         private bool _trayToggleFlip = true; // mirror the custom image while the area is expanded
         public bool TrayToggleFlip
         {
@@ -532,6 +719,14 @@ namespace RetroBar.Utilities
         {
             get => _taskButtonShowIcons;
             set => Set(ref _taskButtonShowIcons, value);
+        }
+
+        // UXUI-Extreme: where the icon and label sit inside a task button
+        private TaskButtonAlignOption _taskButtonAlign = TaskButtonAlignOption.Left;
+        public TaskButtonAlignOption TaskButtonAlign
+        {
+            get => _taskButtonAlign;
+            set => Set(ref _taskButtonAlign, value);
         }
 
         private bool _taskButtonShowLabels = true;
@@ -632,6 +827,23 @@ namespace RetroBar.Utilities
         {
             get => _clockOrientation;
             set => SetEnum(ref _clockOrientation, value);
+        }
+
+        // UXUI-Extreme: equal-width clock digits. Proportional digits (a "1" narrower than a "0")
+        // make the time look off-centre and shuffle as it changes, whatever the alignment. On: the
+        // clock uses tabular numerals, and where the chosen font has none, a monospaced font.
+        private bool _clockMonospace = true;
+        public bool ClockMonospace
+        {
+            get => _clockMonospace;
+            set => Set(ref _clockMonospace, value);
+        }
+
+        private string _clockMonoFamily = "";   // "" = Consolas
+        public string ClockMonoFamily
+        {
+            get => _clockMonoFamily;
+            set => Set(ref _clockMonoFamily, value ?? "");
         }
 
         private string _clockFontFamily = "";
@@ -828,6 +1040,33 @@ namespace RetroBar.Utilities
         public string Icon { get; set; } = "";  // file name in the Icons folder
     }
 
+    // UXUI-Extreme: apps pinned to a row of the task list.
+    public class TaskRowRule
+    {
+        public int Row { get; set; } = 1;            // 1 = the top row; -1 = the lowest row
+        public string Apps { get; set; } = "";        // exe names, comma separated (".exe" optional)
+        public bool OnlyListed { get; set; }          // no other app may use this row
+        public TaskButtonAlignOption Align { get; set; } // where the row's buttons sit: left, centre or right
+        public double HeightAdjust { get; set; }       // px added to (or taken from) this row's button height
+
+        public TaskRowRule Clone() => (TaskRowRule)MemberwiseClone();
+    }
+
+    // UXUI-Extreme: a notification area icon's replacement, remembered by the icon's identifier.
+    public class TrayIconReplacementSetting
+    {
+        public string Identifier { get; set; } = ""; // the same identifier the show/hide behaviour uses
+        public string Title { get; set; } = "";      // shown in the Icons tab when the icon isn't running
+        public string Icon { get; set; } = "";       // file name in the Icons folder
+    }
+
+    // UXUI-Extreme: what a custom Start button image holds
+    public enum StartImageStatesOption
+    {
+        One,   // one picture for every state
+        Three  // normal, hover and pressed stacked top to bottom (like the XP themes' button)
+    }
+
     // UXUI-Extreme (UX-014): one app's remembered task button settings.
     public class TaskButtonAppRule
     {
@@ -836,10 +1075,27 @@ namespace RetroBar.Utilities
         public double Width { get; set; }       // 0 = default; -1 = icon only; otherwise px at 100%
         public AppOverrideOption Icon { get; set; }
         public AppOverrideOption Label { get; set; }
+        public TaskButtonAppAlignOption Align { get; set; } // Default = the all-apps alignment
 
         public TaskButtonAppRule Clone() => (TaskButtonAppRule)MemberwiseClone();
         [System.Text.Json.Serialization.JsonIgnore]
-        public bool IsEmpty => Width == 0 && Icon == AppOverrideOption.Default && Label == AppOverrideOption.Default;
+        public bool IsEmpty => Width == 0 && Icon == AppOverrideOption.Default && Label == AppOverrideOption.Default && Align == TaskButtonAppAlignOption.Default;
+    }
+
+    // UXUI-Extreme: alignment of a task button's icon and label
+    public enum TaskButtonAlignOption
+    {
+        Left,
+        Centre,
+        Right
+    }
+
+    public enum TaskButtonAppAlignOption
+    {
+        Default,
+        Left,
+        Centre,
+        Right
     }
 
     // UXUI-Extreme (UX-012): rotation for the Start button and clock on horizontal taskbars
@@ -877,7 +1133,16 @@ namespace RetroBar.Utilities
     {
         TaskbarEnd,
         BesideStart,
-        UnderStart
+        UnderStart,
+        InQuickLaunch
+    }
+
+    // UXUI-Extreme: top / centre / bottom
+    public enum VerticalPlaceOption
+    {
+        Top,
+        Centre,
+        Bottom
     }
 
     // UXUI-Extreme (UX-012): clock italic, independent of the taskbar font
@@ -894,6 +1159,23 @@ namespace RetroBar.Utilities
         ThemeDefault,
         TimeAndDay,
         TimeOnly
+    }
+
+    // UXUI-Extreme: where the notification area toggle sits
+    public enum TrayTogglePlacementOption
+    {
+        Beside,
+        First,
+        Last
+    }
+
+    // UXUI-Extreme: how the clock lines' own margins are treated
+    public enum ClockMarginOption
+    {
+        Automatic, // even when the clock is turned, the theme's own when horizontal
+        Theme,     // always the theme's margins
+        Even,      // left = right and the first line's top = the last line's bottom
+        None       // no outer margins at all (gaps between lines stay)
     }
 
     // UXUI-Extreme (UX-008)

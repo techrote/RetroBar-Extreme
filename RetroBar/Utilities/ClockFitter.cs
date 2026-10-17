@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -288,6 +289,7 @@ namespace RetroBar.Utilities
             _probe.FontStyle = source.FontStyle;
             _probe.FontStretch = source.FontStretch;
             _probe.UseLayoutRounding = source.UseLayoutRounding;
+            Typography.SetNumeralAlignment(_probe, Typography.GetNumeralAlignment(source));
             TextOptions.SetTextFormattingMode(_probe, TextOptions.GetTextFormattingMode(source));
             TextOptions.SetTextHintingMode(_probe, TextOptions.GetTextHintingMode(source));
             _probe.Text = text;
@@ -419,12 +421,26 @@ namespace RetroBar.Utilities
                 }
             }
 
+            // Margin evening: the theme's margins, or evened / removed outer margins, are the
+            // starting point for everything below.
+            ClockMarginOption marginMode = EffectiveMarginMode(clock);
+            Thickness[] baseMargins = BaseMargins(visible, marginMode);
+            bool trimmed = marginMode == ClockMarginOption.Even || marginMode == ClockMarginOption.None;
+            void settle()
+            {
+                for (int i = 0; i < visible.Count; i++)
+                {
+                    if (trimmed) SetMargin(visible[i], baseMargins[i]);
+                    else Unfit(visible[i], GetOriginal(visible[i]));
+                }
+            }
+
             double available = constraint.Height - clock.Margin.Top - clock.Margin.Bottom - rootMargin;
 
             if (!Settings.Instance.ClockFitLines || visible.Count == 0 ||
                 double.IsNaN(available) || double.IsInfinity(available) || available <= 0)
             {
-                foreach (TextBlock line in visible) Unfit(line, GetOriginal(line));
+                settle();
                 return;
             }
 
@@ -437,11 +453,11 @@ namespace RetroBar.Utilities
                 LineMetrics m = Measure(line);
                 if (m == null)
                 {
-                    foreach (TextBlock l in visible) Unfit(l, GetOriginal(l));
+                    settle();
                     return;
                 }
 
-                Thickness theme = GetOriginal(line).ThemeMargin;
+                Thickness theme = baseMargins[visible.IndexOf(line)];
                 natural += m.BoxHeight + theme.Top + theme.Bottom;
                 inkTotal += m.InkBottom - m.InkTop;
                 metrics.Add(m);
@@ -450,7 +466,7 @@ namespace RetroBar.Utilities
             if (natural <= available + 0.5)
             {
                 // Fits as the theme draws it.
-                foreach (TextBlock line in visible) Unfit(line, GetOriginal(line));
+                settle();
                 return;
             }
 
@@ -469,7 +485,7 @@ namespace RetroBar.Utilities
             for (int i = 0; i < count; i++)
             {
                 LineMetrics m = metrics[i];
-                Thickness theme = GetOriginal(visible[i]).ThemeMargin;
+                Thickness theme = baseMargins[i];
                 double height = Math.Round(m.InkBottom - m.InkTop + share);
                 double above = Math.Floor(share / 2);
                 double top = Math.Round(above - m.InkTop);
@@ -500,6 +516,59 @@ namespace RetroBar.Utilities
                     line.Margin = margins[i];
                     original.MarginSet = true;
                 }
+            }
+        }
+
+        // Turned clocks (Automatic) and the Even / None modes get evened margins.
+        private static ClockMarginOption EffectiveMarginMode(FrameworkElement clock)
+        {
+            ClockMarginOption mode = Settings.Instance.ClockMarginMode;
+            if (mode != ClockMarginOption.Automatic)
+            {
+                return mode;
+            }
+
+            bool turned = VisualTreeHelper.GetParent(clock) is Border host && host.LayoutTransform is RotateTransform;
+            return turned ? ClockMarginOption.Even : ClockMarginOption.Theme;
+        }
+
+        // The margins each visible line starts from. Even: left = right, and the block's outer top
+        // and bottom (first line's top, last line's bottom) equal, so a turned clock sits centred
+        // across and along the bar instead of leaning toward the side the theme pads. None: those
+        // outer margins removed. Gaps between lines are the theme's.
+        private static Thickness[] BaseMargins(List<TextBlock> visible, ClockMarginOption mode)
+        {
+            var margins = new Thickness[visible.Count];
+            for (int i = 0; i < visible.Count; i++)
+            {
+                margins[i] = GetOriginal(visible[i]).ThemeMargin;
+            }
+
+            if ((mode != ClockMarginOption.Even && mode != ClockMarginOption.None) || margins.Length == 0)
+            {
+                return margins;
+            }
+
+            for (int i = 0; i < margins.Length; i++)
+            {
+                double side = mode == ClockMarginOption.None ? 0 : (margins[i].Left + margins[i].Right) / 2;
+                margins[i] = new Thickness(side, margins[i].Top, side, margins[i].Bottom);
+            }
+
+            int last = margins.Length - 1;
+            double outer = mode == ClockMarginOption.None ? 0 : (margins[0].Top + margins[last].Bottom) / 2;
+            margins[0] = new Thickness(margins[0].Left, outer, margins[0].Right, margins[0].Bottom);
+            margins[last] = new Thickness(margins[last].Left, margins[last].Top, margins[last].Right, outer);
+            return margins;
+        }
+
+        private static void SetMargin(TextBlock line, Thickness margin)
+        {
+            Original original = GetOriginal(line);
+            if (!original.MarginSet || line.Margin != margin)
+            {
+                line.Margin = margin;
+                original.MarginSet = true;
             }
         }
 

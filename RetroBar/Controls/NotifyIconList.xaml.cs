@@ -88,6 +88,7 @@ namespace RetroBar.Controls
                 collectionViewShaping.LiveFilteringProperties.Add("IsHidden");
                 collectionViewShaping.LiveFilteringProperties.Add("IsPinned");
                 NotifyIcons.ItemsSource = collectionView;
+                ApplyTogglePlacement(); // UXUI-Extreme
 
                 if (Settings.Instance.CollapseNotifyIcons)
                 {
@@ -255,7 +256,8 @@ namespace RetroBar.Controls
             // Update the dragged icon's position in the list
             if (dropInfo.Data is Tray.NotifyIcon draggedIcon)
             {
-                int insertIndex = dropInfo.InsertIndex;
+                // A tucked toggle is a cell of the list too: not an icon, so it doesn't count.
+                int insertIndex = Math.Clamp(dropInfo.InsertIndex - (ToggleTucked && ToggleFirst ? 1 : 0), 0, visibleIcons.Count);
                 if (insertIndex > 0 && visibleIcons.IndexOf(draggedIcon) < insertIndex && visibleIcons.Remove(draggedIcon))
                 {
                     insertIndex--;

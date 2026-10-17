@@ -82,6 +82,7 @@ namespace RetroBar.Controls
             sldAppWidth.Value = rule.Width > 0 ? rule.Width : 160;
             cboAppIcon.SelectedIndex = (int)rule.Icon;
             cboAppLabel.SelectedIndex = (int)rule.Label;
+            cboAppAlign.SelectedIndex = (int)rule.Align;
             _updatingApp = false;
             UpdateTexts();
         }
@@ -97,7 +98,7 @@ namespace RetroBar.Controls
         private void AppCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_updatingApp || _loading || SelectedApp == null ||
-                cboAppWidth.SelectedIndex < 0 || cboAppIcon.SelectedIndex < 0 || cboAppLabel.SelectedIndex < 0)
+                cboAppWidth.SelectedIndex < 0 || cboAppIcon.SelectedIndex < 0 || cboAppLabel.SelectedIndex < 0 || cboAppAlign.SelectedIndex < 0)
             {
                 return;
             }
@@ -123,7 +124,7 @@ namespace RetroBar.Controls
             UpdateTexts();
         }
 
-        private void SaveApp()
+        private void SaveApp(double? exactWidth = null)
         {
             TaskButtonAppRule selected = SelectedApp;
             double width = cboAppWidth.SelectedIndex switch
@@ -131,11 +132,12 @@ namespace RetroBar.Controls
                 APP_ICON => TaskButtonRules.IconOnly,
                 APP_NARROW => TaskButtonRules.NarrowWidth,
                 APP_WIDE => TaskButtonRules.WideWidth,
-                APP_CUSTOM => Math.Round(sldAppWidth.Value),
+                APP_CUSTOM => exactWidth ?? Math.Round(sldAppWidth.Value),
                 _ => 0,
             };
             var icon = (AppOverrideOption)cboAppIcon.SelectedIndex;
             var label = (AppOverrideOption)cboAppLabel.SelectedIndex;
+            var align = (TaskButtonAppAlignOption)cboAppAlign.SelectedIndex;
 
             _updatingApp = true;
             TaskButtonRules.Update(selected.App, null, r =>
@@ -143,6 +145,7 @@ namespace RetroBar.Controls
                 r.Width = width;
                 r.Icon = icon;
                 r.Label = label;
+                r.Align = align;
             });
             _updatingApp = false;
 

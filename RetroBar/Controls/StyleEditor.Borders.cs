@@ -18,23 +18,36 @@ namespace RetroBar.Controls
             }
 
             var row = new DockPanel { Margin = new Thickness(0, 4, 0, 2) };
-            var combo = new ComboBox { Width = 110, HorizontalAlignment = HorizontalAlignment.Right };
-            combo.SetResourceReference(ItemsControl.ItemsSourceProperty, "uxui_border_thickness_values");
-            combo.SelectedIndex = (int)Math.Clamp(_style.BorderFactor(part), 0, StyleDocument.MaxBorderFactor);
-            combo.SelectionChanged += (s, e) =>
+            // A slider from 0 (none) through 1 (the theme's own) up to 16 times. The theme is rebuilt
+            // with the new borders, so the change is applied a moment after the slider stops.
+            var combo = new Slider
             {
-                if (combo.SelectedIndex < 0)
+                Minimum = 0, Maximum = StyleDocument.MaxBorderFactor, TickFrequency = 1, IsSnapToTickEnabled = true,
+                Width = 170, Value = Math.Clamp(_style.BorderFactor(part), 0, StyleDocument.MaxBorderFactor),
+                VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right,
+            };
+            var shown = new TextBlock { Width = 62, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+            Func<double, string> describe = value => value < 0.5 ? (TryFindResource("uxui_border_none") as string ?? "None") : value < 1.5 ? (TryFindResource("uxui_border_theme") as string ?? "Theme") : "×" + Math.Round(value);
+            shown.Text = describe(combo.Value);
+            var settle = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
+            settle.Tick += (s, e) =>
+            {
+                settle.Stop();
+                int factor = (int)Math.Round(combo.Value);
+                if (factor != (int)_style.BorderFactor(part))
                 {
-                    combo.SelectedIndex = (int)_style.BorderFactor(part); // item list reloaded (language change)
-                    return;
-                }
-
-                if (combo.SelectedIndex != (int)_style.BorderFactor(part))
-                {
-                    _style.SetBorderFactor(part, combo.SelectedIndex);
+                    _style.SetBorderFactor(part, factor);
                     SaveActive(); // the taskbar reloads its theme with the new borders
                 }
             };
+            combo.ValueChanged += (s, e) =>
+            {
+                shown.Text = describe(combo.Value);
+                settle.Stop();
+                settle.Start();
+            };
+            DockPanel.SetDock(shown, Dock.Right);
+            row.Children.Add(shown);
             DockPanel.SetDock(combo, Dock.Right);
 
             var label = new Label { VerticalAlignment = VerticalAlignment.Center, Target = combo };

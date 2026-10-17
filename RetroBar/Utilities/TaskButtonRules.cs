@@ -105,7 +105,16 @@ namespace RetroBar.Utilities
             r.Width = 0;
             r.Icon = AppOverrideOption.Default;
             r.Label = AppOverrideOption.Default;
+            r.Align = TaskButtonAppAlignOption.Default;
         });
+
+        public static TaskButtonAlignOption Alignment(TaskButtonAppRule rule) => rule?.Align switch
+        {
+            TaskButtonAppAlignOption.Left => TaskButtonAlignOption.Left,
+            TaskButtonAppAlignOption.Centre => TaskButtonAlignOption.Centre,
+            TaskButtonAppAlignOption.Right => TaskButtonAlignOption.Right,
+            _ => Settings.Instance.TaskButtonAlign,
+        };
 
         public static bool ShowIcon(TaskButtonAppRule rule) => Effective(rule?.Icon, Settings.Instance.TaskButtonShowIcons);
 

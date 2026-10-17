@@ -11,7 +11,7 @@ namespace RetroBar.Utilities
     // Applied when the theme loads (ThemeBorders), not by the style layer's brushes.
     public partial class StyleDocument
     {
-        public const double MaxBorderFactor = 4;
+        public const double MaxBorderFactor = 16;
 
         // The parts borders can be set for, in the order the Colours tab lists them.
         public static readonly string[] BorderParts = { "bar", "tray", "button", "buttonActive", "buttonFlashing", "clock", "start" };

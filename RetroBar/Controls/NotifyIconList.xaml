@@ -12,7 +12,7 @@
             <converters:IconListOrientation x:Key="iconsOrientation" />
         </ResourceDictionary>
     </UserControl.Resources>
-    <StackPanel>
+    <StackPanel x:Name="ListPanel">
         <StackPanel.Orientation>
             <Binding Converter="{StaticResource edgeOrientationConverter}"
                      Path="Orientation"

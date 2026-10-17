@@ -68,6 +68,46 @@ namespace RetroBar.Controls
             DropHandler = new ToolbarDropHandler(this);
 
             InitializeComponent();
+
+            // UXUI-Extreme: file drops are taken here, ahead of the drag-drop library's handlers on
+            // the items control (they left the drop unaccepted, so programs never became shortcuts).
+            AllowDrop = true;
+            AddHandler(PreviewDragEnterEvent, new DragEventHandler(FileDrag_Over));
+            AddHandler(PreviewDragOverEvent, new DragEventHandler(FileDrag_Over));
+            AddHandler(PreviewDropEvent, new DragEventHandler(FileDrag_Drop));
+        }
+
+        // The effect to offer: a link, or a copy if the source does not offer links. Never Move: that would make the source delete the original. A source that
+        // offers only Copy or Move (many do) used to be refused because Link was insisted on.
+        private static DragDropEffects EffectFor(DragEventArgs e)
+        {
+            if (e.AllowedEffects.HasFlag(DragDropEffects.Link)) return DragDropEffects.Link;
+            if (e.AllowedEffects.HasFlag(DragDropEffects.Copy)) return DragDropEffects.Copy;
+            return DragDropEffects.None;
+        }
+
+        private void FileDrag_Over(object sender, DragEventArgs e)
+        {
+            if (ShellDrop.CanTake(e.Data))
+            {
+                e.Effects = EffectFor(e);
+                e.Handled = true;
+            }
+        }
+
+        private void FileDrag_Drop(object sender, DragEventArgs e)
+        {
+            if (!ShellDrop.CanTake(e.Data))
+            {
+                return;
+            }
+
+            var dropped = ShellDrop.Read(e.Data);
+            e.Effects = EffectFor(e);
+            e.Handled = true;
+
+            // After the drop has returned to the source (a slow shortcut write must not hold it up).
+            Dispatcher.BeginInvoke(new Action(() => AddDropped(dropped)));
         }
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -85,6 +125,15 @@ namespace RetroBar.Controls
             else if (e.PropertyName == nameof(Settings.TaskbarScale))
             {
                 Refresh();
+            }
+            else if (e.PropertyName == nameof(Settings.QuickLaunchAlignH) || e.PropertyName == nameof(Settings.QuickLaunchAlignV))
+            {
+                ApplyQuickAlignment();
+            }
+            else if (e.PropertyName == nameof(Settings.QuickLaunchButtonFill))
+            {
+                // The icons are boxed (or not) a moment later; measure the cell after that.
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(FitIconColumns));
             }
         }
 
@@ -121,6 +170,37 @@ namespace RetroBar.Controls
             }
         }
 
+        // The Show desktop button inside the quick launch area, at its leading edge.
+        public void SetDesktopCell(bool visible, ManagedShell.WindowsTasks.TasksService tasks)
+        {
+            if (visible && DesktopCell.TasksService == null && tasks != null)
+            {
+                DesktopCell.TasksService = tasks;
+            }
+
+            DockPanel.SetDock(DesktopCell, Host != null && Host.Orientation == System.Windows.Controls.Orientation.Vertical ? Dock.Top : Dock.Left);
+            DesktopCell.Visibility = visible && DesktopCell.TasksService != null ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // Where the icons sit within the quick launch area (it can be longer than its icons).
+        private void ApplyQuickAlignment()
+        {
+            Settings s = Settings.Instance;
+            switch (s.QuickLaunchAlignH)
+            {
+                case TaskButtonAlignOption.Centre: ToolbarItems.HorizontalAlignment = HorizontalAlignment.Center; break;
+                case TaskButtonAlignOption.Right: ToolbarItems.HorizontalAlignment = HorizontalAlignment.Right; break;
+                default: ToolbarItems.ClearValue(HorizontalAlignmentProperty); break;
+            }
+
+            switch (s.QuickLaunchAlignV)
+            {
+                case VerticalPlaceOption.Centre: ToolbarItems.VerticalAlignment = VerticalAlignment.Center; break;
+                case VerticalPlaceOption.Bottom: ToolbarItems.VerticalAlignment = VerticalAlignment.Bottom; break;
+                default: ToolbarItems.ClearValue(VerticalAlignmentProperty); break;
+            }
+        }
+
         public void SaveItemOrder()
         {
             List<string> itemPaths = new List<string>();
@@ -138,29 +218,52 @@ namespace RetroBar.Controls
 
         public void AddToSource(StringCollection filesToAdd)
         {
+            AddDropped(filesToAdd.Cast<string>().Select(p => new ShellDrop.Dropped { Path = p, Name = System.IO.Path.GetFileNameWithoutExtension(p) }).ToList());
+        }
+
+        // Makes a shortcut in the quick launch folder for each dropped item.
+        public void AddDropped(List<ShellDrop.Dropped> items)
+        {
             string sourcePath = Environment.ExpandEnvironmentVariables(Path);
 
-            foreach (string itemPath in filesToAdd)
+            foreach (ShellDrop.Dropped item in items)
             {
-                // Create shortcut to each dragged file
                 try
                 {
-                    string destinationFileName = System.IO.Path.GetFileNameWithoutExtension(itemPath);
+                    string destinationFileName = ShellDrop.SafeFileName(item.Path != null ? System.IO.Path.GetFileNameWithoutExtension(item.Path) : item.Name);
+                    if (item.Path != null && string.IsNullOrEmpty(System.IO.Path.GetFileNameWithoutExtension(item.Path)))
+                    {
+                        destinationFileName = ShellDrop.SafeFileName(item.Name); // a drive or folder root
+                    }
                     string destinationPath = System.IO.Path.Combine(sourcePath, destinationFileName + ".lnk");
                     int dupCount = 0;
 
                     while (ShellHelper.Exists(destinationPath))
                     {
                         dupCount++;
-
                         destinationPath = System.IO.Path.Combine(sourcePath, $"{destinationFileName} ({dupCount}).lnk");
                     }
 
-                    ShellLinkHelper.CreateAndSave(itemPath, destinationPath);
+                    if (item.Path == null)
+                    {
+                        ShellDrop.SaveShortcut(item.IdList, destinationPath);
+                    }
+                    else if (string.Equals(System.IO.Path.GetExtension(item.Path), ".lnk", StringComparison.OrdinalIgnoreCase))
+                    {
+                        System.IO.File.Copy(item.Path, destinationPath); // already a shortcut: keep it as is
+                    }
+                    else
+                    {
+                        ShellLinkHelper.CreateAndSave(item.Path, destinationPath);
+                    }
                 }
                 catch (Exception e)
                 {
-                    ShellLogger.Error($"Toolbar: Unable to save shortcut to {itemPath}", e);
+                    ShellLogger.Error($"Toolbar: Unable to save shortcut to {item.Path ?? item.Name}", e);
+                }
+                finally
+                {
+                    ShellDrop.Free(item);
                 }
             }
         }
@@ -338,6 +441,7 @@ namespace RetroBar.Controls
         {
             Initialize();
             HookIconFit(); // UXUI-Extreme
+            ApplyQuickAlignment();
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)

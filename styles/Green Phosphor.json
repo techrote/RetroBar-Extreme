@@ -9,7 +9,7 @@
       "border": "#20ff60"
     },
     "tray": {
-      "background": { "texture": "scanlines", "lut": "palette", "scale": 0.5, "contrast": 1 },
+      "background": { "texture": "scanlines", "lut": [ "#000800", "#00300c" ], "scale": 0.5, "contrast": 1 },
       "border": "#20ff60"
     },
     "button": {
@@ -34,6 +34,28 @@
     "clock": { "foreground": "#40ff80" },
     "bevel": { "highlight": "#108030", "light": "#004810", "shadow": "#000000", "darkShadow": "#000000" }
   },
-  "palette": [ "#000800", "#00300c", null, null, null, null, null, null, null, null, null, null ],
-  "start": { "recolour": "#20c050" }
+  "start": { "recolour": "#20c050" },
+  "palette": [ "#000800", "#00300c", "#40ff80", "#20ff60", "#108030", "#10a040", "#c0ffd0", "#ffff60", null, null, null, null ],
+  "texturePalette": [
+    {"texture": "noise", "lut": ["#000800", "#002a08", "#004810"], "scale": 1, "contrast": 0.5},
+    {"texture": "scanlines", "lut": ["#000800", "#00300c"], "scale": 0.5, "contrast": 1},
+    {"texture": "waves", "lut": ["#000800", "#10a040", "#c0ffd0"], "scale": 1, "contrast": 1, "frequency": 3, "octaves": 3},
+    {"texture": "bricks", "lut": ["#00300c", "#20ff60", "#ffff60"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "dots", "lut": ["#c0ffd0", "#20ff60", "#108030"], "scale": 1, "contrast": 1, "frequency": 12},
+    {"texture": "noise", "lut": ["#10a040", "#40ff80", "#ffff60"], "scale": 1, "contrast": 1, "strength": 0.6},
+    {"texture": "brushed", "lut": ["#20ff60", "#40ff80", "#c0ffd0"], "scale": 1, "contrast": 1.2, "strength": 0.6},
+    {"texture": "carbon", "lut": ["#ffff60", "#c0ffd0", "#40ff80"], "scale": 1, "contrast": 1},
+    {"texture": "diamond", "lut": ["#000800", "#10a040", "#c0ffd0"], "scale": 1, "contrast": 1},
+    {"texture": "clouds", "lut": ["#00300c", "#20ff60", "#ffff60"], "scale": 2, "contrast": 1, "octaves": 4},
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
 }

@@ -11,10 +11,16 @@ namespace RetroBar.Controls
     {
         private static string _lastFolder;
 
+        // The full path of the file the last successful Choose picked.
+        public static string LastPath { get; private set; }
+
         // UX-017: the icon pack shipped beside RetroBar (Extras\Icons), where the dialog first opens.
         public static string PackFolder(string kind)
         {
-            string folder = Path.Combine(Path.GetDirectoryName(ExePath.GetExecutablePath()) ?? "", "Extras", "Icons", kind);
+            string extras = Path.Combine(Path.GetDirectoryName(ExePath.GetExecutablePath()) ?? "", "Extras");
+            string folder = kind.StartsWith("StartButtons", StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(extras, kind)
+                : Path.Combine(extras, "Icons", kind);
             return Directory.Exists(folder) ? folder : null;
         }
 
@@ -25,7 +31,7 @@ namespace RetroBar.Controls
             {
                 Filter = Application.Current.TryFindResource("uxui_icon_filter") as string ?? "PNG images (*.png)|*.png",
                 DefaultExt = ".png",
-                InitialDirectory = _lastFolder ?? (kind != null ? PackFolder(kind) : null) ?? "",
+                InitialDirectory = (kind != null ? PackFolder(kind) : null) ?? _lastFolder ?? "", // opens in the matching folder
             };
             if (dialog.ShowDialog(owner) != true)
             {
@@ -35,6 +41,7 @@ namespace RetroBar.Controls
             try
             {
                 _lastFolder = Path.GetDirectoryName(dialog.FileName);
+                LastPath = dialog.FileName;
                 return CustomIcons.Import(dialog.FileName);
             }
             catch (Exception e) when (e is IOException || e is FormatException || e is UnauthorizedAccessException || e is NotSupportedException)

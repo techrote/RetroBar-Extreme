@@ -23,10 +23,10 @@
             DragEnter="AppButton_OnDragEnter"
             DragLeave="AppButton_OnDragLeave"
             ToolTipService.ShowDuration="60000">
-        <Grid>
+        <Grid x:Name="ContentGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="LabelColumn" Width="*" />
             </Grid.ColumnDefinitions>
             <Image x:Name="TaskIconImage"
                    Source="{Binding Path=Icon, Mode=OneWay}"
