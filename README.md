@@ -1,3 +1,6 @@
+<img width="1200" height="149" alt="2026-10-17 18_43_26-RetroBar Taskbar" src="https://github.com/user-attachments/assets/ac052ce9-b849-42bc-b862-b1a66b6650c2" />
+
+
 <img width="1200" height="141" alt="image" src="https://github.com/user-attachments/assets/18d0bc4b-2583-4509-809b-5f3f32cc339e" />
  
  ![RetroBar screenshot](https://raw.githubusercontent.com/dremin/retrobar/master/retrobar-preview.png)
