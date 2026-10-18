@@ -166,11 +166,13 @@ namespace RetroBar
         {
             var s = Settings.Instance;
             bool atEnd = s.ShowDesktopPosition == ShowDesktopPositionOption.TaskbarEnd;
-            // Inside the quick launch area (when that is showing; otherwise it stays beside Start).
+            // Beside, or inside, the quick launch area (when that is showing; otherwise it stays beside Start).
+            bool besideQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.BesideQuickLaunch && s.ShowQuickLaunch;
             bool inQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.InQuickLaunch && s.ShowQuickLaunch;
             ShowDesktopButtonTray.Visibility = s.ShowDesktopButton && atEnd ? Visibility.Visible : Visibility.Collapsed;
-            ShowDesktopButtonStart.Visibility = s.ShowDesktopButton && !atEnd && !inQuick ? Visibility.Visible : Visibility.Collapsed;
-            QuickLaunchToolbar.SetDesktopCell(s.ShowDesktopButton && inQuick, ShowDesktopButtonStart.TasksService);
+            ShowDesktopButtonStart.Visibility = s.ShowDesktopButton && !atEnd && !besideQuick && !inQuick ? Visibility.Visible : Visibility.Collapsed;
+            QuickLaunchToolbar.SetDesktopCell(s.ShowDesktopButton && besideQuick, ShowDesktopButtonStart.TasksService);
+            QuickLaunchToolbar.SetDesktopItem(s.ShowDesktopButton && inQuick);
         }
 
         private void ApplyLayoutOptions()
@@ -182,6 +184,8 @@ namespace RetroBar
 
                 UpdateShowDesktopPlacement();
                 ApplySectionOrder(s.QuickLaunchFirst);
+                UpdateLayout();
+                TextureAlign.Apply(this); // nested theme borders share one texture phase
 
                 // Beside = along the taskbar, under = across it.
                 bool under = s.ShowDesktopPosition == ShowDesktopPositionOption.UnderStart &&

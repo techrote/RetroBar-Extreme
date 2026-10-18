@@ -43,9 +43,10 @@ namespace RetroBar.Controls
                     else { MinHeight = cell; ClearValue(MinWidthProperty); }
                 }
 
-                int count = ToolbarItems.Items.Count;
-                if (_iconPanel.Orientation != Orientation.Vertical || count == 0 ||
-                    !(ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) is UIElement first))
+                // The Show desktop icon (when it lives in this area) is one of the cells.
+                int count = ToolbarItems.Items.Count + (QuickExtra != null ? 1 : 0);
+                UIElement first = QuickExtra ?? ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) as UIElement;
+                if (_iconPanel.Orientation != Orientation.Vertical || count == 0 || first == null)
                 {
                     _iconPanel.ClearValue(WrapPanel.ItemHeightProperty);
                     return;
@@ -95,7 +96,8 @@ namespace RetroBar.Controls
         // launch area never clips the icons or their boxes.
         public double CellLength(bool horizontal)
         {
-            if (!(ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) is UIElement first))
+            UIElement first = QuickExtra ?? ToolbarItems.ItemContainerGenerator.ContainerFromIndex(0) as UIElement;
+            if (first == null)
             {
                 return 0;
             }
@@ -110,12 +112,18 @@ namespace RetroBar.Controls
             {
                 foreach (UIElement other in root.Children)
                 {
-                    if (!ReferenceEquals(other, ToolbarItems) && other.Visibility != Visibility.Collapsed)
+                    if (!ReferenceEquals(other, ToolbarFlow) && other.Visibility != Visibility.Collapsed)
                     {
                         other.Measure(unlimited);
                         cell += horizontal ? other.DesiredSize.Width : other.DesiredSize.Height;
                     }
                 }
+            }
+
+            if (DesktopCell.Visibility != Visibility.Collapsed)
+            {
+                DesktopCell.Measure(unlimited);
+                cell += horizontal ? DesktopCell.DesiredSize.Width : DesktopCell.DesiredSize.Height;
             }
 
             return cell + 1; // a pixel of slack, so rounding never shaves the last column

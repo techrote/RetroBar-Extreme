@@ -253,7 +253,7 @@ internal static partial class Program
         Check(V(startQuick, "grpStart") == Visibility.Visible && V(startQuick, "grpDesktop") == Visibility.Visible && V(startQuick, "grpTaskButtons") == Visibility.Collapsed, "the Start/Quick tab takes the Start button and Show desktop groups");
         var icons = new RetroBar.Controls.IconsEditor { Sections = "StartQuick" };
         Check(V(icons, "grpStartPics") == Visibility.Visible && V(icons, "grpQuickIcons") == Visibility.Visible && V(icons, "grpTray") == Visibility.Collapsed, "start and quick launch pictures move to the Start/Quick tab");
-        Check(Named<System.Windows.Controls.ComboBox>(all, "cboShowDesktopPosition").Items.Count == 4, "Show desktop can go inside quick launch");
+        Check(Named<System.Windows.Controls.ComboBox>(all, "cboShowDesktopPosition").Items.Count == 5, "Show desktop can go beside or inside quick launch");
         Check(Named<System.Windows.Controls.ComboBox>(all, "cboTaskVAlign").Items.Count == 3, "task button vertical position choices");
 
         var rule = new TaskRowRule { Row = 2, HeightAdjust = 6, Align = TaskButtonAlignOption.Right };

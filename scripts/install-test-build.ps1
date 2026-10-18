@@ -35,11 +35,21 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
 Stop-RetroBar
 
-# Back up only the first time, so -Restore always returns to your real install.
+# The program is backed up only the first time, so -Restore always returns to your real install.
 if (-not (Test-Path "$backup\program")) {
     New-Item -ItemType Directory "$backup\program" -Force | Out-Null
     Copy-Item "$install\*" "$backup\program" -Recurse -Force
-    Copy-Item "$data\settings.json", "$data\Style.json" $backup -Force -ErrorAction SilentlyContinue
+}
+
+# Settings and style are backed up on every run (the newest copy is what -Restore puts back; older
+# copies are kept beside it), so changes you made between test builds are never lost.
+New-Item -ItemType Directory $backup -Force | Out-Null
+$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+foreach ($name in 'settings.json', 'Style.json') {
+    if (Test-Path "$data\$name") {
+        if (Test-Path "$backup\$name") { Copy-Item "$backup\$name" "$backup\$([IO.Path]::GetFileNameWithoutExtension($name)).$stamp.old.json" -Force }
+        Copy-Item "$data\$name" $backup -Force
+    }
 }
 
 # The shipped samples move between builds (folders get renamed): replace them, never mix.

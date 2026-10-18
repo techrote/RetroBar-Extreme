@@ -142,7 +142,7 @@ namespace RetroBar.Controls
             var box = new TextBox
             {
                 Text = TextureConfig.ToText(texture), FontFamily = new FontFamily("Consolas"), FontSize = 11,
-                TextWrapping = TextWrapping.Wrap, AcceptsReturn = false, MinHeight = 38, MaxHeight = 70, MaxWidth = 520,
+                TextWrapping = TextWrapping.Wrap, AcceptsReturn = false, MinHeight = 38, MaxHeight = 70, MaxWidth = 300,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalAlignment = HorizontalAlignment.Stretch,
                 ToolTip = TextureText("uxui_texture_config_tip"),
             };
