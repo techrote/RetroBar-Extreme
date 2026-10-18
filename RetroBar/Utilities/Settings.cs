@@ -1134,7 +1134,8 @@ namespace RetroBar.Utilities
         TaskbarEnd,
         BesideStart,
         UnderStart,
-        InQuickLaunch
+        BesideQuickLaunch, // a button of its own, next to the quick launch icons
+        InQuickLaunch      // an icon of the quick launch area, like any program
     }
 
     // UXUI-Extreme: top / centre / bottom

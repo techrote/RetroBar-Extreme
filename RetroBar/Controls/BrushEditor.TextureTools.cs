@@ -33,10 +33,12 @@ namespace RetroBar.Controls
         private void Report(Action<string> status, string text) => status?.Invoke(text);
 
         // ---- presets ----------------------------------------------------------------------------
-        private UIElement PresetRow(TextureSpec texture, Action<string> status)
+        // The buttons (Save, Delete, Import, Export) come back as the row; the picker comes out separately
+        // (it sits in the editor's heading, and says "Preset" until something is chosen).
+        private UIElement PresetRow(TextureSpec texture, Action<string> status, out UIElement picker)
         {
             var row = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
-            var combo = new ComboBox { Width = 175, Margin = new Thickness(0, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center };
+            var combo = new ComboBox { Width = 120, Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
 
             var builtIn = TexturePresets.ForPattern(texture.Name).ToList();
             var user = TexturePresets.LoadUser();
@@ -45,9 +47,16 @@ namespace RetroBar.Controls
             combo.SelectedIndex = -1;
             combo.ToolTip = TextureText("uxui_texture_preset_tip");
 
-            var label = new Label { Content = TextureText("uxui_texture_preset"), Target = combo, Padding = new Thickness(2, 2, 6, 2) };
-            row.Children.Add(label);
-            row.Children.Add(combo);
+            var hint = new TextBlock
+            {
+                Text = TextureText("uxui_texture_preset"), IsHitTestVisible = false, Margin = new Thickness(11, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Foreground = SystemColors.GrayTextBrush,
+            };
+            var host = new Grid();
+            host.Children.Add(combo);
+            host.Children.Add(hint);
+            combo.SelectionChanged += (s, e) => hint.Visibility = combo.SelectedIndex < 0 ? Visibility.Visible : Visibility.Collapsed;
+            picker = host;
 
             combo.SelectionChanged += (s, e) =>
             {
@@ -142,7 +151,7 @@ namespace RetroBar.Controls
             var box = new TextBox
             {
                 Text = TextureConfig.ToText(texture), FontFamily = new FontFamily("Consolas"), FontSize = 11,
-                TextWrapping = TextWrapping.Wrap, AcceptsReturn = false, MinHeight = 38, MaxHeight = 70, MaxWidth = 520,
+                TextWrapping = TextWrapping.Wrap, AcceptsReturn = false, MinHeight = 38, MaxHeight = 70, MaxWidth = 300,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalAlignment = HorizontalAlignment.Stretch,
                 ToolTip = TextureText("uxui_texture_config_tip"),
             };

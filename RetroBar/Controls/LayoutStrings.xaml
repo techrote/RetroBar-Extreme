@@ -36,7 +36,8 @@
         <system:String>End of the taskbar</system:String>
         <system:String>Beside the Start button</system:String>
         <system:String>Under the Start button</system:String>
-        <system:String>Inside the quick launch area</system:String>
+        <system:String>Beside the quick launch area</system:String>
+        <system:String>Inside the quick launch area (as an icon)</system:String>
     </x:Array>
     <system:String x:Key="uxui_layout_show_desktop_on">Show the Show desktop button</system:String>
     <system:String x:Key="uxui_layout_clock_heading">Clock</system:String>

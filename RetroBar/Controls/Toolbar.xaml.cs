@@ -178,7 +178,8 @@ namespace RetroBar.Controls
                 DesktopCell.TasksService = tasks;
             }
 
-            DockPanel.SetDock(DesktopCell, Host != null && Host.Orientation == System.Windows.Controls.Orientation.Vertical ? Dock.Top : Dock.Left);
+            ToolbarFlow.Orientation = Host != null && Host.Orientation == System.Windows.Controls.Orientation.Vertical
+                ? System.Windows.Controls.Orientation.Vertical : System.Windows.Controls.Orientation.Horizontal;
             DesktopCell.Visibility = visible && DesktopCell.TasksService != null ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -188,16 +189,16 @@ namespace RetroBar.Controls
             Settings s = Settings.Instance;
             switch (s.QuickLaunchAlignH)
             {
-                case TaskButtonAlignOption.Centre: ToolbarItems.HorizontalAlignment = HorizontalAlignment.Center; break;
-                case TaskButtonAlignOption.Right: ToolbarItems.HorizontalAlignment = HorizontalAlignment.Right; break;
-                default: ToolbarItems.ClearValue(HorizontalAlignmentProperty); break;
+                case TaskButtonAlignOption.Centre: ToolbarFlow.HorizontalAlignment = HorizontalAlignment.Center; break;
+                case TaskButtonAlignOption.Right: ToolbarFlow.HorizontalAlignment = HorizontalAlignment.Right; break;
+                default: ToolbarFlow.ClearValue(HorizontalAlignmentProperty); break;
             }
 
             switch (s.QuickLaunchAlignV)
             {
-                case VerticalPlaceOption.Centre: ToolbarItems.VerticalAlignment = VerticalAlignment.Center; break;
-                case VerticalPlaceOption.Bottom: ToolbarItems.VerticalAlignment = VerticalAlignment.Bottom; break;
-                default: ToolbarItems.ClearValue(VerticalAlignmentProperty); break;
+                case VerticalPlaceOption.Centre: ToolbarFlow.VerticalAlignment = VerticalAlignment.Center; break;
+                case VerticalPlaceOption.Bottom: ToolbarFlow.VerticalAlignment = VerticalAlignment.Bottom; break;
+                default: ToolbarFlow.ClearValue(VerticalAlignmentProperty); break;
             }
         }
 

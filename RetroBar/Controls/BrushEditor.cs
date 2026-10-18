@@ -16,7 +16,8 @@ namespace RetroBar.Controls
         private const int MODE_THEME = 0, MODE_COLOUR = 1, MODE_GRADIENT = 2, MODE_TEXTURE = 3;
         private const int MAX_STOPS = 6;
 
-        private readonly ComboBox _mode = new ComboBox { Width = 110, HorizontalAlignment = HorizontalAlignment.Right };
+        private readonly ComboBox _mode = new ComboBox { Width = 95, HorizontalAlignment = HorizontalAlignment.Right };
+        private readonly StackPanel _headerExtras = new StackPanel { Orientation = Orientation.Horizontal }; // pattern and preset pickers, in the heading row
         private readonly StackPanel _details = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(14, 0, 0, 2) };
         private readonly Func<BrushSpec> _themeSeed;
         private BrushSpec _value;
@@ -41,6 +42,8 @@ namespace RetroBar.Controls
 
             InitializeTextureModeLabels(); // UXUI-Extreme (UX-011): retain translated original modes.
             _mode.SelectionChanged += Mode_SelectionChanged;
+            DockPanel.SetDock(_headerExtras, Dock.Right);
+            row.Children.Add(_headerExtras);
             DockPanel.SetDock(_mode, Dock.Right);
             row.Children.Add(_mode);
 
@@ -102,6 +105,7 @@ namespace RetroBar.Controls
         private void BuildDetails()
         {
             _details.Children.Clear();
+            _headerExtras.Children.Clear();
             _refreshTexturePreview = null; // UXUI-Extreme (UX-011)
             _configBox = null;
 
