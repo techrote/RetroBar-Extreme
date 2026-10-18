@@ -9,6 +9,78 @@
 # RetroBar
 [![Current release](https://img.shields.io/github/v/release/dremin/RetroBar)](https://github.com/dremin/RetroBar/releases/latest) ![Build status](https://github.com/dremin/RetroBar/workflows/RetroBar/badge.svg)  [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
 
+## RetroBar Extreme
+
+**MOD LIST // OCTOBER 2026**
+
+This is the tinkering build of RetroBar. The upstream project already does the important bit — putting a proper 95/98/2000/XP/Vista-style taskbar back on modern Windows. **Extreme** keeps that base and adds the sort of controls that used to turn up three pages into a hardware/modding forum thread after somebody said *"can it do this too?"*
+
+Everything in the list below is added by this fork. Defaults are kept sensible, so you can still run it much like ordinary RetroBar and only mess with the bits you care about.
+
+### LOOKS / COLOURS / TEXTURES
+
+[+] **Live Colours editor** over any theme: solids and multi-stop gradients for the bar, tray, task buttons (normal / hover / active / flashing), clock and 3D edges.
+
+[+] **Saved styles + import/export**, with a pile of ready-made examples. Hand-editing XAML is not required.
+
+[+] **Colour copy/paste, working palette and colourway generator.** Pick base/accent colours, use a preset, or pull a useful palette out of the current Start button and then tweak it by hand.
+
+[+] **Start-button recolouring** for bitmap-based XP/Vista/Longhorn-style themes. Shading, transparency and the flag/artwork are kept instead of just tinting the whole bitmap.
+
+[+] **Procedural + PNG textures.** Ten procedural patterns plus custom greyscale PNGs, palette/LUT colouring, rotation, scale, contrast, tone, generator controls, resampling and sharpening. Texture configs can be copied, pasted, saved, imported and exported; there is also a 20-slot texture palette.
+
+[+] **Border thickness control** from none through heavy, plus complementary-colour filling for quick style building.
+
+### FONTS / SCALE / CLOCK
+
+[+] **Native-size taskbar scaling** as an alternative to the old stretch-everything method. Sizes are rebuilt at the requested scale so text and hard edges can stay crisp; classic stretching is still there when wanted.
+
+[+] **Sharp scaled-text modes** for awkward in-between scales, without requiring font smoothing.
+
+[+] **Taskbar font controls:** family, size, weight, italic and line spacing, with row-height adjustment for tall or unusual fonts.
+
+[+] **24 fonts built into RetroBar Extreme**, including small-size, condensed, mono, display and true pixel-grid faces. They work without installing anything into Windows.
+
+[+] **Clock controls:** separate font/weight/size/spacing, horizontal or vertical reading direction, selectable clock lines, and steady/equal-width digits so the tray does not shuffle around as the time changes.
+
+[+] Menu text and symbol-font handling have been cleaned up so changing taskbar typography does not turn window-menu glyphs into random letters/numbers.
+
+### START / QUICK LAUNCH
+
+[+] **Start button layout controls:** horizontal or vertical (up/down), automatic or exact length/thickness, top/centre/bottom alignment, plus independent icon/text switches.
+
+[+] **Start/Quick layout:** swap the Start and Quick Launch areas, put Show Desktop at the end/beside/under Start or inside Quick Launch, and keep the whole lot usable on very tall multi-row bars.
+
+[+] **Quick Launch controls:** icon alignment, exact strip length, optional task-button-style boxes and a one-icon-cell minimum.
+
+[+] **Custom PNG icons** for Start and Quick Launch. Multi-size icon folders (16px/24px/32px/etc.) are understood so the best source can be picked for the current DPI/scale.
+
+[+] **25 extra Start-button sets, 100 matching Start icons**, plus Show Desktop and tray-image samples.
+
+[+] Drag/drop onto Quick Launch has been fixed up as part of the layout work.
+
+### TASK BUTTONS / ROWS / TRAY
+
+[+] **Global task-button width / icon / label controls**, plus remembered per-application overrides. One program can be icon-only, another wide, another text-only, without changing the rest.
+
+[+] **Per-row layout controls** for multi-row taskbars: app lists, alignment and row height, send selected apps to the end, and adjust icon/label vertical position.
+
+[+] **Notification-area toggle customisation:** replacement PNG, expanded-state mirroring and custom margins.
+
+[+] **Tray-icon inversion now updates live** when the setting, per-icon choice or theme changes; icons no longer get stuck inverted.
+
+[+] Taskbar grips and unlocked-edge spacing have been made stable, so locking/unlocking the bar does not shuffle the layout.
+
+### IN THE ZIP
+
+[+] **26 example styles** available from Saved styles, including Arcade Checker, Blueprint, Copper Patina, Gunmetal Ops, Night Shift, Synthwave, Teletext, Workshop Steel and more.
+
+[+] An **Extras** folder is included with installer, portable and Win7/8 builds: example styles, icon artwork and installable copies of the bundled fonts.
+
+[+] Most of the new controls apply live and are saved, so this works more like an old-school skinning/modding utility than a one-shot theme pack.
+
+---
+
 Pining for simpler times? RetroBar teleports you back in time by replacing your modern Windows taskbar with the classic Windows 95, 98, Me, 2000, XP, or Vista style.
 
 RetroBar is based on the [ManagedShell](https://github.com/cairoshell/ManagedShell) library for great compatibility and performance.
