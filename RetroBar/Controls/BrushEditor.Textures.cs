@@ -112,13 +112,12 @@ namespace RetroBar.Controls
                 RaiseChanged();
                 Dispatcher.BeginInvoke(new Action(BuildDetails)); // parameter rows differ per pattern
             };
-            var patternRow = new DockPanel();
-            var label = new Label { Content = TextureText("uxui_texture_pattern"), Target = pattern };
-            DockPanel.SetDock(label, Dock.Left);
-            patternRow.Children.Add(label);
-            patternRow.Children.Add(pattern);
-            _details.Children.Add(patternRow);
-            _details.Children.Add(PresetRow(texture, say)); // UXUI-Extreme: presets, import / export
+            // The pattern and preset pickers sit in the editor's heading row, beside the mode.
+            pattern.Width = 100;
+            pattern.Margin = new Thickness(4, 0, 0, 0);
+            _headerExtras.Children.Add(pattern);
+            UIElement presetButtons = PresetRow(texture, say, out UIElement presetPicker); // UXUI-Extreme: presets, import / export
+            _headerExtras.Children.Add(presetPicker);
 
             var presets = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
             var ratrod = new Button { Content = TextureText("uxui_texture_ratrod"), Margin = new Thickness(0, 0, 4, 0) };
@@ -147,13 +146,13 @@ namespace RetroBar.Controls
                     texture.Lut = new[] { Colors.Black, Colors.White }.ToList();
                 BuildDetails(); RaiseChanged();
             };
-            // "Use palette" and the two starting points share a row.
+            // The two starting points and the preset buttons share a row.
             presets.Margin = new Thickness(0);
-            DockPanel.SetDock(presets, Dock.Right);
-            var paletteRow = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
-            paletteRow.Children.Add(presets);
-            paletteRow.Children.Add(palette);
-            _details.Children.Add(paletteRow);
+            DockPanel.SetDock(presetButtons, Dock.Right);
+            var toolsRow = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
+            toolsRow.Children.Add(presetButtons);
+            toolsRow.Children.Add(presets);
+            _details.Children.Add(toolsRow);
             if (!texture.UsePalette)
             {
                 var lutGrid = new System.Windows.Controls.Primitives.UniformGrid { Columns = 2 };
@@ -173,18 +172,23 @@ namespace RetroBar.Controls
                     lutGrid.Children.Add(row);
                 }
                 _details.Children.Add(lutGrid);
-                if (texture.Lut.Count < MAX_STOPS)
-                {
-                    var add = new Button { Content = TextureText("uxui_texture_add"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 2) };
-                    add.Click += (s, e) =>
-                    {
-                        int last = texture.Lut.Count - 1;
-                        texture.Lut.Insert(last, LutTextures.Sample(new[] { texture.Lut[last - 1], texture.Lut[last] }, 0.5));
-                        BuildDetails(); RaiseChanged();
-                    };
-                    _details.Children.Add(add);
-                }
             }
+
+            // Add LUT colour and Use palette share a row.
+            var addRow = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
+            if (!texture.UsePalette && texture.Lut.Count < MAX_STOPS)
+            {
+                var add = new Button { Content = TextureText("uxui_texture_add"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 10, 0) };
+                add.Click += (s, e) =>
+                {
+                    int last = texture.Lut.Count - 1;
+                    texture.Lut.Insert(last, LutTextures.Sample(new[] { texture.Lut[last - 1], texture.Lut[last] }, 0.5));
+                    BuildDetails(); RaiseChanged();
+                };
+                addRow.Children.Add(add);
+            }
+            addRow.Children.Add(palette);
+            _details.Children.Add(addRow);
             // UXUI-Extreme: every pattern shows the same controls in the same cells (generator-only
             // ones leave a gap when the pattern doesn't use them); rows with nothing in them collapse.
             var cells = new UIElement[15];
