@@ -13,6 +13,7 @@ namespace RetroBar.Utilities
     public class HotkeyManager : IDisposable
     {
         private readonly HotkeyListenerWindow _listenerWindow;
+        private bool _disposed;
 
         public HotkeyManager()
         {
@@ -28,12 +29,24 @@ namespace RetroBar.Utilities
 
         public void Dispose()
         {
-            if (_listenerWindow.IsRegistered)
+            if (_disposed)
             {
-                _listenerWindow.UnregisterHotkeys();
+                return;
             }
 
-            _listenerWindow?.Dispose();
+            _disposed = true;
+            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            try
+            {
+                if (_listenerWindow.IsRegistered)
+                {
+                    _listenerWindow.UnregisterHotkeys();
+                }
+            }
+            finally
+            {
+                _listenerWindow.Dispose();
+            }
         }
 
         #region Events
@@ -47,7 +60,7 @@ namespace RetroBar.Utilities
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.WinNumHotkeysAction))
+            if (!_disposed && e.PropertyName == nameof(Settings.WinNumHotkeysAction))
             {
                 if (!_listenerWindow.IsRegistered && Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.WindowsDefault)
                 {

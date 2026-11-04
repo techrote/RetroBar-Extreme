@@ -146,8 +146,10 @@ namespace RetroBar.Controls
                 rowX[row] += width;
             }
 
-            // Row alignment: slide each row's buttons left, to the centre, or to the right.
-            foreach (var (row, rule) in rules)
+            // An explicit row and a relative row (for example "Lowest row") can resolve to the
+            // same physical row. As with its height above, the last matching rule chooses the
+            // alignment; applying every rule would shift the same buttons more than once.
+            foreach (var (row, rule) in rules.GroupBy(r => r.row).Select(group => group.Last()))
             {
                 if (rule.Align == TaskButtonAlignOption.Left)
                 {

@@ -6,8 +6,10 @@
  ![RetroBar screenshot](https://raw.githubusercontent.com/dremin/retrobar/master/retrobar-preview.png)
 
 
-# RetroBar
-[![Current release](https://img.shields.io/github/v/release/dremin/RetroBar)](https://github.com/dremin/RetroBar/releases/latest) ![Build status](https://github.com/dremin/RetroBar/workflows/RetroBar/badge.svg)  [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
+# RetroBar Extreme
+[Extreme releases](https://github.com/techrote/RetroBar-Extreme/releases) · [![Build status](https://github.com/techrote/RetroBar-Extreme/actions/workflows/retrobar.yml/badge.svg?branch=master)](https://github.com/techrote/RetroBar-Extreme/actions/workflows/retrobar.yml) · [Upstream RetroBar](https://github.com/dremin/RetroBar) · [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
+
+[Quality audit, fixes and Windows verification guide — 4 November 2026](docs/2026-11-04-quality-audit.md)
 
 ## RetroBar Extreme
 
@@ -73,7 +75,7 @@ Everything in the list below is added by this fork. Defaults are kept sensible, 
 
 ### IN THE ZIP
 
-[+] **26 example styles** available from Saved styles, including Arcade Checker, Blueprint, Copper Patina, Gunmetal Ops, Night Shift, Synthwave, Teletext, Workshop Steel and more.
+[+] **27 example styles** available from Saved styles, including Arcade Checker, Blueprint, Copper Patina, Gunmetal Ops, Night Shift, Synthwave, Teletext, Workshop Steel and more.
 
 [+] An **Extras** folder is included with installer, portable and Win7/8 builds: example styles, icon artwork and installable copies of the bundled fonts.
 

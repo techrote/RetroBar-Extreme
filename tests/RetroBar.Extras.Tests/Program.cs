@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,9 +11,9 @@ using System.Windows.Media.Imaging;
 using RetroBar.Utilities;
 
 // UXUI-Extreme (UX-017): built-in fonts, built-in example styles and the Extras folder.
-// Real WPF/STA checks against RetroBar's own code and resources. Reads only: never writes to
-// RetroBar's settings, Style.json or Styles folder.
-internal static class Program
+// Real WPF/STA checks against RetroBar's own code and resources. Settings persistence tests
+// use temporary files; layout fixtures suppress settings autosave. Never use an owner profile.
+internal static partial class Program
 {
     private static int assertions;
     private static string evidence;
@@ -27,6 +28,14 @@ internal static class Program
     {
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "extras-evidence");
         Directory.CreateDirectory(evidence);
+        // Run before any Settings access: its static initializer can migrate and save a
+        // pre-existing profile. Do not let an automated fixture touch the owner's data.
+        string profileDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RetroBar");
+        if (Directory.Exists(profileDirectory))
+        {
+            Console.Error.WriteLine("Run Extras contracts in a clean Windows profile: existing RetroBar profile data was found.");
+            return 1;
+        }
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         int failures = 0;
         foreach (var test in new (string Name, Action Body)[]
@@ -36,13 +45,26 @@ internal static class Program
             ("Knurled Swarf: face and size selection, and pixel-exact rendering in WPF", PixelFont),
             ("Example styles are built in, parse cleanly and are listed after saved styles", ExampleStyles),
             ("The Extras folder ships beside the build: styles, icon pack, fonts and licence", ExtrasFolder),
+            ("Settings loading preserves defaults and saves publish complete files", SettingsPersistence),
+            ("Null settings fields retain usable defaults", NullSettings),
+            ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
+            ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
+            ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }
             catch (Exception e) { failures++; results.Add(new { test.Name, Passed = false, Error = e.ToString() }); Console.Error.WriteLine("FAIL " + test.Name + "\n" + e); }
         }
 
-        File.WriteAllText(Path.Combine(evidence, "results.json"), JsonSerializer.Serialize(new { assertions, failures, results }, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(Path.Combine(evidence, "results.json"), JsonSerializer.Serialize(new
+        {
+            Head = Environment.GetEnvironmentVariable("RETROBAR_HEAD"),
+            TestedCommit = Environment.GetEnvironmentVariable("RETROBAR_TESTED_COMMIT"),
+            TestedTree = Environment.GetEnvironmentVariable("RETROBAR_TESTED_TREE"),
+            Framework = RuntimeInformation.FrameworkDescription,
+            assertions, failures, results,
+            OwnerVisualAcceptance = "Not performed. Use the exact CI build for Windows interaction acceptance.",
+        }, new JsonSerializerOptions { WriteIndented = true }));
         Console.WriteLine($"{assertions} assertions, {failures} failed groups");
         app.Shutdown();
         return failures == 0 ? 0 : 1;
