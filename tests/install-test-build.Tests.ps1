@@ -5,21 +5,32 @@ $subject = Join-Path (Split-Path -Parent $PSScriptRoot) 'scripts\install-test-bu
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('retrobar-backup-tests-' + [guid]::NewGuid().ToString('N'))
 $oldLocalAppData = $env:LOCALAPPDATA
 $oldTemp = $env:TEMP
-$script:assertions = 0
-$script:stopCalls = 0
-$script:launches = 0
-$script:failSnapshotCopy = $false
-$script:failProgramSwap = $false
-$script:failStyleRestore = $false
+# Mocks run inside the subject's child script scope. Mutate one shared reference
+# instead of using $script:, which would address the currently executing script.
+$retroBarBackupFixtureState = [pscustomobject]@{
+    Assertions = 0
+    StopCalls = 0
+    Launches = 0
+    FailSnapshotCopy = $false
+    FailProgramSwap = $false
+    FailStyleRestore = $false
+    SnapshotCopyFailures = 0
+    ProgramSwapFailures = 0
+    StyleRestoreFailures = 0
+    SnapshotCopyDestination = $null
+}
 
 function Assert([bool]$Condition, [string]$Message) {
-    $script:assertions++
+    $retroBarBackupFixtureState.Assertions++
     if (-not $Condition) { throw "FAIL: $Message" }
 }
-function Expect-Failure([scriptblock]$Action, [string]$Message) {
-    $failed = $false
-    try { & $Action } catch { $failed = $true }
-    Assert $failed $Message
+function Expect-Failure([scriptblock]$Action, [string]$Message, [string]$ExpectedError = '') {
+    $caught = $null
+    try { & $Action } catch { $caught = $_ }
+    Assert ($null -ne $caught) $Message
+    if ($ExpectedError) {
+        Assert ($caught.Exception.Message -eq $ExpectedError) "Expected the injected failure '$ExpectedError', got '$($caught.Exception.Message)'"
+    }
 }
 function Write-Fixture([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text)
@@ -40,8 +51,13 @@ function New-Fixture([string]$Name) {
     Write-Fixture (Join-Path $fixture.Install 'custom.txt') 'keep-custom-file'
     New-Item -ItemType Directory -Path (Join-Path $fixture.Install 'Extras') | Out-Null
     Write-Fixture (Join-Path $fixture.Install 'Extras\old-sample.txt') 'old-sample'
-    $script:stopCalls = 0
-    $script:launches = 0
+    Assert (-not $retroBarBackupFixtureState.FailSnapshotCopy -and -not $retroBarBackupFixtureState.FailProgramSwap -and -not $retroBarBackupFixtureState.FailStyleRestore) 'Every armed failure must be consumed before the next fixture'
+    $retroBarBackupFixtureState.StopCalls = 0
+    $retroBarBackupFixtureState.Launches = 0
+    $retroBarBackupFixtureState.SnapshotCopyFailures = 0
+    $retroBarBackupFixtureState.ProgramSwapFailures = 0
+    $retroBarBackupFixtureState.StyleRestoreFailures = 0
+    $retroBarBackupFixtureState.SnapshotCopyDestination = $null
     return $fixture
 }
 function Invoke-Subject([switch]$Restore) {
@@ -63,7 +79,7 @@ function Get-Process {
     [CmdletBinding()]
     param([string]$Name)
     Assert ($Name -eq 'RetroBar') 'Only RetroBar is addressed by process cleanup'
-    $script:stopCalls++
+    $retroBarBackupFixtureState.StopCalls++
 }
 function Start-Sleep { param([int]$Seconds) }
 function Start-Process {
@@ -71,17 +87,20 @@ function Start-Process {
     param([string]$FilePath)
     Assert ($FilePath.StartsWith($testRoot, [StringComparison]::OrdinalIgnoreCase)) 'Only the isolated fixture can be launched'
     Assert (Test-Path -LiteralPath $FilePath -PathType Leaf) 'The restarted executable exists'
-    $script:launches++
+    $retroBarBackupFixtureState.Launches++
 }
 function Copy-Item {
     [CmdletBinding()]
     param([string[]]$LiteralPath, [string]$Destination, [switch]$Recurse, [switch]$Force)
-    if ($script:failSnapshotCopy -and $Destination -like '*program.pending-*') {
-        $script:failSnapshotCopy = $false
+    if ($retroBarBackupFixtureState.FailSnapshotCopy -and $Destination -like '*program.pending-*') {
+        $retroBarBackupFixtureState.FailSnapshotCopy = $false
+        $retroBarBackupFixtureState.SnapshotCopyFailures++
+        $retroBarBackupFixtureState.SnapshotCopyDestination = $Destination
         throw 'Injected original-program backup failure'
     }
-    if ($script:failStyleRestore -and $Destination -like '*Style.json.restore-*') {
-        $script:failStyleRestore = $false
+    if ($retroBarBackupFixtureState.FailStyleRestore -and $Destination -like '*Style.json.restore-*') {
+        $retroBarBackupFixtureState.FailStyleRestore = $false
+        $retroBarBackupFixtureState.StyleRestoreFailures++
         throw 'Injected settings restoration failure after the first file'
     }
     Microsoft.PowerShell.Management\Copy-Item @PSBoundParameters
@@ -89,8 +108,9 @@ function Copy-Item {
 function Move-Item {
     [CmdletBinding()]
     param([string[]]$LiteralPath, [string]$Destination, [switch]$Force)
-    if ($script:failProgramSwap -and $LiteralPath[0] -like '*RetroBar-test-stage-*') {
-        $script:failProgramSwap = $false
+    if ($retroBarBackupFixtureState.FailProgramSwap -and $LiteralPath[0] -like '*RetroBar-test-stage-*') {
+        $retroBarBackupFixtureState.FailProgramSwap = $false
+        $retroBarBackupFixtureState.ProgramSwapFailures++
         throw 'Injected program promotion failure'
     }
     Microsoft.PowerShell.Management\Move-Item @PSBoundParameters
@@ -101,6 +121,7 @@ try {
     Write-Fixture (Join-Path $fixture.Data 'settings.json') '{"Theme":"original"}'
     Write-Fixture (Join-Path $fixture.Data 'Style.json') '{"name":"original-style"}'
     Invoke-Subject
+    Assert ($retroBarBackupFixtureState.StopCalls -eq 1 -and $retroBarBackupFixtureState.Launches -eq 1) 'The subject updates the shared stop/restart counters'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'test-program') 'Test build is installed'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Backup 'program\files\RetroBar.exe')) -eq 'original-program') 'Complete snapshot keeps original program'
     Assert (Test-Path -LiteralPath (Join-Path $fixture.Install 'custom.txt')) 'Custom program files survive test installation'
@@ -109,6 +130,7 @@ try {
     Write-Fixture (Join-Path $fixture.Data 'settings.json') '{"Theme":"test"}'
     Write-Fixture (Join-Path $fixture.Data 'Style.json') '{"name":"test-style"}'
     Invoke-Subject -Restore
+    Assert ($retroBarBackupFixtureState.StopCalls -eq 2 -and $retroBarBackupFixtureState.Launches -eq 2) 'Stop/restart counters survive another child script invocation'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'original-program') 'Restore returns original executable'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Data 'settings.json')) -eq '{"Theme":"original"}') 'Restore returns saved settings'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Data 'Style.json')) -eq '{"name":"original-style"}') 'Restore returns saved style'
@@ -139,11 +161,13 @@ try {
     Write-Host 'PASS: repeated test installs preserve original program and latest settings state'
 
     $fixture = New-Fixture 'incomplete-original-backup'
-    $script:failSnapshotCopy = $true
-    Expect-Failure { Invoke-Subject } 'A failed backup is reported'
+    $retroBarBackupFixtureState.FailSnapshotCopy = $true
+    Expect-Failure { Invoke-Subject } 'A failed backup is reported' 'Injected original-program backup failure'
+    Assert (-not $retroBarBackupFixtureState.FailSnapshotCopy -and $retroBarBackupFixtureState.SnapshotCopyFailures -eq 1) 'The original-program copy failure was injected exactly once'
+    Assert ($retroBarBackupFixtureState.SnapshotCopyDestination -match '[\\/]program\.pending-[0-9a-f]{32}[\\/]files$') 'Copy-DirectoryContents reached the staged backup files directory'
     Assert (-not (Test-Path -LiteralPath (Join-Path $fixture.Backup 'program'))) 'Failed copy never publishes a usable original backup'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'original-program') 'Failed backup leaves original installation intact'
-    Assert ($script:launches -eq 1) 'Original taskbar restarts after backup failure'
+    Assert ($retroBarBackupFixtureState.Launches -eq 1) 'Original taskbar restarts after backup failure'
     Invoke-Subject
     Assert (Test-Path -LiteralPath (Join-Path $fixture.Backup 'program\complete.json')) 'A retry creates a complete backup'
     Write-Host 'PASS: failed backup remains uncommitted and can be retried'
@@ -153,7 +177,7 @@ try {
     Write-Fixture (Join-Path $fixture.Backup 'program\partial.txt') 'incomplete'
     Expect-Failure { Invoke-Subject -Restore } 'Unverified legacy backup cannot be restored'
     Expect-Failure { Invoke-Subject } 'Unverified legacy backup cannot be silently replaced'
-    Assert ($script:stopCalls -eq 0) 'Backup validation fails before stopping the current taskbar'
+    Assert ($retroBarBackupFixtureState.StopCalls -eq 0) 'Backup validation fails before stopping the current taskbar'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'original-program') 'Rejected backup never deletes the installed program'
     Assert (Test-Path -LiteralPath (Join-Path $fixture.Backup 'program\partial.txt')) 'Legacy backup remains available for manual recovery'
     Write-Host 'PASS: legacy/incomplete backup is refused without touching the installation'
@@ -161,18 +185,19 @@ try {
     $fixture = New-Fixture 'damaged-complete-backup'
     Invoke-Subject
     Write-Fixture (Join-Path $fixture.Backup 'program\files\custom.txt') 'damaged'
-    $beforeStops = $script:stopCalls
+    $beforeStops = $retroBarBackupFixtureState.StopCalls
     Expect-Failure { Invoke-Subject -Restore } 'A damaged backup is rejected'
-    Assert ($script:stopCalls -eq $beforeStops) 'Hash validation completes before the taskbar stops'
+    Assert ($retroBarBackupFixtureState.StopCalls -eq $beforeStops) 'Hash validation completes before the taskbar stops'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'test-program') 'Damaged backup does not replace current program'
     Write-Host 'PASS: damaged snapshot is rejected before any destructive step'
 
     $fixture = New-Fixture 'failed-program-swap'
-    $script:failProgramSwap = $true
-    Expect-Failure { Invoke-Subject } 'Directory promotion failure is reported'
+    $retroBarBackupFixtureState.FailProgramSwap = $true
+    Expect-Failure { Invoke-Subject } 'Directory promotion failure is reported' 'Injected program promotion failure'
+    Assert (-not $retroBarBackupFixtureState.FailProgramSwap -and $retroBarBackupFixtureState.ProgramSwapFailures -eq 1) 'The directory promotion failure was injected exactly once'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'original-program') 'Directory swap failure restores the original installation'
     Assert (Test-Path -LiteralPath (Join-Path $fixture.Install 'custom.txt')) 'Custom files survive directory rollback'
-    Assert ($script:launches -eq 1) 'Original taskbar restarts after directory rollback'
+    Assert ($retroBarBackupFixtureState.Launches -eq 1) 'Original taskbar restarts after directory rollback'
     Write-Host 'PASS: failed program promotion rolls back'
 
     $fixture = New-Fixture 'failed-settings-restore'
@@ -181,14 +206,15 @@ try {
     Invoke-Subject
     Write-Fixture (Join-Path $fixture.Data 'settings.json') '{"Theme":"before-restore"}'
     Write-Fixture (Join-Path $fixture.Data 'Style.json') '{"name":"before-restore"}'
-    $script:failStyleRestore = $true
-    Expect-Failure { Invoke-Subject -Restore } 'Partial settings restore failure is reported rather than hidden'
+    $retroBarBackupFixtureState.FailStyleRestore = $true
+    Expect-Failure { Invoke-Subject -Restore } 'Partial settings restore failure is reported rather than hidden' 'Injected settings restoration failure after the first file'
+    Assert (-not $retroBarBackupFixtureState.FailStyleRestore -and $retroBarBackupFixtureState.StyleRestoreFailures -eq 1) 'The partial settings restoration failure was injected exactly once'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Install 'RetroBar.exe')) -eq 'test-program') 'Settings restore failure rolls back the program too'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Data 'settings.json')) -eq '{"Theme":"before-restore"}') 'Already-restored settings roll back to pre-operation values'
     Assert ([IO.File]::ReadAllText((Join-Path $fixture.Data 'Style.json')) -eq '{"name":"before-restore"}') 'Failed style restoration retains pre-operation style'
     Write-Host 'PASS: partial settings failure restores both settings and program'
 
-    Write-Host "$script:assertions assertions; all installer-helper groups passed"
+    Write-Host "$($retroBarBackupFixtureState.Assertions) assertions; all installer-helper groups passed"
 } finally {
     $env:LOCALAPPDATA = $oldLocalAppData
     $env:TEMP = $oldTemp
