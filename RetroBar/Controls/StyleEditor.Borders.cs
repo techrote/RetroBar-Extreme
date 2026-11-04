@@ -29,22 +29,18 @@ namespace RetroBar.Controls
             var shown = new TextBlock { Width = 62, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
             Func<double, string> describe = value => value < 0.5 ? (TryFindResource("uxui_border_none") as string ?? "None") : value < 1.5 ? (TryFindResource("uxui_border_theme") as string ?? "Theme") : "×" + Math.Round(value);
             shown.Text = describe(combo.Value);
-            var settle = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
-            settle.Tick += (s, e) =>
-            {
-                settle.Stop();
-                int factor = (int)Math.Round(combo.Value);
-                if (factor != (int)_style.BorderFactor(part))
-                {
-                    _style.SetBorderFactor(part, factor);
-                    SaveActive(); // the taskbar reloads its theme with the new borders
-                }
-            };
             combo.ValueChanged += (s, e) =>
             {
                 shown.Text = describe(combo.Value);
-                settle.Stop();
-                settle.Start();
+                int factor = (int)Math.Round(combo.Value);
+                if (factor != (int)_style.BorderFactor(part))
+                {
+                    // Mutate the current document now, as brush edits do. Only the disk write
+                    // is delayed, so an old slider cannot later modify a different/reset style,
+                    // and the common save timer is flushed when this editor closes or hides.
+                    _style.SetBorderFactor(part, factor);
+                    ScheduleSave();
+                }
             };
             DockPanel.SetDock(shown, Dock.Right);
             row.Children.Add(shown);

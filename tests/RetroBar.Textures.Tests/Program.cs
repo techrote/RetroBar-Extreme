@@ -24,6 +24,13 @@ internal static partial class Program
     private static int Main(string[] args)
     {
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "texture-evidence");
+        // Settings initialization can save legacy migrations. Refuse owner data before
+        // constructing any editor or control that might initialize that singleton.
+        if (Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RetroBar")))
+        {
+            Console.Error.WriteLine("Run texture contracts in a clean Windows profile.");
+            return 1;
+        }
         temporary = Path.Combine(Path.GetTempPath(), "ux011-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(evidence);
         Directory.CreateDirectory(temporary);
@@ -33,6 +40,8 @@ internal static partial class Program
         foreach (var test in new (string Name, Action Body)[]
         {
             ("JSON, clone, reset, legacy brushes and palette contracts", Documents),
+            ("Gradient numeric safety and finite-angle rendering", GradientSafety),
+            ("Complete part reset preserves neighbouring parts and palettes", StylePartReset),
             ("LUT pixels, alpha, contrast and bounded immutable cache", Pixels),
             ("Bounded custom PNG decoding, replacement and fail-open", CustomPng),
             ("Real WPF tiling at fractional DPI, texture and legacy scales", Tiling),
@@ -60,6 +69,8 @@ internal static partial class Program
         File.WriteAllText(Path.Combine(evidence, "results.json"), JsonSerializer.Serialize(new
         {
             Head = Environment.GetEnvironmentVariable("UX011_HEAD"), Framework = RuntimeInformation.FrameworkDescription,
+            TestedCommit = Environment.GetEnvironmentVariable("RETROBAR_TESTED_COMMIT"),
+            TestedTree = Environment.GetEnvironmentVariable("RETROBAR_TESTED_TREE"),
             Assertions = assertions, Failures = failures, Tests = results,
             OwnerVisualAcceptance = "Not performed. Owner must test exact CI build on their taskbar.",
         }, new JsonSerializerOptions { WriteIndented = true }));

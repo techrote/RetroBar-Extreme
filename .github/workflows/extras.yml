@@ -29,8 +29,22 @@ jobs:
             10.0.x
       - name: Run manual-update, built-in font, style and Extras contracts
         shell: pwsh
+        env:
+          RETROBAR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          $env:RETROBAR_TESTED_COMMIT = git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:RETROBAR_TESTED_TREE = git rev-parse 'HEAD^{tree}'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet run --project tests/RetroBar.Extras.Tests/RetroBar.Extras.Tests.csproj -c Release -f ${{ matrix.framework }} -- "$env:GITHUB_WORKSPACE/extras-evidence"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test artifact comments and installation recovery
+        if: matrix.framework == 'net10.0-windows'
+        shell: pwsh
+        run: |
+          node --test tests/workflows/comment-pr-artifacts.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./tests/install-test-build.Tests.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload test results and pixel-font renders
         if: always()

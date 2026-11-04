@@ -57,7 +57,10 @@ namespace RetroBar.Utilities
 
         protected void Set<T>(ref T field, T value, [CallerMemberName] string propertyName = "")
         {
-            if (!field.Equals(value))
+            // JSON null must not erase a usable default (theme names, paths and icon
+            // collections are dereferenced during startup). Optional strings normalize
+            // null in their own setters before reaching this method.
+            if (value is not null && !EqualityComparer<T>.Default.Equals(field, value))
             {
                 field = value;
                 OnPropertyChanged(propertyName);
@@ -76,6 +79,17 @@ namespace RetroBar.Utilities
                 field = value;
                 OnPropertyChanged(propertyName);
             }
+        }
+
+        protected void SetList<T>(ref List<T> field, List<T> value, [CallerMemberName] string propertyName = "") where T : class
+        {
+            // JSON arrays can contain null entries even when the array itself is present.
+            // Consumers enumerate actual rules/icons, so discard only those invalid entries.
+            if (value != null && value.Exists(item => item is null))
+            {
+                value = value.FindAll(item => item is not null);
+            }
+            Set(ref field, value, propertyName);
         }
 
         #region Properties
@@ -133,7 +147,7 @@ namespace RetroBar.Utilities
             }
             set
             {
-                if (_clockFormat != value)
+                if (value != null && _clockFormat != value)
                 {
                     _clockFormat = value;
                     OnPropertyChanged();
@@ -167,7 +181,7 @@ namespace RetroBar.Utilities
             }
             set
             {
-                if (_amDesignator != value)
+                if (value != null && _amDesignator != value)
                 {
                     _amDesignator = value;
                     OnPropertyChanged();
@@ -184,7 +198,7 @@ namespace RetroBar.Utilities
             }
             set
             {
-                if (_pmDesignator != value)
+                if (value != null && _pmDesignator != value)
                 {
                     _pmDesignator = value;
                     OnPropertyChanged();
@@ -238,7 +252,7 @@ namespace RetroBar.Utilities
         public List<string> InvertNotifyIcons
         {
             get => _invertNotifyIcons;
-            set => Set(ref _invertNotifyIcons, value);
+            set => SetList(ref _invertNotifyIcons, value);
         }
 
         private List<NotifyIconBehaviorSetting> _notifyIconBehaviors = new List<NotifyIconBehaviorSetting>
@@ -267,6 +281,7 @@ namespace RetroBar.Utilities
         public List<NotifyIconBehaviorSetting> NotifyIconBehaviors
         {
             get => _notifyIconBehaviors;
+            // Records are value types; JSON null elements are rejected by deserialization.
             set => Set(ref _notifyIconBehaviors, value);
         }
 
@@ -274,7 +289,7 @@ namespace RetroBar.Utilities
         public List<string> NotifyIconOrder
         {
             get => _notifyIconOrder;
-            set => Set(ref _notifyIconOrder, value);
+            set => SetList(ref _notifyIconOrder, value);
         }
 
         private bool _allowFontSmoothing = false;
@@ -337,7 +352,7 @@ namespace RetroBar.Utilities
         public List<string> QuickLaunchOrder
         {
             get => _quickLaunchOrder;
-            set => Set(ref _quickLaunchOrder, value);
+            set => SetList(ref _quickLaunchOrder, value);
         }
 
         private bool _showTaskThumbnails = false;
@@ -512,7 +527,7 @@ namespace RetroBar.Utilities
         public List<QuickLaunchIconSetting> QuickLaunchIcons
         {
             get => _quickLaunchIcons;
-            set => Set(ref _quickLaunchIcons, value ?? new List<QuickLaunchIconSetting>());
+            set => SetList(ref _quickLaunchIcons, value ?? new List<QuickLaunchIconSetting>());
         }
 
         // UXUI-Extreme (UX-016): notification area expand/collapse toggle. "" = theme image.
@@ -543,7 +558,7 @@ namespace RetroBar.Utilities
         public List<TrayIconReplacementSetting> TrayIconReplacements
         {
             get => _trayIconReplacements;
-            set => Set(ref _trayIconReplacements, value ?? new List<TrayIconReplacementSetting>());
+            set => SetList(ref _trayIconReplacements, value ?? new List<TrayIconReplacementSetting>());
         }
 
         // UXUI-Extreme: where the Start icon (and label) sit on the Start button, and a custom
@@ -575,7 +590,7 @@ namespace RetroBar.Utilities
         public List<TaskRowRule> TaskRowRules
         {
             get => _taskRowRules;
-            set => Set(ref _taskRowRules, value ?? new List<TaskRowRule>());
+            set => SetList(ref _taskRowRules, value ?? new List<TaskRowRule>());
         }
 
         // Apps whose buttons are placed after all the others (for example terminals), comma separated.
@@ -742,7 +757,7 @@ namespace RetroBar.Utilities
         public List<TaskButtonAppRule> TaskButtonAppRules
         {
             get => _taskButtonAppRules;
-            set => Set(ref _taskButtonAppRules, value ?? new List<TaskButtonAppRule>());
+            set => SetList(ref _taskButtonAppRules, value ?? new List<TaskButtonAppRule>());
         }
 
         // UXUI-Extreme (UX-012): Start button layout. Defaults = the theme's own look.
@@ -1005,12 +1020,17 @@ namespace RetroBar.Utilities
             set
             {
                 // Migrate to NotifyIconBehaviors
-                if (value.Length > 0)
+                if (value != null && value.Length > 0)
                 {
                     var newSettings = new List<NotifyIconBehaviorSetting>();
 
                     foreach (var identifier in value)
                     {
+                        if (identifier == null)
+                        {
+                            continue;
+                        }
+
                         newSettings.Add(new NotifyIconBehaviorSetting
                         {
                             Identifier = identifier,

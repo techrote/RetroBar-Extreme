@@ -5,81 +5,101 @@ on:
     workflows: ['RetroBar']
     types: [completed]
 
-jobs:
+permissions:
+  actions: read
+  pull-requests: write
 
+# Serialize callbacks for the same source branch. Recheck the live PR below because
+# callbacks can be queued out of order or arrive after another push.
+concurrency:
+  group: retrobar-artifacts-${{ github.event.workflow_run.head_repository.id }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
   pr_comment:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/github-script@v9
         with:
-          # This snippet is based on
-          # https://github.com/oprypin/nightly.link/blob/master/.github/workflows/pr-comment.yml
+          # Do not check out or execute the PR's code in this privileged workflow.
           script: |
-            async function upsertComment(owner, repo, issue_number, purpose, body) {
-              const {data: comments} = await github.rest.issues.listComments(
-                {owner, repo, issue_number});
-
-              const marker = `<!-- bot: ${purpose} -->`;
-              body = marker + "\n" + body;
-
-              const existing = comments.filter((c) => c.body.includes(marker));
-              if (existing.length > 0) {
-                const last = existing[existing.length - 1];
-                core.info(`Updating comment ${last.id}`);
-                await github.rest.issues.updateComment({
-                  owner, repo,
-                  body,
-                  comment_id: last.id,
-                });
-              } else {
-                core.info(`Creating a comment in issue / PR #${issue_number}`);
-                await github.rest.issues.createComment({issue_number, body, owner, repo});
-              }
-            }
-
             const {owner, repo} = context.repo;
-            const run_id = ${{github.event.workflow_run.id}};
-            const headSHA = '${{github.event.workflow_run.head_sha}}';
-            
-            // Find PRs that match the head SHA
-            let pull_requests = [];
-            
-            // First check the standard way (works for non-fork PRs)
-            const standard_prs = ${{ toJSON(github.event.workflow_run.pull_requests) }};
-            if (standard_prs.length > 0) {
-              pull_requests = standard_prs;
-            } else {
-              // For fork PRs, search by head SHA
-              for await (const { data } of github.paginate.iterator(
-                github.rest.pulls.list, { owner, repo, state: 'open' }
-              )) {
-                for (const pull of data) {
-                  if (pull.head.sha === headSHA) {
-                    pull_requests.push({ number: pull.number });
-                    break; // Found matching PR, no need to continue
-                  }
-                }
-              }
-            }
-            
-            if (!pull_requests.length) {
-              return core.error("This workflow doesn't match any pull requests!");
+            const run = context.payload.workflow_run;
+            const headSHA = run.head_sha;
+            const headRepoId = run.head_repository?.id;
+            if (!/^[0-9a-f]{40}$/i.test(headSHA || '') || !headRepoId ||
+                !run.head_branch || run.repository?.full_name !== `${owner}/${repo}` ||
+                run.event !== 'pull_request' || run.conclusion !== 'success') {
+              core.info('No verified successful pull-request source; no artifact comment.');
+              return;
             }
 
-            const artifacts = await github.paginate(
-              github.rest.actions.listWorkflowRunArtifacts, {owner, repo, run_id});
+            const matchesSource = pr => pr.state === 'open' &&
+              pr.head?.sha === headSHA && pr.head?.repo?.id === headRepoId &&
+              pr.head?.ref === run.head_branch && pr.base?.repo?.full_name === `${owner}/${repo}`;
+
+            let candidates = run.pull_requests || [];
+            if (!candidates.length) {
+              // Fork runs can omit pull_requests. A shared SHA alone is not enough
+              // to identify a PR: its source repository and branch must match too.
+              candidates = (await github.paginate(github.rest.pulls.list,
+                {owner, repo, state: 'open', per_page: 100})).filter(matchesSource);
+            }
+            if (!candidates.length) {
+              core.info('No current pull request matches this source.');
+              return;
+            }
+
+            const artifacts = (await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {owner, repo, run_id: run.id, per_page: 100})).filter(art => !art.expired);
             if (!artifacts.length) {
-              return core.error(`No artifacts found`);
+              core.warning('This run has no unexpired artifacts; leaving existing comments alone.');
+              return;
             }
-            let body = `Download the artifacts for this pull request:\n`;
+
+            const marker = '<!-- bot: nightly-link -->';
+            const attempt = run.run_attempt || 1;
+            const runURL = `https://github.com/${owner}/${repo}/actions/runs/${run.id}/attempts/${attempt}`;
+            const escapeLabel = value => String(value).replace(/[\r\n]/g, ' ').replace(/[\\\[\]()`*_<>]/g, '\\$&');
+            let body = `${marker}\n<!-- retrobar-artifacts-run: ${run.id} attempt: ${attempt} -->\n` +
+              `Pull-request head: \`${headSHA}\`.\n\n` +
+              `Artifacts from [RetroBar run ${run.id}, attempt ${attempt}](${runURL}). ` +
+              `These are pull-request merge builds; the PR head above identifies their source branch.\n`;
             for (const art of artifacts) {
-              body += `\n* [${art.name}.zip](https://nightly.link/${owner}/${repo}/actions/artifacts/${art.id}.zip)`;
+              body += `\n* [${escapeLabel(art.name)}.zip](https://nightly.link/${owner}/${repo}/actions/artifacts/${art.id}.zip)`;
             }
 
-            core.info("Review thread message body:", body);
+            for (const number of new Set(candidates.map(pr => pr.number))) {
+              let {data: pr} = await github.rest.pulls.get({owner, repo, pull_number: number});
+              if (!matchesSource(pr)) {
+                core.info(`Skipping PR #${number}: it has closed or its source has changed.`);
+                continue;
+              }
 
-            for (const pr of pull_requests) {
-              await upsertComment(owner, repo, pr.number,
-                "nightly-link", body);
+              const comments = await github.paginate(github.rest.issues.listComments,
+                {owner, repo, issue_number: number, per_page: 100});
+              // A marker copied into a human comment must never make it editable by this bot.
+              const existing = comments.filter(comment => comment.user?.login === 'github-actions[bot]' &&
+                comment.user?.type === 'Bot' && comment.body?.startsWith(marker)).at(-1);
+              const previous = existing?.body.match(/<!-- retrobar-artifacts-run: (\d+) attempt: (\d+) -->/);
+              if (previous && (+previous[1] > run.id || (+previous[1] === run.id && +previous[2] > attempt))) {
+                core.info(`Skipping PR #${number}: its comment already names a newer run or attempt.`);
+                continue;
+              }
+
+              // A push during the API reads above must not publish stale download links.
+              ({data: pr} = await github.rest.pulls.get({owner, repo, pull_number: number}));
+              if (!matchesSource(pr)) {
+                core.info(`Skipping PR #${number}: its source changed before publication.`);
+                continue;
+              }
+              if (existing) {
+                if (existing.body !== body) {
+                  await github.rest.issues.updateComment({owner, repo, comment_id: existing.id, body});
+                }
+              } else {
+                await github.rest.issues.createComment({owner, repo, issue_number: number, body});
+              }
             }

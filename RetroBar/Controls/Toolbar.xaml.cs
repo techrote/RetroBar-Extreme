@@ -338,19 +338,24 @@ namespace RetroBar.Controls
 
         private void Toolbar_TaskbarHotkeyPressed(object sender, HotkeyManager.TaskbarHotkeyEventArgs e)
         {
-            if (Settings.Instance.WinNumHotkeysAction == WinNumHotkeysOption.InvokeQuickLaunch && Host.Screen.Primary)
+            // A collapsed toolbar remains loaded and subscribed to hotkeys, but its folder has
+            // already been disposed. Ignore shortcuts until the visible toolbar has a source again.
+            if (Folder == null || !IsVisible || Host == null ||
+                Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.InvokeQuickLaunch || !Host.Screen.Primary)
             {
-                try
-                {
-                    ListCollectionView items = (ListCollectionView)CollectionViewSource.GetDefaultView(Folder.Files);
-
-                    bool exists = items.MoveCurrentToPosition(e.index);
-                    
-                    if (exists) InvokeContextMenu((ShellFile)items.CurrentItem, false);
-
-                }
-                catch (ArgumentOutOfRangeException) { }
+                return;
             }
+
+            try
+            {
+                ListCollectionView items = (ListCollectionView)CollectionViewSource.GetDefaultView(Folder.Files);
+                bool exists = items.MoveCurrentToPosition(e.index);
+                if (exists && items.CurrentItem is ShellFile file)
+                {
+                    InvokeContextMenu(file, false);
+                }
+            }
+            catch (ArgumentOutOfRangeException) { }
         }
         #endregion
 

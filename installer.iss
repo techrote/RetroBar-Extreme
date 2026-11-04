@@ -299,7 +299,7 @@ end;
 function DownloadDotNetVersion(baseVersion: String): Boolean;
 begin
   DownloadPage.Clear;
-  DownloadPage.Add(Format('https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/%s/latest.version', [baseVersion]), '{#DotNetVersionFile}', '');
+  DownloadPage.Add(Format('https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/%s/latest.version', [baseVersion]), '{#DotNetVersionFile}', '');
   DownloadPage.Show;
   try
     try
@@ -321,7 +321,7 @@ function DownloadDotNetRuntime(version: AnsiString): Boolean;
 var
   baseUrl: String;
 begin
-  baseUrl := Format('https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/%s/windowsdesktop-runtime-%s', [version, version]);
+  baseUrl := Format('https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/%s/windowsdesktop-runtime-%s', [version, version]);
   DownloadPage.Clear;
   if PreferArm64Files() then
     DownloadPage.Add(Format('%s-win-arm64.exe', [baseUrl]), '{#DotNetInstallerExe}', '')

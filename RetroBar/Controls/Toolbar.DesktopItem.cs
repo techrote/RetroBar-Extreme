@@ -78,13 +78,17 @@ namespace RetroBar.Controls
 
         public DesktopQuickItem()
         {
-            Settings.Instance.PropertyChanged += (s, e) =>
+            // Taskbar rebuilds replace this data item. A strong singleton subscription would
+            // keep every old item alive and refreshing long after its toolbar was closed.
+            PropertyChangedEventManager.AddHandler(Settings.Instance, Settings_PropertyChanged, string.Empty);
+        }
+
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Settings.ShowDesktopIcon) || e.PropertyName == nameof(Settings.TaskbarScale) || e.PropertyName == nameof(Settings.Theme))
             {
-                if (e.PropertyName == nameof(Settings.ShowDesktopIcon) || e.PropertyName == nameof(Settings.TaskbarScale) || e.PropertyName == nameof(Settings.Theme))
-                {
-                    Application.Current?.Dispatcher.BeginInvoke(new Action(Refresh));
-                }
-            };
+                Application.Current?.Dispatcher.BeginInvoke(new Action(Refresh));
+            }
         }
 
         public string DisplayName { get; private set; } = "Show Desktop";
