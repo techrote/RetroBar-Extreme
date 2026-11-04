@@ -40,6 +40,7 @@ internal static partial class Program
         int failures = 0;
         foreach (var test in new (string Name, Action Body)[]
         {
+            ("Manual updates ignore legacy settings and make no background HTTP requests", () => ManualUpdates.Run(Check)),
             ("Every built-in font resolves from the executable, with real Regular and Bold faces", Fonts),
             ("Built-in fonts cover the characters the taskbar shows", Coverage),
             ("Knurled Swarf: face and size selection, and pixel-exact rendering in WPF", PixelFont),

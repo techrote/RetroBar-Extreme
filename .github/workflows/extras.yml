@@ -27,7 +27,7 @@ jobs:
           dotnet-version: |
             6.0.x
             10.0.x
-      - name: Run built-in font, example style and Extras folder tests
+      - name: Run manual-update, built-in font, style and Extras contracts
         shell: pwsh
         env:
           RETROBAR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}

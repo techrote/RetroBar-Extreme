@@ -1,7 +1,8 @@
 ﻿#define RetroBarName "RetroBar"
 #define RetroBarPublisher "Sam Johnson"
 #define RetroBarURL "https://github.com/dremin/RetroBar"
-#define RetroBarReleasesURL RetroBarURL + "/releases"
+; UXUI-Extreme (UX-019): manual application updates belong to this fork.
+#define RetroBarReleasesURL "https://github.com/techrote/RetroBar-Extreme/releases"
 #define RetroBarExeName "RetroBar.exe"
 
 #define DotNet6VersionDownload "6.0.36"
@@ -31,7 +32,6 @@
 #define Minor
 #define Revision
 #define RetroBarVersion GetVersionComponents(ReleasePath10 + "\publish-x64\" + RetroBarExeName, Major, Minor, Revision, null), Str(Major) + "." + Str(Minor) + "." + Str(Revision)
-#define VersionURL "https://dremin.github.io/updates/retrobar.json"
 
 [Setup]
 AppId={{574527FE-00A4-4F85-92AD-B4B8B4077D73}
@@ -42,7 +42,7 @@ AppVerName={#RetroBarName} {#RetroBarVersion}
 AppPublisher={#RetroBarPublisher}
 AppPublisherURL={#RetroBarURL}
 AppSupportURL={#RetroBarURL}
-AppUpdatesURL={#RetroBarURL}
+AppUpdatesURL={#RetroBarReleasesURL}
 DefaultDirName={autopf}\{#RetroBarName}
 UninstallDisplayIcon={app}\{#RetroBarExeName}
 SetupMutex={#RetroBarName}Installer
@@ -243,47 +243,6 @@ begin
   end;
 end;
 
-procedure CheckForUpdates;
-var
-  LatestVersion: string;
-  CurrentVersion: string;
-  JSONStr: AnsiString;
-  PosStart, PosEnd: Integer;
-  MsgResult: Integer;
-begin
-  CurrentVersion := '{#RetroBarVersion}';
-
-  try
-    DownloadTemporaryFile('{#VersionURL}', 'retrobar.json', '', nil);
-  except
-    Log('Failed to download update information: ' + GetExceptionMessage);
-    Exit;
-  end;
-
-  if LoadStringFromFile(ExpandConstant('{tmp}\retrobar.json'), JSONStr) then
-  begin
-    PosStart := Pos('"version": "', JSONStr) + Length('"version": "');
-    PosEnd := Pos('"', Copy(JSONStr, PosStart, Length(JSONStr))) + PosStart - 1;
-    LatestVersion := Copy(JSONStr, PosStart, PosEnd - PosStart);
-
-    case CompareVersion(CurrentVersion, LatestVersion) of
-      -1: begin
-        Log(Format('CheckForUpdates: Current version %s is older than latest version %s', [CurrentVersion, LatestVersion]));
-        MsgResult := MsgBox(Format(CustomMessage('UpdateAvailableMessage'), [CurrentVersion, LatestVersion]),
-          mbInformation, MB_YESNO);
-        if MsgResult = IDYES then
-          ShellExec('open', '{#RetroBarReleasesURL}', '', '', SW_SHOW, ewNoWait, MsgResult);
-          end;
-       0: Log(Format('CheckForUpdates: Current version %s matches latest version %s', [CurrentVersion, LatestVersion]));
-       1: Log(Format('CheckForUpdates: Current version %s is newer than latest version %s', [CurrentVersion, LatestVersion]));
-    end;
-  end
-  else
-  begin
-    Log('Failed to read the version information file.');
-  end;
-end;
-
 function DotNetRuntimeIsMissing(): Boolean;
 var
   runtimes: TArrayOfString;
@@ -396,10 +355,10 @@ begin
   Result := True;
 end;
 
-// run CheckForUpdates
+// UXUI-Extreme (UX-019): no application-version probe during setup. The separately
+// prompted Microsoft .NET prerequisite download below is still available when needed.
 function InitializeSetup: Boolean;
 begin
-  CheckForUpdates;
   Result := True;
 end;
 
