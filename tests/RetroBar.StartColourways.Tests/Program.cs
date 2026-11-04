@@ -38,6 +38,13 @@ internal static class Program
     {
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "start-colourways-evidence");
         Directory.CreateDirectory(evidence);
+        // Loading the Settings singleton can migrate an existing profile before any
+        // test runs. Refuse owner data even though these fixtures do not edit settings.
+        if (Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RetroBar")))
+        {
+            Console.Error.WriteLine("Run Start colourways contracts in a clean Windows profile.");
+            return 1;
+        }
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         int failures = 0;
         foreach (var test in new (string Name, Action Body)[]
@@ -61,6 +68,8 @@ internal static class Program
         File.WriteAllText(Path.Combine(evidence, "results.json"), JsonSerializer.Serialize(new
         {
             Head = Environment.GetEnvironmentVariable("UX010_HEAD"), Framework = RuntimeInformation.FrameworkDescription,
+            TestedCommit = Environment.GetEnvironmentVariable("RETROBAR_TESTED_COMMIT"),
+            TestedTree = Environment.GetEnvironmentVariable("RETROBAR_TESTED_TREE"),
             Assertions = assertions, Failures = failures, Tests = results,
             OwnerVisualAcceptance = "Not performed by this automated test",
         }, new JsonSerializerOptions { WriteIndented = true }));

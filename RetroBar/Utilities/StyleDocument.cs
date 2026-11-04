@@ -65,6 +65,16 @@ namespace RetroBar.Utilities
             properties[property] = spec;
         }
 
+        // Reset everything owned by one part, including border widths and the Start image.
+        // Palette slots and other parts are independent working state and stay unchanged.
+        public void ResetPart(string part)
+        {
+            if (part == null) throw new ArgumentNullException(nameof(part));
+            Parts.Remove(part);
+            Borders.Remove(part);
+            if (part == "start") StartRecolour = null;
+        }
+
         public StyleDocument Clone()
         {
             var copy = new StyleDocument { Name = Name, StartRecolour = StartRecolour };
@@ -388,12 +398,12 @@ namespace RetroBar.Utilities
 
             if (value.TryGetProperty("angle", out JsonElement angle))
             {
-                if (angle.ValueKind != JsonValueKind.Number)
+                if (angle.ValueKind != JsonValueKind.Number || !angle.TryGetDouble(out double degrees) || !double.IsFinite(degrees))
                 {
-                    throw new FormatException("a gradient's \"angle\" is a number of degrees, such as 90");
+                    throw new FormatException("a gradient's \"angle\" must be a finite number of degrees, such as 90");
                 }
 
-                spec.Angle = angle.GetDouble();
+                spec.Angle = degrees;
             }
 
             int count = stops.GetArrayLength();
@@ -416,8 +426,10 @@ namespace RetroBar.Utilities
                     double offset = evenOffset;
                     if (stop.TryGetProperty("offset", out JsonElement o))
                     {
-                        offset = o.ValueKind == JsonValueKind.Number ? o.GetDouble()
-                            : throw new FormatException("a gradient stop's \"offset\" is a number from 0 to 1");
+                        if (o.ValueKind != JsonValueKind.Number || !o.TryGetDouble(out offset) || !double.IsFinite(offset))
+                        {
+                            throw new FormatException("a gradient stop's \"offset\" must be a finite number from 0 to 1");
+                        }
                     }
                     spec.Stops.Add(new GradientStop(ParseColor(color.ValueKind == JsonValueKind.String ? color.GetString() : color.GetRawText()), Math.Clamp(offset, 0, 1)));
                 }
@@ -514,7 +526,11 @@ namespace RetroBar.Utilities
             else
             {
                 // Centre the gradient line in the box so every angle spans it end to end.
-                double radians = (Angle + rotate) * Math.PI / 180;
+                if (!double.IsFinite(Angle)) throw new FormatException("a gradient's angle must be finite");
+                if (!double.IsFinite(rotate)) throw new ArgumentOutOfRangeException(nameof(rotate));
+                // Reduce before addition and conversion: two valid finite angles can otherwise
+                // overflow, and a single large finite angle can overflow when multiplied by PI.
+                double radians = ((Angle % 360) + (rotate % 360)) * Math.PI / 180;
                 double dx = Math.Cos(radians) / 2, dy = Math.Sin(radians) / 2;
                 var stops = new GradientStopCollection(Stops.Select(s => new GradientStop(s.Color, s.Offset)));
                 brush = new LinearGradientBrush(stops, new Point(0.5 - dx, 0.5 - dy), new Point(0.5 + dx, 0.5 + dy));

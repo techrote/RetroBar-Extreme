@@ -435,19 +435,7 @@ namespace RetroBar.Controls
             {
                 return;
             }
-            if (part == "start") // UXUI-Extreme (UX-010): restore the original bitmap only.
-            {
-                _style.StartRecolour = null;
-                SaveActive();
-                BuildPart();
-                return;
-            }
-
-            foreach (string property in StyleMap.PartProperties[part])
-            {
-                _style.Set(part, property, null);
-            }
-
+            _style.ResetPart(part);
             SaveActive();
             BuildPart();
         }
