@@ -27,7 +27,7 @@ jobs:
           dotnet-version: |
             6.0.x
             10.0.x
-      - name: Run built-in font, example style and Extras folder tests
+      - name: Run manual-update, built-in font, style and Extras contracts
         shell: pwsh
         run: |
           dotnet run --project tests/RetroBar.Extras.Tests/RetroBar.Extras.Tests.csproj -c Release -f ${{ matrix.framework }} -- "$env:GITHUB_WORKSPACE/extras-evidence"

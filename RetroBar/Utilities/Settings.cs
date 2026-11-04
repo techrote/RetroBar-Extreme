@@ -918,11 +918,13 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _clockClickAction, value);
         }
 
-        private bool _checkForUpdates = true;
+        // UXUI-Extreme (UX-019): retain the JSON property for backwards compatibility, but
+        // ignore old true values. The next normal settings save writes false. Ignoring this
+        // flag neither raises change notifications nor forces a file rewrite.
         public bool CheckForUpdates
         {
-            get => _checkForUpdates;
-            set => Set(ref _checkForUpdates, value);
+            get => false;
+            set { }
         }
 
         private bool _showExitMenuItem = true;

@@ -90,6 +90,15 @@ RetroBar is based on the [ManagedShell](https://github.com/cairoshell/ManagedShe
   - Fresh installs of Windows 7 may require additional Windows updates. See [#1319](https://github.com/dremin/RetroBar/issues/1319) for details.
 - Microsoft .NET Desktop Runtime - When using the RetroBar installer, this is automatically downloaded and installed if necessary. If you're using the portable version, you will be prompted to download on first launch.
 
+## Extreme updates
+
+Application updates are manual. RetroBar-Extreme does not poll an update feed in the app
+or at installer startup, including when an older settings file enabled update checks.
+Properties → **Taskbar** has an explicit **RetroBar-Extreme releases** link to this fork's
+[downloads](https://github.com/techrote/RetroBar-Extreme/releases). Opening it launches your
+browser; it does not install a build. The installer can still offer the Microsoft .NET
+Desktop Runtime when that prerequisite is missing.
+
 ## Features
 - Replaces default Windows taskbar with classic layout
 - Native notification area with balloon notification support

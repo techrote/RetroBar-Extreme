@@ -144,10 +144,16 @@
                                       Unchecked="CbAutoStart_OnChecked">
                                 <Label Content="{DynamicResource autostart}" />
                             </CheckBox>
-                            <CheckBox x:Name="cbCheckForUpdates"
-                                      IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=CheckForUpdates, UpdateSourceTrigger=PropertyChanged}">
-                                <Label Content="{DynamicResource check_for_updates}" />
-                            </CheckBox>
+                            <!-- UXUI-Extreme (UX-019): browsing releases is an explicit action. -->
+                            <TextBlock x:Name="ManualUpdatesNotice" Margin="0,5,5,5">
+                                <Run Text="{DynamicResource uxui_updates_manual}" />
+                                <Run Text=" " />
+                                <Hyperlink x:Name="ManualReleasesLink"
+                                           NavigateUri="{x:Static Settings:Updater.ReleasesUri}"
+                                           RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="{DynamicResource uxui_updates_releases}" />
+                                </Hyperlink>
+                            </TextBlock>
                             <DockPanel>
                                 <Label VerticalAlignment="Center"
                                        Target="{Binding ElementName=cboLanguageSelect}">
