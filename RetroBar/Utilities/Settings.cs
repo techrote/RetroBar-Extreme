@@ -281,7 +281,8 @@ namespace RetroBar.Utilities
         public List<NotifyIconBehaviorSetting> NotifyIconBehaviors
         {
             get => _notifyIconBehaviors;
-            set => SetList(ref _notifyIconBehaviors, value);
+            // Records are value types; JSON null elements are rejected by deserialization.
+            set => Set(ref _notifyIconBehaviors, value);
         }
 
         private List<string> _notifyIconOrder = new List<string>();

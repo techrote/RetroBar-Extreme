@@ -118,7 +118,6 @@ internal static partial class Program
                 ("InvertNotifyIcons", "\"keep\""),
                 ("NotifyIconOrder", "\"keep\""),
                 ("QuickLaunchOrder", "\"keep\""),
-                ("NotifyIconBehaviors", "{\"Identifier\":\"keep\",\"Behavior\":1}"),
                 ("QuickLaunchIcons", "{}"),
                 ("TrayIconReplacements", "{}"),
                 ("TaskRowRules", "{\"Row\":1}"),
@@ -129,6 +128,10 @@ internal static partial class Program
                 var entries = (System.Collections.IList)type.GetProperty(name).GetValue(withEntries);
                 Check(entries.Count == 1 && entries[0] != null, name + " discards null entries while retaining its valid entry");
             }
+            bool rejectedRecord = false;
+            try { JsonSerializer.Deserialize("{\"NotifyIconBehaviors\":[null]}", type); }
+            catch (JsonException) { rejectedRecord = true; }
+            Check(rejectedRecord, "null value-type icon records reject the document instead of entering the live list");
             object legacy = JsonSerializer.Deserialize("{\"PinnedNotifyIcons\":[null,\"keep\"]}", type);
             var migrated = (System.Collections.IList)type.GetProperty("NotifyIconBehaviors").GetValue(legacy);
             Check(migrated.Count == 1, "legacy pinned icons skip null entries during migration");
