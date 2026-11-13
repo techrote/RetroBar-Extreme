@@ -32,7 +32,11 @@ internal static partial class Program
     private static (ScrollViewer viewer, TaskRowPanel panel, FrameworkElement[] items) RowFixture(
         int rows, double viewport, params (string app, double width)[] windows)
     {
-        Settings.Instance.RowCount = rows; // suppressed persistence in LayoutSettingsScope
+        // Settings is deliberately internal to the application. The existing Extras
+        // contract scope suppresses saves; assign through its same reflection seam.
+        Type type = typeof(HotkeyManager).Assembly.GetType("RetroBar.Utilities.Settings", true);
+        object settings = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+        type.GetProperty("RowCount").SetValue(settings, rows);
         var panel = new TaskRowPanel { Orientation = Orientation.Horizontal, ViewportWidth = viewport };
         FrameworkElement[] items = windows.Select(w => (FrameworkElement)new Button
         {
@@ -217,7 +221,7 @@ internal static partial class Program
         var converter = new TaskButtonWidthConverter();
         object[] Values(string name, double width) => new object[]
         {
-            0, width, 0, 2, FixtureApp(name), Settings.Instance.TaskButtonAppRules, 3.0, 48.0, 160.0
+            0, width, 0, 2, FixtureApp(name), new List<TaskButtonAppRule> { iconRule, wideRule }, 3.0, 48.0, 160.0
         };
         Check((double)converter.Convert(Values("icon", 110), typeof(double), null, null) == 48,
             "icon-only app remains compact even when a row overflows");
