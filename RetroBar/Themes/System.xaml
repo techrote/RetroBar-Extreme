@@ -496,6 +496,7 @@
                               Style="{DynamicResource TaskListScrollButtonGrid}"
                               Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}">
                             <RepeatButton Command="ScrollBar.PageLeftCommand"
+                                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                           Style="{DynamicResource TaskListScrollButton}"
                                           Focusable="False"
                                           MinWidth="16"
@@ -512,6 +513,7 @@
                               Style="{DynamicResource TaskListScrollButtonGrid}"
                               Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}">
                             <RepeatButton Command="ScrollBar.PageRightCommand"
+                                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                           Style="{DynamicResource TaskListScrollButton}"
                                           Focusable="False"
                                           MinWidth="16"

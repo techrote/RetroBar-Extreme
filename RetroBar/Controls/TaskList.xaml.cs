@@ -327,7 +327,9 @@ namespace RetroBar.Controls
             if (Host is null)
                 return; // The state is trashed, but presumably it's just a transition
 
-            bool ruleConstrained = Host.Orientation == Orientation.Horizontal && TaskRowPanel.HasRules;
+            bool ruleConstrained = Host.Orientation == Orientation.Horizontal &&
+                Settings.Instance.Edge != AppBarEdge.Left && Settings.Instance.Edge != AppBarEdge.Right &&
+                TaskRowPanel.HasRules;
             SetHorizontalScrollable(ruleConstrained);
 
             if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
@@ -338,7 +340,6 @@ namespace RetroBar.Controls
                 return;
             }
 
-            double height = ActualHeight;
             int rows = Math.Max(1, Host.Rows);
 
             int taskCount = TasksList.Items.Count;
@@ -368,13 +369,15 @@ namespace RetroBar.Controls
                 // Room to spare: keep the default width and leave the trailing gap.
                 ExtraWidthCount = 0;
                 ButtonWidth = defaultWidth;
-                SetScrollable(false);
+                SetScrollable(ruleConstrained);
             }
             else if (maxWidth < minWidth)
             {
                 ExtraWidthCount = 0;
-                ButtonWidth = Math.Max(minWidth, Math.Ceiling(defaultWidth / 2));
-                SetScrollable(!ruleConstrained);
+                ButtonWidth = ruleConstrained
+                    ? Math.Max(minWidth, Math.Ceiling(defaultWidth / 2))
+                    : Math.Ceiling(defaultWidth / 2);
+                SetScrollable(true);
             }
             else
             {
@@ -383,7 +386,7 @@ namespace RetroBar.Controls
                 double baseWidth = Math.Floor(maxWidth);
                 ButtonWidth = baseWidth;
                 ExtraWidthCount = Math.Max(0, (int)Math.Floor(viewport) - (int)baseWidth * ButtonsPerRow);
-                SetScrollable(false);
+                SetScrollable(ruleConstrained);
             }
         }
 

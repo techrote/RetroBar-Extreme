@@ -54,6 +54,7 @@ internal static partial class Program
             ("Constrained rows survive real WPF infinite-width ScrollViewer measure", ConstrainedRowOverflowRed),
             ("Explicit/relative/exclusive/end-app overflow retains WPF row ownership", ConstrainedRowRouting),
             ("One-row, narrow widths, resize, rule changes and DPI layout stay finite", ConstrainedRowResize),
+            ("Adjusted row heights remain reachable on both scroll axes", HeightAdjustmentAccessibility),
             ("Keyboard focus requests scroll off-screen task buttons into view", ConstrainedRowFocus),
             ("No-rule WrapPanel and vertical scrolling stay unchanged", LegacyRowModes),
             ("Per-app width, icon and label rules remain intact", PerAppRowPresentation),

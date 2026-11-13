@@ -63,7 +63,7 @@ namespace RetroBar.Controls
         }
 
         internal static bool HasRules =>
-            (Settings.Instance.TaskRowRules?.Any(r => !string.IsNullOrWhiteSpace(r.Apps) || r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0) ?? false) ||
+            (Settings.Instance.TaskRowRules?.Any(r => r != null && (!string.IsNullOrWhiteSpace(r.Apps) || r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0)) ?? false) ||
             !string.IsNullOrWhiteSpace(Settings.Instance.TaskEndApps);
 
         protected override Size MeasureOverride(Size constraint)

@@ -136,6 +136,11 @@ internal static partial class Program
             "resize expands viewport without stale offset or extent");
 
         scope.Set("RowCount", 2);
+        scope.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            null, // rejected settings entries must not crash rule detection/reflow
+            new TaskRowRule { Row = -1, Align = TaskButtonAlignOption.Right },
+        });
         panel.InvalidateMeasure();
         MeasureRow(viewer, panel, 250, 2);
         Check(items.Any(item => Y(item) > 0), "changing row count repacks instead of retaining stale slots");
@@ -146,6 +151,26 @@ internal static partial class Program
         MeasureRow(viewer, panel, 250, 2);
         Check(double.IsFinite(viewer.ExtentWidth) && viewer.ExtentWidth >= 0,
             "scaled WPF panel has finite extent");
+    }
+
+    private static void HeightAdjustmentAccessibility()
+    {
+        using var scope = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow", "RowCount");
+        scope.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, HeightAdjust = 80 },
+        });
+        scope.Set("TaskEndApps", "");
+        scope.Set("TaskEndAppsBottomRow", false);
+        var (viewer, panel, _) = RowFixture(2, 115,
+            ("one", 105), ("two", 105), ("three", 105));
+        viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+        MeasureRow(viewer, panel, 115, 2);
+        Check(viewer.ScrollableHeight > 0, "row-height adjustments can extend into a vertical scroll extent");
+        Check(viewer.ScrollableWidth > 0, "vertical adjustment does not disable horizontal navigation");
+        viewer.ScrollToBottom();
+        viewer.UpdateLayout();
+        Check(viewer.VerticalOffset > 0, "off-screen adjusted-height rows remain reachable vertically");
     }
 
     private static void ConstrainedRowFocus()
@@ -253,6 +278,8 @@ internal static partial class Program
             "production horizontal template has both navigation commands");
         Check(horizontal.Contains("ComputedHorizontalScrollBarVisibility"),
             "horizontal arrows are displayed only when scroll overflow is computed");
+        Check(horizontal.Contains("CommandTarget"),
+            "navigation commands explicitly target the owning ScrollViewer");
         Check(horizontal.Contains("ComputedVerticalScrollBarVisibility"),
             "horizontal template retains legacy vertical overflow controls");
         Check(!vertical.Contains("PageLeftCommand") && vertical.Contains("PageUpCommand"),
