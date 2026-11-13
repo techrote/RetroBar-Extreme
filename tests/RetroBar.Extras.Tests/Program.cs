@@ -52,6 +52,12 @@ internal static partial class Program
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
             ("Constrained rows survive real WPF infinite-width ScrollViewer measure", ConstrainedRowOverflowRed),
+            ("Explicit/relative/exclusive/end-app overflow retains WPF row ownership", ConstrainedRowRouting),
+            ("One-row, narrow widths, resize, rule changes and DPI layout stay finite", ConstrainedRowResize),
+            ("Keyboard focus requests scroll off-screen task buttons into view", ConstrainedRowFocus),
+            ("No-rule WrapPanel and vertical scrolling stay unchanged", LegacyRowModes),
+            ("Per-app width, icon and label rules remain intact", PerAppRowPresentation),
+            ("Shared task-list navigation template retains overflow-only controls", TaskNavigationTemplate),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }

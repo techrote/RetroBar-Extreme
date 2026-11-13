@@ -97,8 +97,14 @@ namespace RetroBar.Controls
                 return new Size(rowWidth, 0);
             }
 
+            // A scrolling host can allocate fewer vertical pixels when its native scrollbar
+            // appears; that is not permission to remove a configured task row. The real
+            // Taskbar always provides authoritative Rows. Unhosted WPF ScrollViewer fixtures
+            // use the configured count, while direct-panel tests retain their height fallback.
             int rows = Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
-                : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount) : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
+                : IsInsideScrollViewer() ? Math.Max(1, Settings.Instance.RowCount)
+                : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount)
+                : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
             _slots = Place(children, rows, rowHeight, rowWidth);
             double extent = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
             return new Size(Math.Max(rowWidth, extent),
@@ -118,6 +124,20 @@ namespace RetroBar.Controls
                 children[i].Arrange(_slots[i]);
             }
             return finalSize;
+        }
+
+        private bool IsInsideScrollViewer()
+        {
+            DependencyObject parent = System.Windows.Media.VisualTreeHelper.GetParent(this);
+            while (parent != null)
+            {
+                if (parent is ScrollViewer)
+                {
+                    return true;
+                }
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            }
+            return false;
         }
 
         private double _totalHeight;
