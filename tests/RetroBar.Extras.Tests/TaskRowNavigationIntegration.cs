@@ -235,7 +235,9 @@ internal static partial class Program
 
             // Regression probe: scroll arrows take width away from the content viewport.
             // A four-button/two-row layout fits without arrows, but may no longer fit
-            // inside the smaller viewport while arrows are displayed. Changing a row rule
+            // inside the smaller viewport while arrows are displayed. Include widths
+            // close to the per-button minimum, where the arrow chrome is a large fraction
+            // of the available area. Changing a row rule
             // should recover the same no-overflow state as a fresh unrestrained layout.
             // No shell HWND, task activation or real application installation is involved.
             items.ItemsSource = Enumerable.Range(0, 4).Select(i => FixtureApp("integration" + i)).ToArray();
@@ -248,7 +250,7 @@ internal static partial class Program
             {
                 new TaskRowRule { Row = 1, Apps = "integration", OnlyListed = true },
             };
-            foreach (double width in new[] { 180.0, 185.0, 200.0, 210.0 })
+            foreach (double width in new[] { 105.0, 110.0, 120.0, 140.0, 180.0, 185.0, 200.0, 210.0 })
             {
                 settings.Set("TaskRowRules", relaxed);
                 panel.InvalidateMeasure();
