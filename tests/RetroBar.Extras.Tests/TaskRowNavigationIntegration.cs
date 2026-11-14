@@ -192,13 +192,13 @@ internal static partial class Program
                 BindingFlags.NonPublic | BindingFlags.Instance);
             Check(sizing != null, "production layout policy has a single host-independent sizing core");
             void SetLayout(int rows) => sizing.Invoke(control, new object[] { Orientation.Horizontal, rows });
-            void Measure(double width)
+            void Measure(double width, int rows = 1)
             {
-                SetLayout(1);
+                SetLayout(rows);
                 control.Measure(new Size(width, 52));
                 control.Arrange(new Rect(0, 0, width, 52));
                 control.UpdateLayout();
-                SetLayout(1);
+                SetLayout(rows);
                 control.InvalidateMeasure();
                 control.Measure(new Size(width, 52));
                 control.Arrange(new Rect(0, 0, width, 52));
@@ -232,6 +232,51 @@ internal static partial class Program
             Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
                 "production sizing turns horizontal scrolling off when rules are removed");
             Check(viewer.ScrollableWidth < 1, "no-rule TaskList uses the original wrapping path");
+
+            // Regression probe: scroll arrows take width away from the content viewport.
+            // A four-button/two-row layout fits without arrows, but may no longer fit
+            // inside the smaller viewport while arrows are displayed. Changing a row rule
+            // should recover the same no-overflow state as a fresh unrestrained layout.
+            // No shell HWND, task activation or real application installation is involved.
+            items.ItemsSource = Enumerable.Range(0, 4).Select(i => FixtureApp("integration" + i)).ToArray();
+            settings.Set("RowCount", 2);
+            var relaxed = new List<TaskRowRule>
+            {
+                new TaskRowRule { Row = 1, Align = TaskButtonAlignOption.Centre },
+            };
+            var constrained = new List<TaskRowRule>
+            {
+                new TaskRowRule { Row = 1, Apps = "integration", OnlyListed = true },
+            };
+            foreach (double width in new[] { 180.0, 185.0, 200.0, 210.0 })
+            {
+                settings.Set("TaskRowRules", relaxed);
+                panel.InvalidateMeasure();
+                Measure(width, 2);
+                Measure(width, 2);
+                Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto &&
+                      viewer.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed &&
+                      viewer.ScrollableWidth < 0.5,
+                    $"fresh relaxed rows should fit at width {width}: mode={viewer.HorizontalScrollBarVisibility}, computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
+
+                settings.Set("TaskRowRules", constrained);
+                panel.InvalidateMeasure();
+                Measure(width, 2);
+                Measure(width, 2);
+                Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Visible &&
+                      viewer.ScrollableWidth > 1,
+                    $"constraining all four buttons into row 1 should overflow at width {width}: computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
+
+                settings.Set("TaskRowRules", relaxed);
+                panel.InvalidateMeasure();
+                Measure(width, 2);
+                Measure(width, 2);
+                Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed &&
+                      viewer.ScrollableWidth < 0.5,
+                    $"P2 arrow hysteresis: relaxed rows must remove stale arrows at width {width}: computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
+                Check(DescendantsOfType<TaskButton>(control).Count() == 4,
+                    "arrow-state transition retains all four production task buttons");
+            }
         }
         finally
         {
