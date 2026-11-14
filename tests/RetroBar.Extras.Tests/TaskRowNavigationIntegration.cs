@@ -56,7 +56,7 @@ internal static partial class Program
         {
             DependencyObject child = VisualTreeHelper.GetChild(root, i);
             if (child is T found) yield return found;
-            foreach (T found in DescendantsOfType<T>(child)) yield return found;
+            foreach (T descendant in DescendantsOfType<T>(child)) yield return descendant;
         }
     }
 
