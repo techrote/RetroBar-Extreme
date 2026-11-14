@@ -279,6 +279,38 @@ internal static partial class Program
                 Check(DescendantsOfType<TaskButton>(control).Count() == 4,
                     "arrow-state transition retains all four production task buttons");
             }
+
+            // Owner physical failure: on a full taskbar, configured task-button widths
+            // were compressed to a row-count average, truncating their visible faces
+            // without generating horizontal navigation. A constrained row must keep
+            // its configured width; the finite viewer scrolls instead.
+            settings.Set("TaskButtonWidthPx", 240.0);
+            typeof(TaskList).GetMethod("SetStyles", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(control, null);
+            settings.Set("TaskRowRules", constrained);
+            panel.InvalidateMeasure();
+            Measure(200, 2);
+            Measure(200, 2);
+            Check(control.ButtonWidth >= 240,
+                $"full-taskbar width regression: requested 240-DIP button compressed to {control.ButtonWidth}, viewer={viewer.ActualWidth}, viewport={viewer.ViewportWidth}, scrollable={viewer.ScrollableWidth}");
+            var fullButtons = DescendantsOfType<TaskButton>(control).ToArray();
+            Check(fullButtons.Length == 4 && fullButtons.All(button => button.ActualWidth >= 239),
+                "all four production task buttons retain the configured full width");
+            Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Visible &&
+                  viewer.ScrollableWidth >= 2 * 239,
+                $"full-width task buttons must overflow horizontally rather than be clipped without navigation: computed={viewer.ComputedHorizontalScrollBarVisibility}, extent={viewer.ExtentWidth}, viewport={viewer.ViewportWidth}");
+            viewer.ScrollToRightEnd();
+            viewer.UpdateLayout();
+            Check(viewer.HorizontalOffset > 2 * 239 - 1,
+                "last full-width task button remains horizontally reachable on a full taskbar");
+
+            // No-rule layouts must retain native WrapPanel behaviour rather than
+            // suddenly activating a horizontal scroll policy.
+            settings.Set("TaskRowRules", new List<TaskRowRule>());
+            panel.InvalidateMeasure();
+            Measure(200, 2);
+            Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
+                "legacy no-rule WrapPanel does not inherit new full-width scrolling");
         }
         finally
         {
