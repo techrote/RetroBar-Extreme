@@ -327,7 +327,14 @@ namespace RetroBar.Controls
             if (Host is null)
                 return; // The state is trashed, but presumably it's just a transition
 
-            bool ruleConstrained = Host.Orientation == Orientation.Horizontal &&
+            ConfigureButtonLayout(Host.Orientation, Host.Rows);
+        }
+
+        // A single production sizing routine also permits a WPF layout fixture to supply
+        // rows/orientation without creating a shell-managed AppBarWindow or taskbar instance.
+        private void ConfigureButtonLayout(Orientation orientation, int rowCount)
+        {
+            bool ruleConstrained = orientation == Orientation.Horizontal &&
                 Settings.Instance.Edge != AppBarEdge.Left && Settings.Instance.Edge != AppBarEdge.Right &&
                 TaskRowPanel.HasRules;
             SetHorizontalScrollable(ruleConstrained);
@@ -340,7 +347,7 @@ namespace RetroBar.Controls
                 return;
             }
 
-            int rows = Math.Max(1, Host.Rows);
+            int rows = Math.Max(1, rowCount);
 
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex

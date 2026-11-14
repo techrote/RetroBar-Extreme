@@ -60,6 +60,7 @@ internal static partial class Program
             ("Per-app width, icon and label rules remain intact", PerAppRowPresentation),
             ("Shared task-list navigation template retains overflow-only controls", TaskNavigationTemplate),
             ("Production task-list navigation template clicks and narrow extents", ExecutableNavigationTemplate),
+            ("Production TaskList ItemsPanel binding and sizing through overflow/resize/rule removal", ProductionTaskListViewportBinding),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }

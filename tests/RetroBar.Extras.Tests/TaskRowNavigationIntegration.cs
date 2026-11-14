@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Linq;
 using System.Windows;
 using System.Windows.Automation.Peers;
@@ -132,4 +133,103 @@ internal static partial class Program
         Check(left.Visibility != Visibility.Visible && right.Visibility != Visibility.Visible,
             "real navigation controls hide automatically when overflow disappears");
     }
+    private static void ProductionTaskListViewportBinding()
+    {
+        using var settings = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow",
+            "RowCount", "TaskButtonWidthPx", "Edge");
+        using var theme = new NavigationThemeScope();
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, Align = TaskButtonAlignOption.Right },
+        });
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("RowCount", 1);
+        settings.Set("TaskButtonWidthPx", 80.0);
+        settings.Set("Edge", ManagedShell.AppBar.AppBarEdge.Bottom);
+
+        // Supply only those global style resources normally loaded by App. TaskList,
+        // TaskButton, the ItemsControl ItemTemplate and ItemsPanelTemplate remain the
+        // unmodified production XAML. No taskbar/shell HWND or owner profile is created.
+        var values = new Dictionary<string, object>
+        {
+            ["TaskButtonWidth"] = 160.0,
+            ["TaskButtonMinWidth"] = 45.0,
+            ["TaskButtonMargin"] = new Thickness(0, 0, 3, 0),
+            ["TaskButtonVerticalMargin"] = new Thickness(),
+            ["TaskButton"] = new Style(typeof(Button)),
+            ["TaskButtonActive"] = new Style(typeof(Button)),
+            ["TaskButtonFlashing"] = new Style(typeof(Button)),
+            ["menuTextRenderingModeConverter"] = new RetroBar.Converters.BoolToTextRenderingModeConverter(),
+        };
+        var resources = Application.Current.Resources;
+        var originals = values.ToDictionary(kv => kv.Key,
+            kv => (exists: resources.Contains(kv.Key), value: resources.Contains(kv.Key) ? resources[kv.Key] : null));
+        foreach (var pair in values) resources[pair.Key] = pair.Value;
+        try
+        {
+            var control = new TaskList();
+            var items = (ItemsControl)control.FindName("TasksList");
+            var viewer = (ScrollViewer)control.FindName("TasksScrollViewer");
+            Check(items != null && viewer != null, "production TaskList exposes its real task items and scroll host");
+            items.ItemsSource = Enumerable.Range(0, 9).Select(i => FixtureApp("integration" + i)).ToArray();
+            control.ButtonMarginTotal = 3;
+            control.IconOnlyWidth = 48;
+            control.DefaultWidthWithMargin = 163;
+
+            var sizing = typeof(TaskList).GetMethod("ConfigureButtonLayout",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            Check(sizing != null, "production layout policy has a single host-independent sizing core");
+            void SetLayout(int rows) => sizing.Invoke(control, new object[] { Orientation.Horizontal, rows });
+            void Measure(double width)
+            {
+                SetLayout(1);
+                control.Measure(new Size(width, 52));
+                control.Arrange(new Rect(0, 0, width, 52));
+                control.UpdateLayout();
+                SetLayout(1);
+                control.InvalidateMeasure();
+                control.Measure(new Size(width, 52));
+                control.Arrange(new Rect(0, 0, width, 52));
+                control.UpdateLayout();
+            }
+
+            Measure(210);
+            var panel = DescendantsOfType<TaskRowPanel>(control).Single();
+            var realButtons = DescendantsOfType<TaskButton>(control).ToArray();
+            Check(realButtons.Length == 9, "production ItemTemplate creates nine real task buttons");
+            Check(panel.GetBindingExpression(TaskRowPanel.ViewportWidthProperty) != null,
+                "production ItemsPanelTemplate binds ViewportWidth rather than injecting a test-only value");
+            Check(panel.ViewportWidth > 0 && Math.Abs(panel.ViewportWidth - viewer.ViewportWidth) < 1,
+                "production viewport ancestor binding resolves to the real ScrollViewer");
+            Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto && viewer.ScrollableWidth > 0,
+                "production TaskList sizing enables horizontal overflow with rule ownership");
+
+            double widthAt210 = control.ButtonWidth;
+            Measure(165);
+            Check(Math.Abs(control.ButtonWidth - widthAt210) < 40,
+                "production button width remains bounded by host viewport rather than growing content extent");
+            Check(viewer.ScrollableWidth > 0 && double.IsFinite(viewer.ScrollableWidth),
+                "resize keeps a stable, finite extent without oscillation");
+            Check(panel.ViewportWidth >= 0 && double.IsFinite(panel.ViewportWidth),
+                "actual viewport binding remains finite during resize");
+
+            settings.Set("TaskRowRules", new List<TaskRowRule>());
+            SetLayout(1);
+            panel.InvalidateMeasure();
+            Measure(165);
+            Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
+                "production sizing turns horizontal scrolling off when rules are removed");
+            Check(viewer.ScrollableWidth < 1, "no-rule TaskList uses the original wrapping path");
+        }
+        finally
+        {
+            foreach (var pair in originals)
+            {
+                if (pair.Value.exists) resources[pair.Key] = pair.Value.value;
+                else resources.Remove(pair.Key);
+            }
+        }
+    }
+
 }
