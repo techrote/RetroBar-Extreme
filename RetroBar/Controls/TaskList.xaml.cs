@@ -373,6 +373,19 @@ namespace RetroBar.Controls
             double defaultWidth = DefaultButtonWidth + margin;
             double minWidth = MinButtonWidth + margin;
 
+            if (ruleConstrained)
+            {
+                // Row ownership may concentrate every task in a single physical row.
+                // Averaging the task count over all configured rows silently squeezes
+                // requested button widths before the horizontal access policy can work.
+                // Keep the theme/user width (and per-app overrides); let TaskRowPanel
+                // extend the scroll extent when the permitted row has insufficient room.
+                ExtraWidthCount = 0;
+                ButtonWidth = Math.Max(minWidth, defaultWidth);
+                SetScrollable(true);
+                return;
+            }
+
             if (maxWidth > defaultWidth)
             {
                 // Room to spare: keep the default width and leave the trailing gap.
