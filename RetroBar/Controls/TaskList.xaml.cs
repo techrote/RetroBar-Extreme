@@ -322,17 +322,6 @@ namespace RetroBar.Controls
             }
         }
 
-        private void TasksScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            // The navigation arrows consume part of the usable width without resizing
-            // the ScrollViewer itself. Re-evaluate widths when that viewport changes;
-            // ScrollChanged is delivered after WPF's layout pass, avoiding re-entrant measure.
-            if (Math.Abs(e.ViewportWidthChange) > 0.01)
-            {
-                SetTaskButtonWidth();
-            }
-        }
-
         private void SetTaskButtonWidth()
         {
             if (Host is null)
@@ -363,15 +352,12 @@ namespace RetroBar.Controls
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex
 
-            // Use the actual content viewport rather than either the expanding
-            // ItemsControl extent or the outer ScrollViewer width. The latter includes
-            // horizontal navigation arrows when they are visible, and can make them
-            // self-sustaining after a constrained-row rule is relaxed.
-            double viewport = TasksScrollViewer.ViewportWidth;
-            if (!double.IsFinite(viewport) || viewport <= 0)
-            {
-                viewport = TasksScrollViewer.ActualWidth;
-            }
+            // Use the finite outer scroll host, never the growing ItemsControl
+            // extent or the arrow-reduced content viewport. The panel separately
+            // preflights its no-arrow row layout before deciding whether the
+            // navigation chrome is really necessary. Fixed widths are essential
+            // for that comparison to remain deterministic across layout passes.
+            double viewport = TasksScrollViewer.ActualWidth;
             if (!double.IsFinite(viewport) || viewport <= 0)
             {
                 viewport = ActualWidth;
