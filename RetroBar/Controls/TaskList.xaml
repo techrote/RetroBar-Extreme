@@ -47,6 +47,7 @@
                       Focusable="False"
                       PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
                       SizeChanged="TasksScrollViewer_SizeChanged"
+                      ScrollChanged="TasksScrollViewer_ScrollChanged"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="TasksList"
