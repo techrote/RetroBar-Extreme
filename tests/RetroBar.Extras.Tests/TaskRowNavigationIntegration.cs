@@ -107,8 +107,9 @@ internal static partial class Program
         Check(buttons.Length >= 2, "real production template creates RepeatButton controls");
         RepeatButton left = buttons.Single(b => b.Command == ScrollBar.PageLeftCommand);
         RepeatButton right = buttons.Single(b => b.Command == ScrollBar.PageRightCommand);
-        Check(left.Visibility == Visibility.Visible && right.Visibility == Visibility.Visible,
-            "actual overflow makes left/right navigation visible");
+        Check(((UIElement)VisualTreeHelper.GetParent(left)).Visibility == Visibility.Visible &&
+              ((UIElement)VisualTreeHelper.GetParent(right)).Visibility == Visibility.Visible,
+            "actual overflow makes both navigation containers visible");
         Check(viewer.ScrollableWidth > 100, "production template exposes a finite scrollable extent");
 
         double initial = viewer.HorizontalOffset;
@@ -135,8 +136,9 @@ internal static partial class Program
         }
         ResizeViewer(viewer, 900);
         Check(viewer.ScrollableWidth < 0.5, "expanding viewport removes overflow");
-        Check(left.Visibility != Visibility.Visible && right.Visibility != Visibility.Visible,
-            $"real navigation controls hide on no-overflow: left={left.Visibility}, right={right.Visibility}, computed={viewer.ComputedHorizontalScrollBarVisibility}, extent={viewer.ExtentWidth}, viewport={viewer.ViewportWidth}, scrollable={viewer.ScrollableWidth}");
+        Check(((UIElement)VisualTreeHelper.GetParent(left)).Visibility == Visibility.Collapsed &&
+              ((UIElement)VisualTreeHelper.GetParent(right)).Visibility == Visibility.Collapsed,
+            $"real navigation containers collapse on no-overflow: computed={viewer.ComputedHorizontalScrollBarVisibility}, extent={viewer.ExtentWidth}, viewport={viewer.ViewportWidth}, scrollable={viewer.ScrollableWidth}");
     }
     private static void ProductionTaskListViewportBinding()
     {
@@ -174,6 +176,10 @@ internal static partial class Program
         try
         {
             var control = new TaskList();
+            // Normal production initialization happens from Loaded. This fixture is deliberately
+            // HWND-free, so initialise the same theme-dependent width fields explicitly.
+            typeof(TaskList).GetMethod("SetStyles", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(control, null);
             var items = (ItemsControl)control.FindName("TasksList");
             var viewer = (ScrollViewer)control.FindName("TasksScrollViewer");
             Check(items != null && viewer != null, "production TaskList exposes its real task items and scroll host");
@@ -208,7 +214,7 @@ internal static partial class Program
             Check(panel.ViewportWidth > 0 && Math.Abs(panel.ViewportWidth - viewer.ViewportWidth) < 1,
                 "production viewport ancestor binding resolves to the real ScrollViewer");
             Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto && viewer.ScrollableWidth > 0,
-                "production TaskList sizing enables horizontal overflow with rule ownership");
+                $"production TaskList sizing enables overflow: mode={viewer.HorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, buttonWidth={control.ButtonWidth}, count={items.Items.Count}, boundViewport={panel.ViewportWidth}");
 
             double widthAt210 = control.ButtonWidth;
             Measure(165);
