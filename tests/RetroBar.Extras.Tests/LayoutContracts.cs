@@ -180,7 +180,7 @@ internal static partial class Program
         // Prior settings.json snapshots normally contain RowLimit=5. They must
         // not retain the old cap after upgrading, and saved row counts survive.
         object oldProfile = JsonSerializer.Deserialize(
-            "{\\"RowLimit\\":5,\\"RowCount\\":5}", settings.Type);
+            """{"RowLimit":5,"RowCount":5}""", settings.Type);
         Check((int)rowLimit.GetValue(oldProfile) == 16 &&
               (int)rowCount.GetValue(oldProfile) == 5,
             "old five-row settings load with the new sixteen-row limit");
