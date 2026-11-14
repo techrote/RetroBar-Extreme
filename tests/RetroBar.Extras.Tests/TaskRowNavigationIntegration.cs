@@ -143,7 +143,7 @@ internal static partial class Program
     private static void ProductionTaskListViewportBinding()
     {
         using var settings = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow",
-            "RowCount", "TaskButtonWidthPx", "Edge");
+            "RowCount", "TaskButtonWidthPx", "TaskButtonAppRules", "Edge");
         using var theme = new NavigationThemeScope();
         settings.Set("TaskRowRules", new List<TaskRowRule>
         {
@@ -256,10 +256,15 @@ internal static partial class Program
                 panel.InvalidateMeasure();
                 Measure(width, 2);
                 Measure(width, 2);
+                // Configured button widths are no longer compressed under row rules.
+                // Below 180 DIPs even two 83-DIP buttons per row legitimately need
+                // horizontal access; at 180+ the same relaxed rule fits without arrows.
+                bool relaxedNeedsScroll = width < 180;
+                Visibility expectedRelaxedArrows = relaxedNeedsScroll ? Visibility.Visible : Visibility.Collapsed;
                 Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto &&
-                      viewer.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed &&
-                      viewer.ScrollableWidth < 0.5,
-                    $"fresh relaxed rows should fit at width {width}: mode={viewer.HorizontalScrollBarVisibility}, computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
+                      viewer.ComputedHorizontalScrollBarVisibility == expectedRelaxedArrows &&
+                      (relaxedNeedsScroll ? viewer.ScrollableWidth > 1 : viewer.ScrollableWidth < 0.5),
+                    $"fresh relaxed rows must match actual fixed-width occupancy at width {width}: expected={expectedRelaxedArrows}, computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
 
                 settings.Set("TaskRowRules", constrained);
                 panel.InvalidateMeasure();
@@ -273,9 +278,9 @@ internal static partial class Program
                 panel.InvalidateMeasure();
                 Measure(width, 2);
                 Measure(width, 2);
-                Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed &&
-                      viewer.ScrollableWidth < 0.5,
-                    $"P2 arrow hysteresis: relaxed rows must remove stale arrows at width {width}: computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
+                Check(viewer.ComputedHorizontalScrollBarVisibility == expectedRelaxedArrows &&
+                      (relaxedNeedsScroll ? viewer.ScrollableWidth > 1 : viewer.ScrollableWidth < 0.5),
+                    $"P2 arrow hysteresis: relaxed rows must return to their fresh fixed-width state at width {width}: expected={expectedRelaxedArrows}, computed={viewer.ComputedHorizontalScrollBarVisibility}, scrollable={viewer.ScrollableWidth}, viewport={viewer.ViewportWidth}, outer={viewer.ActualWidth}, button={control.ButtonWidth}");
                 Check(DescendantsOfType<TaskButton>(control).Count() == 4,
                     "arrow-state transition retains all four production task buttons");
             }
@@ -296,6 +301,19 @@ internal static partial class Program
             var fullButtons = DescendantsOfType<TaskButton>(control).ToArray();
             Check(fullButtons.Length == 4 && fullButtons.All(button => button.ActualWidth >= 239),
                 "all four production task buttons retain the configured full width");
+            settings.Set("TaskButtonAppRules", new List<TaskButtonAppRule>
+            {
+                new TaskButtonAppRule { App = "integration0.exe", Width = 320 },
+            });
+            panel.InvalidateMeasure();
+            Measure(200, 2);
+            var wideButton = DescendantsOfType<TaskButton>(control).Single(button =>
+                ((ManagedShell.WindowsTasks.ApplicationWindow)button.DataContext).WinFileName.EndsWith("integration0.exe"));
+            Check(wideButton.ActualWidth >= 319,
+                $"per-app wide-button override must not be clipped by row compression: actual={wideButton.ActualWidth}");
+            Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Visible && viewer.ScrollableWidth > 0,
+                "per-app wider face remains horizontally reachable");
+
             Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Visible &&
                   viewer.ScrollableWidth >= 2 * 239,
                 $"full-width task buttons must overflow horizontally rather than be clipped without navigation: computed={viewer.ComputedHorizontalScrollBarVisibility}, extent={viewer.ExtentWidth}, viewport={viewer.ViewportWidth}");
