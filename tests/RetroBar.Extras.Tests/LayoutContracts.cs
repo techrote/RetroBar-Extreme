@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -162,6 +163,75 @@ internal static partial class Program
         Vector bottomOffset = VisualTreeHelper.GetOffset(bottomButton);
         Check(Math.Abs(bottomOffset.X - 200) < 0.01 && Math.Abs(bottomOffset.Y - 20) < 0.01,
             "row assignment is retained while overlapping alignment is resolved once");
+    }
+
+    // The owner can now select sixteen physical taskbar rows. Check the public
+    // selection range, legacy saved RowLimit=5 and row-16/lowest placement against
+    // real STA WPF Measure/Arrange without constructing a shell taskbar.
+    private static void SixteenRowCapacity()
+    {
+        using var settings = new LayoutSettingsScope("RowCount", "TaskRowRules",
+            "TaskEndApps", "TaskEndAppsBottomRow");
+        var rowLimit = settings.Type.GetProperty("RowLimit");
+        var rowCount = settings.Type.GetProperty("RowCount");
+        Check((int)rowLimit.GetValue(settings.Instance) == 16,
+            "taskbar row count selector and drag-resize limit reach 16");
+
+        // Prior settings.json snapshots normally contain RowLimit=5. They must
+        // not retain the old cap after upgrading, and saved row counts survive.
+        object oldProfile = JsonSerializer.Deserialize(
+            "{\\"RowLimit\\":5,\\"RowCount\\":5}", settings.Type);
+        Check((int)rowLimit.GetValue(oldProfile) == 16 &&
+              (int)rowCount.GetValue(oldProfile) == 5,
+            "old five-row settings load with the new sixteen-row limit");
+        rowCount.SetValue(oldProfile, 16);
+        Check((int)rowCount.GetValue(oldProfile) == 16,
+            "row 16 is accepted by the settings model");
+        rowCount.SetValue(oldProfile, 17);
+        Check((int)rowCount.GetValue(oldProfile) == 16,
+            "row 17 is rejected instead of growing the taskbar beyond the limit");
+        rowCount.SetValue(oldProfile, 0);
+        Check((int)rowCount.GetValue(oldProfile) == 1,
+            "row count stays at least one");
+
+        var strings = (ResourceDictionary)Application.LoadComponent(
+            new Uri("/RetroBar;component/Controls/LayoutStrings.xaml", UriKind.Relative));
+        var choices = (string[])strings["uxui_rows_values"];
+        Check(choices.Length == 17 && choices[0].Contains("1") &&
+              choices[15].Contains("16") && choices[16] == "Lowest row",
+            "Layout editor exposes rows 1..16 plus the relative lowest-row rule");
+        var lastIndex = typeof(LayoutEditor).GetField(
+            "LastRowChoice", BindingFlags.NonPublic | BindingFlags.Static);
+        Check(lastIndex != null && (int)lastIndex.GetRawConstantValue() == 16,
+            "relative lowest-row picker maps index 16 to row -1");
+
+        settings.Set("RowCount", 16);
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, Apps = "first", OnlyListed = true },
+            new TaskRowRule { Row = 16, Apps = "last", OnlyListed = true },
+            new TaskRowRule { Row = -1, Align = TaskButtonAlignOption.Right },
+        });
+        var (viewer, panel, items) = RowFixture(16, 180,
+            ("first", 92), ("ordinary", 82),
+            ("last", 90), ("last", 90), ("last", 90));
+        Check(Math.Abs(Y(items[0])) < 0.5,
+            "explicit top-row rule remains on row 1");
+        Check(Math.Abs(Y(items[1]) - 18) < 0.5,
+            "unmatched task avoids the exclusive first and sixteenth rows");
+        foreach (int index in new[] { 2, 3, 4 })
+            Check(Math.Abs(Y(items[index]) - 15 * 18) < 0.5,
+                "explicit row 16 matches relative lowest physical row");
+        Check(panel.DesiredSize.Height >= 16 * 18,
+            "the content extent includes all sixteen physical rows");
+        Check(viewer.ScrollableWidth > 0,
+            "overflow on row 16 exposes horizontal navigation");
+        viewer.ScrollToRightEnd();
+        viewer.UpdateLayout();
+        Check(viewer.HorizontalOffset > 0,
+            "the last task on row 16 remains reachable");
     }
 
     // Regression for #37: ScrollContentPresenter measures the content with infinite width.
