@@ -163,4 +163,42 @@ internal static partial class Program
         Check(Math.Abs(bottomOffset.X - 200) < 0.01 && Math.Abs(bottomOffset.Y - 20) < 0.01,
             "row assignment is retained while overlapping alignment is resolved once");
     }
+
+    // Regression for #37: ScrollContentPresenter measures the content with infinite width.
+    // A rule that reserves row 1 must still keep every unmatched button in row 2;
+    // the second row may extend horizontally, but may not silently reassign tasks to row 1.
+    private static void ConstrainedRowOverflowRed()
+    {
+        using var settings = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow", "RowCount");
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("RowCount", 2);
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, Apps = "reserved-app", OnlyListed = true },
+        });
+
+        var panel = new TaskRowPanel { Orientation = Orientation.Horizontal };
+        var buttons = Enumerable.Range(0, 9).Select(_ => new Border { Width = 92, Height = 18 }).ToArray();
+        foreach (var button in buttons)
+            panel.Children.Add(button);
+
+        var viewer = new ScrollViewer
+        {
+            Content = panel,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        };
+        viewer.Measure(new Size(184, 48));
+        viewer.Arrange(new Rect(0, 0, 184, 48));
+        viewer.UpdateLayout();
+
+        foreach (var button in buttons)
+            Check(Math.Abs(VisualTreeHelper.GetOffset(button).Y - 18) < 0.5,
+                "under infinite-width ScrollViewer measure, an exclusive rule keeps unmatched tasks in row 2");
+        Check(viewer.ScrollableWidth >= 500, "overflowed constrained row contributes real horizontal extent");
+        viewer.ScrollToRightEnd();
+        viewer.UpdateLayout();
+        Check(viewer.HorizontalOffset > 0, "WPF can scroll to the off-screen task buttons");
+    }
 }

@@ -30,6 +30,30 @@ jobs:
         Profile: ${{ matrix.publishprofile[0] }}
         Framework: ${{ matrix.publishprofile[1] }}
 
+    - name: Record exact build provenance
+      shell: pwsh
+      env:
+        Profile: ${{ matrix.publishprofile[0] }}
+        Framework: ${{ matrix.publishprofile[1] }}
+        SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        $sourceHead = $env:SOURCE_HEAD
+        $sourceTree = (git rev-parse ($sourceHead + '^{tree}')).Trim()
+        $testedCommit = (git rev-parse HEAD).Trim()
+        $testedTree = (git rev-parse 'HEAD^{tree}').Trim()
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $manifest = [ordered]@{
+          source_head = $sourceHead
+          source_tree = $sourceTree
+          tested_commit = $testedCommit
+          tested_tree = $testedTree
+          workflow_run = $env:GITHUB_RUN_ID
+          workflow_attempt = $env:GITHUB_RUN_ATTEMPT
+        }
+        $destination = "RetroBar\\bin\\Release\\$env:Framework\\publish-$env:Profile\\source-provenance.json"
+        $manifest | ConvertTo-Json | Set-Content -LiteralPath $destination -Encoding utf8
+        Write-Host "Published source $sourceHead tree $sourceTree; CI checkout $testedCommit tree $testedTree"
+
     - name: Copy license
       run: cp DistLicense.txt RetroBar\bin\Release\${{ matrix.publishprofile[1] }}\publish-${{ matrix.publishprofile[0] }}\License.txt
 

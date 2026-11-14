@@ -485,15 +485,43 @@
                 <ControlTemplate TargetType="{x:Type ScrollViewer}">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ScrollContentPresenter Grid.Column="0"
+                        <!-- The two narrow buttons consume space only while content overflows.
+                             ScrollViewer reports the reduced finite viewport to TaskRowPanel. -->
+                        <Grid Grid.Column="0"
+                              Style="{DynamicResource TaskListScrollButtonGrid}"
+                              Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}">
+                            <RepeatButton Command="ScrollBar.PageLeftCommand"
+                                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                          Style="{DynamicResource TaskListScrollButton}"
+                                          Focusable="False"
+                                          MinWidth="16"
+                                          ToolTip="Scroll tasks left">
+                                <TextBlock Style="{DynamicResource TaskListScrollButtonText}">3</TextBlock>
+                            </RepeatButton>
+                        </Grid>
+                        <ScrollContentPresenter Grid.Column="1"
                                                 Width="{TemplateBinding Width}"
                                                 Height="{TemplateBinding Height}"
                                                 CanContentScroll="{TemplateBinding CanContentScroll}"
                                                 Content="{TemplateBinding Content}" />
-                        <Grid Grid.Column="1"
+                        <Grid Grid.Column="2"
+                              Style="{DynamicResource TaskListScrollButtonGrid}"
+                              Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}">
+                            <RepeatButton Command="ScrollBar.PageRightCommand"
+                                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                          Style="{DynamicResource TaskListScrollButton}"
+                                          Focusable="False"
+                                          MinWidth="16"
+                                          ToolTip="Scroll tasks right">
+                                <TextBlock Style="{DynamicResource TaskListScrollButtonText}">4</TextBlock>
+                            </RepeatButton>
+                        </Grid>
+                        <Grid Grid.Column="3"
                               Style="{DynamicResource TaskListScrollButtonGrid}"
                               Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}">
                             <Grid.RowDefinitions>

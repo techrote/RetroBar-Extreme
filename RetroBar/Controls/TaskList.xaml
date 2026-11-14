@@ -46,6 +46,8 @@
                       x:Name="TasksScrollViewer"
                       Focusable="False"
                       PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
+                      SizeChanged="TasksScrollViewer_SizeChanged"
+                      HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="TasksList"
                           Focusable="False"
@@ -55,7 +57,8 @@
                           dd:DragDrop.DragDropContext="TaskList">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}">
+                        <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}"
+                                            ViewportWidth="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}">
                             <WrapPanel.Orientation>
                                 <Binding Converter="{StaticResource orientationConverter}"
                                          Path="Orientation"

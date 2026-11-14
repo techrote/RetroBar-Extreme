@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using ManagedShell.WindowsTasks;
 using RetroBar.Utilities;
 
@@ -20,32 +21,66 @@ namespace RetroBar.Controls
         private Rect[] _slots = Array.Empty<Rect>();
         private bool _custom;
 
+        // In a ScrollViewer the scrolling dimension is measured with infinity. Its finite,
+        // computed viewport comes from a binding in the ItemsPanelTemplate instead.
+        public static readonly DependencyProperty ViewportWidthProperty =
+            DependencyProperty.Register(nameof(ViewportWidth), typeof(double), typeof(TaskRowPanel),
+                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        public double ViewportWidth
+        {
+            get => (double)GetValue(ViewportWidthProperty);
+            set => SetValue(ViewportWidthProperty, value);
+        }
+
         public TaskRowPanel()
         {
             Loaded += (s, e) => Settings.Instance.PropertyChanged += Settings_PropertyChanged;
             Unloaded += (s, e) => Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            AddHandler(Keyboard.GotKeyboardFocusEvent,
+                new KeyboardFocusChangedEventHandler(OnDescendantKeyboardFocus), true);
+        }
+
+        private void OnDescendantKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            // Route focus through WPF's RequestBringIntoView/ScrollContentPresenter rather than
+            // changing focus, activating the task, or maintaining a second scroll offset.
+            if (_custom && e.OriginalSource is FrameworkElement focused)
+            {
+                focused.BringIntoView();
+            }
         }
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Settings.TaskRowRules) || e.PropertyName == nameof(Settings.TaskEndApps) ||
-                e.PropertyName == nameof(Settings.TaskEndAppsBottomRow) || e.PropertyName == nameof(Settings.RowCount))
+                e.PropertyName == nameof(Settings.TaskEndAppsBottomRow) || e.PropertyName == nameof(Settings.RowCount) ||
+                e.PropertyName == nameof(Settings.TaskButtonAppRules) || e.PropertyName == nameof(Settings.TaskButtonWidthPx) ||
+                e.PropertyName == nameof(Settings.TaskbarScale) || e.PropertyName == nameof(Settings.ScalingMode))
             {
                 InvalidateMeasure();
             }
         }
 
-        private static bool HasRules =>
-            (Settings.Instance.TaskRowRules?.Any(r => !string.IsNullOrWhiteSpace(r.Apps) || r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0) ?? false) ||
+        internal static bool HasRules =>
+            (Settings.Instance.TaskRowRules?.Any(r => r != null && (!string.IsNullOrWhiteSpace(r.Apps) || r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0)) ?? false) ||
             !string.IsNullOrWhiteSpace(Settings.Instance.TaskEndApps);
 
         protected override Size MeasureOverride(Size constraint)
         {
-            _custom = Orientation == Orientation.Horizontal && HasRules && !double.IsInfinity(constraint.Width);
+            _custom = Orientation == Orientation.Horizontal && HasRules;
             if (!_custom)
             {
+                _slots = Array.Empty<Rect>();
+                _totalHeight = 0;
                 return base.MeasureOverride(constraint);
             }
+
+            // Viewport is the finite *packing* width; desired width is the full scroll
+            // *extent*. Keeping them separate prevents infinite-width ScrollViewer measure
+            // from disabling row rules or allowing content width to feed back into packing.
+            double rowWidth = double.IsFinite(constraint.Width) ? Math.Max(0, constraint.Width) :
+                double.IsFinite(ViewportWidth) ? Math.Max(0, ViewportWidth) : 0;
 
             var unlimited = new Size(double.PositiveInfinity, double.PositiveInfinity);
             UIElement[] children = InternalChildren.Cast<UIElement>().Where(c => c.Visibility != Visibility.Collapsed).ToArray();
@@ -58,14 +93,22 @@ namespace RetroBar.Controls
             if (rowHeight <= 0)
             {
                 _slots = Array.Empty<Rect>();
-                return new Size(0, 0);
+                _totalHeight = 0;
+                return new Size(rowWidth, 0);
             }
 
+            // A scrolling host can allocate fewer vertical pixels when its native scrollbar
+            // appears; that is not permission to remove a configured task row. The real
+            // Taskbar always provides authoritative Rows. Unhosted WPF ScrollViewer fixtures
+            // use the configured count, while direct-panel tests retain their height fallback.
             int rows = Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
-                : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount) : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
-            _slots = Place(children, rows, rowHeight, constraint.Width);
-            double width = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
-            return new Size(width, _slots.Length == 0 ? rows * rowHeight : Math.Max(rows * rowHeight, _totalHeight));
+                : IsInsideScrollViewer() ? Math.Max(1, Settings.Instance.RowCount)
+                : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount)
+                : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
+            _slots = Place(children, rows, rowHeight, rowWidth);
+            double extent = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
+            return new Size(Math.Max(rowWidth, extent),
+                _slots.Length == 0 ? rows * rowHeight : Math.Max(rows * rowHeight, _totalHeight));
         }
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -83,12 +126,27 @@ namespace RetroBar.Controls
             return finalSize;
         }
 
+        private bool IsInsideScrollViewer()
+        {
+            DependencyObject parent = System.Windows.Media.VisualTreeHelper.GetParent(this);
+            while (parent != null)
+            {
+                if (parent is ScrollViewer)
+                {
+                    return true;
+                }
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            }
+            return false;
+        }
+
         private double _totalHeight;
 
         private Rect[] Place(UIElement[] children, int rows, double rowHeight, double rowWidth)
         {
             Settings settings = Settings.Instance;
             var rules = (settings.TaskRowRules ?? new List<TaskRowRule>())
+                .Where(r => r != null)
                 .Select(r => (row: r.Row > 0 ? r.Row - 1 : rows + r.Row, rule: r))
                 .Where(r => r.row >= 0 && r.row < rows)
                 .ToList();
@@ -136,6 +194,10 @@ namespace RetroBar.Controls
 
                 // The first allowed row (from the top) it fits in; if none has room, the shortest.
                 double width = children[i].DesiredSize.Width;
+                if (!double.IsFinite(width) || width < 0)
+                {
+                    width = 0;
+                }
                 allowed.Sort();
                 int row = allowed.FirstOrDefault(r => rowX[r] + width <= rowWidth + 0.5, -1);
                 if (row < 0)

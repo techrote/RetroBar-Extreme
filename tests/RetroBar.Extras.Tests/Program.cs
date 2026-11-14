@@ -51,6 +51,16 @@ internal static partial class Program
             ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
+            ("Constrained rows survive real WPF infinite-width ScrollViewer measure", ConstrainedRowOverflowRed),
+            ("Explicit/relative/exclusive/end-app overflow retains WPF row ownership", ConstrainedRowRouting),
+            ("One-row, narrow widths, resize, rule changes and DPI layout stay finite", ConstrainedRowResize),
+            ("Adjusted row heights remain reachable on both scroll axes", HeightAdjustmentAccessibility),
+            ("Keyboard focus requests scroll off-screen task buttons into view", ConstrainedRowFocus),
+            ("No-rule WrapPanel and vertical scrolling stay unchanged", LegacyRowModes),
+            ("Per-app width, icon and label rules remain intact", PerAppRowPresentation),
+            ("Shared task-list navigation template retains overflow-only controls", TaskNavigationTemplate),
+            ("Production task-list navigation template clicks and narrow extents", ExecutableNavigationTemplate),
+            ("Production TaskList ItemsPanel binding and sizing through overflow/resize/rule removal", ProductionTaskListViewportBinding),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }

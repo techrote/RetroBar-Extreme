@@ -16,7 +16,8 @@ namespace RetroBar.Controls
     public partial class TaskList : UserControl
     {
         private bool isLoaded;
-        private bool isScrollable;
+        private bool isVerticalScrollable;
+        private bool isHorizontalScrollable;
         private double DefaultButtonWidth;
         private double MinButtonWidth;
         private double TaskButtonLeftMargin;
@@ -182,9 +183,22 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.TaskButtonWidthPx)) // UXUI-Extreme (UX-014)
+            if (e.PropertyName == nameof(Settings.TaskButtonWidthPx) ||
+                e.PropertyName == nameof(Settings.TaskbarScale) ||
+                e.PropertyName == nameof(Settings.ScalingMode) ||
+                e.PropertyName == nameof(Settings.Theme) ||
+                e.PropertyName == nameof(Settings.Edge))
             {
                 SetStyles();
+                SetTaskButtonWidth();
+                return;
+            }
+
+            if (e.PropertyName == nameof(Settings.TaskRowRules) ||
+                e.PropertyName == nameof(Settings.TaskEndApps) ||
+                e.PropertyName == nameof(Settings.TaskEndAppsBottomRow) ||
+                e.PropertyName == nameof(Settings.RowCount))
+            {
                 SetTaskButtonWidth();
                 return;
             }
@@ -299,10 +313,31 @@ namespace RetroBar.Controls
             SetTaskButtonWidth();
         }
 
+        private void TasksScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // The ScrollViewer, not ItemsControl's expanding extent, owns the finite width.
+            if (e.WidthChanged)
+            {
+                SetTaskButtonWidth();
+            }
+        }
+
         private void SetTaskButtonWidth()
         {
             if (Host is null)
                 return; // The state is trashed, but presumably it's just a transition
+
+            ConfigureButtonLayout(Host.Orientation, Host.Rows);
+        }
+
+        // A single production sizing routine also permits a WPF layout fixture to supply
+        // rows/orientation without creating a shell-managed AppBarWindow or taskbar instance.
+        private void ConfigureButtonLayout(Orientation orientation, int rowCount)
+        {
+            bool ruleConstrained = orientation == Orientation.Horizontal &&
+                Settings.Instance.Edge != AppBarEdge.Left && Settings.Instance.Edge != AppBarEdge.Right &&
+                TaskRowPanel.HasRules;
+            SetHorizontalScrollable(ruleConstrained);
 
             if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
             {
@@ -312,15 +347,27 @@ namespace RetroBar.Controls
                 return;
             }
 
-            double height = ActualHeight;
-            int rows = Host.Rows;
+            int rows = Math.Max(1, rowCount);
 
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex
 
+            // Stable during an overflowing layout: TasksList.ActualWidth is the content
+            // extent and must never determine button widths. The outer ScrollViewer
+            // remains finite even when the navigation controls become visible.
+            double viewport = TasksScrollViewer.ActualWidth;
+            if (!double.IsFinite(viewport) || viewport <= 0)
+            {
+                viewport = ActualWidth;
+            }
+            if (!double.IsFinite(viewport) || viewport <= 0)
+            {
+                return; // A later size-change supplies the real viewport.
+            }
+
             double margin = TaskButtonLeftMargin + TaskButtonRightMargin;
             ButtonsPerRow = Math.Max(1, (int)Math.Ceiling((double)taskCount / rows));
-            double maxWidth = TasksList.ActualWidth / ButtonsPerRow;
+            double maxWidth = viewport / ButtonsPerRow;
             double defaultWidth = DefaultButtonWidth + margin;
             double minWidth = MinButtonWidth + margin;
 
@@ -329,12 +376,14 @@ namespace RetroBar.Controls
                 // Room to spare: keep the default width and leave the trailing gap.
                 ExtraWidthCount = 0;
                 ButtonWidth = defaultWidth;
-                SetScrollable(false);
+                SetScrollable(ruleConstrained);
             }
             else if (maxWidth < minWidth)
             {
                 ExtraWidthCount = 0;
-                ButtonWidth = Math.Ceiling(defaultWidth / 2);
+                ButtonWidth = ruleConstrained
+                    ? Math.Max(minWidth, Math.Ceiling(defaultWidth / 2))
+                    : Math.Ceiling(defaultWidth / 2);
                 SetScrollable(true);
             }
             else
@@ -343,30 +392,34 @@ namespace RetroBar.Controls
                 // across the columns so the row fills the taskbar.
                 double baseWidth = Math.Floor(maxWidth);
                 ButtonWidth = baseWidth;
-                ExtraWidthCount = (int)Math.Floor(TasksList.ActualWidth) - (int)baseWidth * ButtonsPerRow;
-                SetScrollable(false);
+                ExtraWidthCount = Math.Max(0, (int)Math.Floor(viewport) - (int)baseWidth * ButtonsPerRow);
+                SetScrollable(ruleConstrained);
             }
         }
 
         private void SetScrollable(bool canScroll)
         {
-            if (canScroll == isScrollable) return;
+            if (canScroll == isVerticalScrollable) return;
 
-            if (canScroll)
-            {
-                TasksScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            }
-            else
-            {
-                TasksScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-            }
+            TasksScrollViewer.VerticalScrollBarVisibility = canScroll
+                ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
+            isVerticalScrollable = canScroll;
+        }
 
-            isScrollable = canScroll;
+        private void SetHorizontalScrollable(bool canScroll)
+        {
+            if (canScroll == isHorizontalScrollable) return;
+
+            // The shared theme draws compact arrows only if ComputedHorizontalScrollBarVisibility
+            // becomes Visible. Do not use WPF's full horizontal scrollbar or alter vertical mode.
+            TasksScrollViewer.HorizontalScrollBarVisibility = canScroll
+                ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
+            isHorizontalScrollable = canScroll;
         }
 
         private void TasksScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
-            if (!isScrollable && Settings.Instance.TaskWheelAction == TaskWheelActionOption.DoNothing)
+            if (!isVerticalScrollable && Settings.Instance.TaskWheelAction == TaskWheelActionOption.DoNothing)
             {
                 e.Handled = true;
             }
