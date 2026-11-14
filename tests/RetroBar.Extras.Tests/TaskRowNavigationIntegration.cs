@@ -329,6 +329,42 @@ internal static partial class Program
             Measure(200, 2);
             Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
                 "legacy no-rule WrapPanel does not inherit new full-width scrolling");
+
+            // Reproduce the user's full taskbar geometry: TaskList is the last fill
+            // child in a DockPanel, with a fixed-width notification/tray area docked
+            // to the right. An isolated TaskList fixture cannot catch host-allocation
+            // regressions at precisely this edge of the screen.
+            settings.Set("TaskRowRules", constrained);
+            panel.InvalidateMeasure();
+            var barDock = new DockPanel();
+            var tray = new Border { Width = 120, Height = 52 };
+            DockPanel.SetDock(tray, Dock.Right);
+            barDock.Children.Add(tray);
+            barDock.Children.Add(control);
+            for (int pass = 0; pass < 3; pass++)
+            {
+                SetLayout(2);
+                barDock.InvalidateMeasure();
+                barDock.Measure(new Size(320, 52));
+                barDock.Arrange(new Rect(0, 0, 320, 52));
+                barDock.UpdateLayout();
+            }
+            Check(Math.Abs(control.ActualWidth - 200) < 1,
+                $"host DockPanel reserves the trailing tray: taskArea={control.ActualWidth}, tray={tray.ActualWidth}");
+            Check(control.ButtonWidth >= 240 &&
+                  DescendantsOfType<TaskButton>(control).Any(button => button.ActualWidth >= 319),
+                "docked production task buttons keep default and wide per-app widths");
+            Check(viewer.ComputedHorizontalScrollBarVisibility == Visibility.Visible &&
+                  viewer.ScrollableWidth > 2 * 239,
+                $"task area beside a tray uses horizontal navigation instead of button clipping: outer={viewer.ActualWidth}, extent={viewer.ExtentWidth}, scrollable={viewer.ScrollableWidth}");
+            double viewerRight = viewer.TranslatePoint(new Point(viewer.ActualWidth, 0), barDock).X;
+            double trayLeft = tray.TranslatePoint(new Point(0, 0), barDock).X;
+            Check(viewerRight <= trayLeft + 0.5,
+                $"scroll host remains entirely to the left of the notification tray: viewerRight={viewerRight}, trayLeft={trayLeft}");
+            viewer.ScrollToRightEnd();
+            viewer.UpdateLayout();
+            Check(viewer.HorizontalOffset > 2 * 239,
+                "the last full-width button stays reachable with the real trailing tray layout");
         }
         finally
         {
