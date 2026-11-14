@@ -59,6 +59,7 @@ internal static partial class Program
             ("No-rule WrapPanel and vertical scrolling stay unchanged", LegacyRowModes),
             ("Per-app width, icon and label rules remain intact", PerAppRowPresentation),
             ("Shared task-list navigation template retains overflow-only controls", TaskNavigationTemplate),
+            ("Production task-list navigation template clicks and narrow extents", ExecutableNavigationTemplate),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }
