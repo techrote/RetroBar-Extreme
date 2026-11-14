@@ -33,6 +33,19 @@ namespace RetroBar.Controls
             set => SetValue(ViewportWidthProperty, value);
         }
 
+        // Width of the scroll host with *horizontal* arrow chrome removed. The actual
+        // viewport is smaller after arrows appear; keep an independent no-arrow bound
+        // so a formerly-overflowing layout can relinquish its navigation controls.
+        public static readonly DependencyProperty OuterViewportWidthProperty =
+            DependencyProperty.Register(nameof(OuterViewportWidth), typeof(double), typeof(TaskRowPanel),
+                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        public double OuterViewportWidth
+        {
+            get => (double)GetValue(OuterViewportWidthProperty);
+            set => SetValue(OuterViewportWidthProperty, value);
+        }
+
         public TaskRowPanel()
         {
             Loaded += (s, e) => Settings.Instance.PropertyChanged += Settings_PropertyChanged;
@@ -101,14 +114,40 @@ namespace RetroBar.Controls
             // appears; that is not permission to remove a configured task row. The real
             // Taskbar always provides authoritative Rows. Unhosted WPF ScrollViewer fixtures
             // use the configured count, while direct-panel tests retain their height fallback.
+            ScrollViewer scrollHost = FindScrollViewer();
             int rows = Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
-                : IsInsideScrollViewer() ? Math.Max(1, Settings.Instance.RowCount)
+                : scrollHost != null ? Math.Max(1, Settings.Instance.RowCount)
                 : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount)
                 : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
             _slots = Place(children, rows, rowHeight, rowWidth);
             double extent = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
-            return new Size(Math.Max(rowWidth, extent),
-                _slots.Length == 0 ? rows * rowHeight : Math.Max(rows * rowHeight, _totalHeight));
+            double totalHeight = Math.Max(rows * rowHeight, _totalHeight);
+
+            // Auto navigation chrome reduces ViewportWidth, and that reduction can
+            // perpetuate its own overflow even when row rules have been relaxed.
+            // Evaluate the exact same rules and *fixed button widths* against the
+            // unoccluded outer width. If that layout fits, report a bounded extent
+            // for this measure pass, letting WPF collapse the arrows and remeasure
+            // the real, larger content viewport. Keep the no-arrow slots so there
+            // is no transient reassignment of applications between physical rows.
+            //
+            // A visible vertical navigation column also consumes outer width; do
+            // not mistake it for removable horizontal chrome.
+            if (scrollHost != null &&
+                scrollHost.ComputedVerticalScrollBarVisibility != Visibility.Visible &&
+                double.IsFinite(OuterViewportWidth) &&
+                OuterViewportWidth > rowWidth + 0.5)
+            {
+                Rect[] unoccluded = Place(children, rows, rowHeight, OuterViewportWidth);
+                double unoccludedExtent = unoccluded.Length == 0 ? 0 : unoccluded.Max(r => r.Right);
+                if (unoccludedExtent <= OuterViewportWidth + 0.5)
+                {
+                    _slots = unoccluded;
+                    return new Size(rowWidth, totalHeight);
+                }
+            }
+
+            return new Size(Math.Max(rowWidth, extent), totalHeight);
         }
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -126,18 +165,18 @@ namespace RetroBar.Controls
             return finalSize;
         }
 
-        private bool IsInsideScrollViewer()
+        private ScrollViewer FindScrollViewer()
         {
             DependencyObject parent = System.Windows.Media.VisualTreeHelper.GetParent(this);
             while (parent != null)
             {
-                if (parent is ScrollViewer)
+                if (parent is ScrollViewer viewer)
                 {
-                    return true;
+                    return viewer;
                 }
                 parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
             }
-            return false;
+            return null;
         }
 
         private double _totalHeight;
