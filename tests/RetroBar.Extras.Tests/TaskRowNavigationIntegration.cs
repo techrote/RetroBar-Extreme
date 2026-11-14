@@ -82,10 +82,15 @@ internal static partial class Program
 
     private static void ResizeViewer(ScrollViewer viewer, double width)
     {
-        viewer.InvalidateMeasure();
-        viewer.Measure(new Size(width, 52));
-        viewer.Arrange(new Rect(0, 0, width, 52));
-        viewer.UpdateLayout();
+        // A ScrollViewer can remeasure after its computed scrollbar state changes.
+        // Drive two synchronous STA layout passes, checking the settled result.
+        for (int pass = 0; pass < 2; pass++)
+        {
+            viewer.InvalidateMeasure();
+            viewer.Measure(new Size(width, 52));
+            viewer.Arrange(new Rect(0, 0, width, 52));
+            viewer.UpdateLayout();
+        }
     }
 
     private static void ExecutableNavigationTemplate()
@@ -131,7 +136,7 @@ internal static partial class Program
         ResizeViewer(viewer, 900);
         Check(viewer.ScrollableWidth < 0.5, "expanding viewport removes overflow");
         Check(left.Visibility != Visibility.Visible && right.Visibility != Visibility.Visible,
-            "real navigation controls hide automatically when overflow disappears");
+            $"real navigation controls hide on no-overflow: left={left.Visibility}, right={right.Visibility}, computed={viewer.ComputedHorizontalScrollBarVisibility}, extent={viewer.ExtentWidth}, viewport={viewer.ViewportWidth}, scrollable={viewer.ScrollableWidth}");
     }
     private static void ProductionTaskListViewportBinding()
     {
