@@ -249,6 +249,21 @@
                                 <ComboBox x:Name="cboThemeSelect"
                                           SelectedValue="{Binding Source={x:Static Settings:Settings.Instance}, Path=Theme, UpdateSourceTrigger=PropertyChanged}" />
                             </DockPanel>
+                            <!-- PLASMA-M0: compact, disabled-by-default background pilot. -->
+                            <CheckBox Content="Animated PlasmaTerm background (experimental)"
+                                      IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=PlasmaBackgroundEnabled, UpdateSourceTrigger=PropertyChanged}" />
+                            <DockPanel>
+                                <Label Content="Plasma FPS" VerticalAlignment="Center" Target="{Binding ElementName=sldPlasmaFps}" />
+                                <Slider x:Name="sldPlasmaFps" Width="193" HorizontalAlignment="Right"
+                                        Minimum="5" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=PlasmaFrameRate, UpdateSourceTrigger=PropertyChanged}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label Content="Plasma resolution divisor" VerticalAlignment="Center" Target="{Binding ElementName=sldPlasmaResolution}" />
+                                <Slider x:Name="sldPlasmaResolution" Width="193" HorizontalAlignment="Right"
+                                        Minimum="2" Maximum="8" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=PlasmaResolutionDivisor, UpdateSourceTrigger=PropertyChanged}" />
+                            </DockPanel>
                             <DockPanel>
                                 <Label VerticalAlignment="Center"
                                        Target="{Binding ElementName=cboEdgeSelect}">
