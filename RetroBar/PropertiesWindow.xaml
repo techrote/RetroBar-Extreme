@@ -266,7 +266,7 @@
                                     <AccessText Text="{DynamicResource rowcount_text}"
                                                 ToolTip="{DynamicResource rowcount_tip}" />
                                 </Label>
-                                <ComboBox x:Name="cboRowCount"
+                                <ComboBox x:Name="cboRowCount" MaxDropDownHeight="360"
                                           SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=RowCount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource countToIndexConverter}}"
                                           SelectionChanged="CboRowCount_SelectionChanged" />
                             </DockPanel>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -162,5 +163,147 @@ internal static partial class Program
         Vector bottomOffset = VisualTreeHelper.GetOffset(bottomButton);
         Check(Math.Abs(bottomOffset.X - 200) < 0.01 && Math.Abs(bottomOffset.Y - 20) < 0.01,
             "row assignment is retained while overlapping alignment is resolved once");
+    }
+
+    // The owner may select 32 physical taskbar rows. Check legacy settings,
+    // picker coverage and real STA WPF placement without starting ManagedShell.
+    private static void ThirtyTwoRowCapacity()
+    {
+        using var settings = new LayoutSettingsScope("RowCount", "TaskRowRules",
+            "TaskEndApps", "TaskEndAppsBottomRow");
+        var rowLimit = settings.Type.GetProperty("RowLimit");
+        var rowCount = settings.Type.GetProperty("RowCount");
+        Check((int)rowLimit.GetValue(settings.Instance) == 32,
+            "taskbar Properties selector and drag-resize maximum reach row 32");
+
+        // Older profiles may serialize either the five-row or sixteen-row cap.
+        // Preserve their selected row count, but do not resurrect their old cap.
+        object fiveRowProfile = JsonSerializer.Deserialize(
+            """{"RowLimit":5,"RowCount":5}""", settings.Type);
+        object sixteenRowProfile = JsonSerializer.Deserialize(
+            """{"RowLimit":16,"RowCount":16}""", settings.Type);
+        Check((int)rowLimit.GetValue(fiveRowProfile) == 32 &&
+              (int)rowCount.GetValue(fiveRowProfile) == 5,
+            "legacy five-row profile upgrades without changing its selected count");
+        Check((int)rowLimit.GetValue(sixteenRowProfile) == 32 &&
+              (int)rowCount.GetValue(sixteenRowProfile) == 16,
+            "legacy sixteen-row profile upgrades without changing its selected count");
+        rowCount.SetValue(fiveRowProfile, 16);
+        Check((int)rowCount.GetValue(fiveRowProfile) == 16,
+            "existing sixteen-row capacity remains available");
+        rowCount.SetValue(fiveRowProfile, 17);
+        Check((int)rowCount.GetValue(fiveRowProfile) == 17,
+            "new row 17 becomes available");
+        rowCount.SetValue(fiveRowProfile, 32);
+        Check((int)rowCount.GetValue(fiveRowProfile) == 32,
+            "row 32 is accepted by saved settings");
+        rowCount.SetValue(fiveRowProfile, 33);
+        Check((int)rowCount.GetValue(fiveRowProfile) == 32,
+            "row 33 is clamped to the supported upper bound");
+        rowCount.SetValue(fiveRowProfile, 0);
+        Check((int)rowCount.GetValue(fiveRowProfile) == 1,
+            "row count stays at least one");
+
+        var strings = (ResourceDictionary)Application.LoadComponent(
+            new Uri("/RetroBar;component/Controls/LayoutStrings.xaml", UriKind.Relative));
+        var choices = (string[])strings["uxui_rows_values"];
+        Check(choices.Length == 33 &&
+              choices[0].Contains("1") &&
+              choices[15] == "Row 16" &&
+              choices[16] == "Row 17" &&
+              choices[31] == "Row 32" &&
+              choices[32] == "Lowest row",
+            "row-rule editor exposes rows 1..32 followed by relative lowest row");
+        var lastIndex = typeof(LayoutEditor).GetField(
+            "LastRowChoice", BindingFlags.NonPublic | BindingFlags.Static);
+        Check(lastIndex != null && (int)lastIndex.GetRawConstantValue() == 32,
+            "row picker maps index 32 to relative row -1, not explicit row 33");
+
+        // Verify legacy explicit row 16 remains distinct from the dynamic lowest
+        // row when the physical taskbar contains thirty-two rows.
+        settings.Set("RowCount", 32);
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, Apps = "first", OnlyListed = true },
+            new TaskRowRule { Row = 16, Apps = "middle", OnlyListed = true },
+            new TaskRowRule { Row = 32, Apps = "last", OnlyListed = true },
+            new TaskRowRule { Row = -1, Apps = "bottom", OnlyListed = true, Align = TaskButtonAlignOption.Right },
+        });
+        var (viewer, panel, items) = RowFixture(32, 180,
+            ("first", 92), ("ordinary", 82),
+            ("middle", 84), ("bottom", 75),
+            ("last", 90), ("last", 90), ("last", 90));
+        Check(Math.Abs(Y(items[0])) < 0.5,
+            "first explicit rule retains physical row 1");
+        Check(Math.Abs(Y(items[1]) - 18) < 0.5,
+            "unmatched task avoids exclusive rows 1, 16 and 32");
+        Check(Math.Abs(Y(items[2]) - 15 * 18) < 0.5,
+            "explicit row 16 stays row 16 even when 32 rows exist");
+        foreach (int index in new[] { 3, 4, 5, 6 })
+            Check(Math.Abs(Y(items[index]) - 31 * 18) < 0.5,
+                "explicit row 32 and relative lowest app rule share row 32");
+        Check(panel.DesiredSize.Height >= 32 * 18 &&
+              double.IsFinite(panel.DesiredSize.Height),
+            "WPF content extent includes all 32 finite physical rows");
+        Check(viewer.ScrollableWidth > 0,
+            "three app buttons in row 32 retain horizontal overflow");
+        viewer.ScrollToRightEnd();
+        viewer.UpdateLayout();
+        Check(viewer.HorizontalOffset > 0,
+            "last row 32 task is horizontally reachable");
+
+        settings.Set("RowCount", 16);
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 16, Apps = "last", OnlyListed = true },
+            new TaskRowRule { Row = -1, Apps = "bottom", OnlyListed = true, Align = TaskButtonAlignOption.Centre },
+        });
+        var (oldViewer, oldPanel, oldItems) = RowFixture(16, 180,
+            ("bottom", 75), ("last", 90), ("last", 90), ("last", 90));
+        Check(oldItems.All(item => Math.Abs(Y(item) - 15 * 18) < 0.5),
+            "reducing from 32 to 16 retains lowest row semantics");
+        Check(oldPanel.DesiredSize.Height >= 16 * 18 &&
+              oldViewer.ScrollableWidth > 0,
+            "previous sixteen-row geometry and horizontal reachability remain intact");
+    }
+
+    // Regression for #37: ScrollContentPresenter measures the content with infinite width.
+    // A rule that reserves row 1 must still keep every unmatched button in row 2;
+    // the second row may extend horizontally, but may not silently reassign tasks to row 1.
+    private static void ConstrainedRowOverflowRed()
+    {
+        using var settings = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow", "RowCount");
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("RowCount", 2);
+        settings.Set("TaskRowRules", new List<TaskRowRule>
+        {
+            new TaskRowRule { Row = 1, Apps = "reserved-app", OnlyListed = true },
+        });
+
+        var panel = new TaskRowPanel { Orientation = Orientation.Horizontal };
+        var buttons = Enumerable.Range(0, 9).Select(_ => new Border { Width = 92, Height = 18 }).ToArray();
+        foreach (var button in buttons)
+            panel.Children.Add(button);
+
+        var viewer = new ScrollViewer
+        {
+            Content = panel,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        };
+        viewer.Measure(new Size(184, 48));
+        viewer.Arrange(new Rect(0, 0, 184, 48));
+        viewer.UpdateLayout();
+
+        foreach (var button in buttons)
+            Check(Math.Abs(VisualTreeHelper.GetOffset(button).Y - 18) < 0.5,
+                "under infinite-width ScrollViewer measure, an exclusive rule keeps unmatched tasks in row 2");
+        Check(viewer.ScrollableWidth >= 500, "overflowed constrained row contributes real horizontal extent");
+        viewer.ScrollToRightEnd();
+        viewer.UpdateLayout();
+        Check(viewer.HorizontalOffset > 0, "WPF can scroll to the off-screen task buttons");
     }
 }

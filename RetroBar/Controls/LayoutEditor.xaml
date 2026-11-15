@@ -336,7 +336,7 @@
                         <Label Target="{Binding ElementName=cboRowPick}">
                             <AccessText Text="{DynamicResource uxui_rows_row}" />
                         </Label>
-                        <ComboBox x:Name="cboRowPick"
+                        <ComboBox x:Name="cboRowPick" MaxDropDownHeight="360"
                                   ItemsSource="{DynamicResource uxui_rows_values}"
                                   SelectionChanged="RowPick_SelectionChanged" />
                     </DockPanel>
