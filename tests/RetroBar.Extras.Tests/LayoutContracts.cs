@@ -229,11 +229,11 @@ internal static partial class Program
             new TaskRowRule { Row = 1, Apps = "first", OnlyListed = true },
             new TaskRowRule { Row = 16, Apps = "middle", OnlyListed = true },
             new TaskRowRule { Row = 32, Apps = "last", OnlyListed = true },
-            new TaskRowRule { Row = -1, Align = TaskButtonAlignOption.Right },
+            new TaskRowRule { Row = -1, Apps = "bottom", OnlyListed = true, Align = TaskButtonAlignOption.Right },
         });
         var (viewer, panel, items) = RowFixture(32, 180,
             ("first", 92), ("ordinary", 82),
-            ("middle", 84),
+            ("middle", 84), ("bottom", 75),
             ("last", 90), ("last", 90), ("last", 90));
         Check(Math.Abs(Y(items[0])) < 0.5,
             "first explicit rule retains physical row 1");
@@ -241,9 +241,9 @@ internal static partial class Program
             "unmatched task avoids exclusive rows 1, 16 and 32");
         Check(Math.Abs(Y(items[2]) - 15 * 18) < 0.5,
             "explicit row 16 stays row 16 even when 32 rows exist");
-        foreach (int index in new[] { 3, 4, 5 })
+        foreach (int index in new[] { 3, 4, 5, 6 })
             Check(Math.Abs(Y(items[index]) - 31 * 18) < 0.5,
-                "explicit row 32 and relative lowest rule share row 32");
+                "explicit row 32 and relative lowest app rule share row 32");
         Check(panel.DesiredSize.Height >= 32 * 18 &&
               double.IsFinite(panel.DesiredSize.Height),
             "WPF content extent includes all 32 finite physical rows");
@@ -258,10 +258,10 @@ internal static partial class Program
         settings.Set("TaskRowRules", new List<TaskRowRule>
         {
             new TaskRowRule { Row = 16, Apps = "last", OnlyListed = true },
-            new TaskRowRule { Row = -1, Align = TaskButtonAlignOption.Centre },
+            new TaskRowRule { Row = -1, Apps = "bottom", OnlyListed = true, Align = TaskButtonAlignOption.Centre },
         });
         var (oldViewer, oldPanel, oldItems) = RowFixture(16, 180,
-            ("last", 90), ("last", 90), ("last", 90));
+            ("bottom", 75), ("last", 90), ("last", 90), ("last", 90));
         Check(oldItems.All(item => Math.Abs(Y(item) - 15 * 18) < 0.5),
             "reducing from 32 to 16 retains lowest row semantics");
         Check(oldPanel.DesiredSize.Height >= 16 * 18 &&
