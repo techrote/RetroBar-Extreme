@@ -109,6 +109,16 @@
         <system:String>Row 4</system:String>
         <system:String>Row 5</system:String>
         <system:String>Row 6</system:String>
+        <system:String>Row 7</system:String>
+        <system:String>Row 8</system:String>
+        <system:String>Row 9</system:String>
+        <system:String>Row 10</system:String>
+        <system:String>Row 11</system:String>
+        <system:String>Row 12</system:String>
+        <system:String>Row 13</system:String>
+        <system:String>Row 14</system:String>
+        <system:String>Row 15</system:String>
+        <system:String>Row 16</system:String>
         <system:String>Lowest row</system:String>
     </x:Array>
     <system:String x:Key="uxui_rows_align">Alig_n row:</system:String>

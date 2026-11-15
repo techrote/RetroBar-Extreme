@@ -320,18 +320,24 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _edge, value);
         }
 
+        // The maximum is part of the supported taskbar layout, not a per-profile cap.
+        // Older settings.json files saved RowLimit=5; honouring that stored default
+        // would prevent existing installations from selecting the new row range.
+        internal const int MaximumTaskbarRows = 16;
+
         private int _rowCount = 1;
         public int RowCount
         {
             get => _rowCount;
-            set => Set(ref _rowCount, value);
+            set => Set(ref _rowCount, Math.Clamp(value, 1, MaximumTaskbarRows));
         }
 
-        private int _rowLimit = 5;
+        // Keep the JSON property for backward compatibility, but no longer let a
+        // legacy five-row cap restrict the Properties picker or drag resizing.
         public int RowLimit
         {
-            get => _rowLimit;
-            set => Set(ref _rowLimit, value);
+            get => MaximumTaskbarRows;
+            set { }
         }
 
         private int _taskbarWidth = 1;
