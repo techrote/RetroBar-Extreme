@@ -13,7 +13,8 @@ a live taskbar until exact-source Windows visual acceptance.
   Disable the feature to remove the overlay and show the original theme.
 - Properties > Taskbar has an off-by-default checkbox, FPS slider (5–60,
   default 20) and resolution divisor slider (2–8, default 4), persisted in
-  settings.json. Live adjustment does not re-layout the taskbar.
+  settings.json. Live adjustment does not re-layout the taskbar or change
+  the plasma's spatial wavelength (16 physical pixels per plasma coordinate).
 - The per-window renderer reuses one BGRA buffer and WriteableBitmap until
   the window dimensions/resolution change; 262,144-pixel/1024-side caps.
   Animation stops on hide/unload/close and does not accumulate missed frames.

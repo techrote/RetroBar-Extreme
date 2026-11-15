@@ -87,7 +87,12 @@ namespace RetroBar
                     Stretch = Stretch.Fill, TileMode = TileMode.None,
                 };
             }
-            PlasmaRenderer.Render(_plasmaPixels, size.Width, size.Height, _plasmaClock.Elapsed.TotalSeconds);
+            // Keep the wave's spatial wavelength fixed when the user changes
+            // the resolution divisor. Plasma coordinates use 16 device pixels/cell.
+            double sampleX = PlasmaBackgroundSurface.ActualWidth * dpi.DpiScaleX / (16.0 * size.Width);
+            double sampleY = PlasmaBackgroundSurface.ActualHeight * dpi.DpiScaleY / (16.0 * size.Height);
+            PlasmaRenderer.Render(_plasmaPixels, size.Width, size.Height,
+                _plasmaClock.Elapsed.TotalSeconds, sampleX, sampleY);
             _plasmaBitmap.WritePixels(new Int32Rect(0, 0, size.Width, size.Height),
                 _plasmaPixels, size.Width * 4, 0);
         }

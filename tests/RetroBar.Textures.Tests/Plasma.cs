@@ -32,6 +32,16 @@ internal static partial class Program
         CheckPixel(first, 1, 0, 25, 0, 255);
         CheckPixel(first, 3, 1, 255, 0, 15);
         CheckPixel(first, 2, 2, 235, 0, 255);
+        // Same logical field at twice the raster resolution: every matching
+        // sample must retain its colour and position.
+        var fine = new byte[8 * 6 * 4];
+        PlasmaRenderer.Render(fine, 8, 6, 0, 0.5, 0.5);
+        for (int y = 0; y < 3; y++)
+            for (int x = 0; x < 4; x++)
+                for (int c = 0; c < 4; c++)
+                    Check(first[(y * 4 + x) * 4 + c] == fine[((y * 2) * 8 + x * 2) * 4 + c],
+                        "resolution-only changes preserve plasma position");
+        Throws<ArgumentOutOfRangeException>(() => PlasmaRenderer.Render(first, 4, 3, 0, double.NaN, 1));
         var moved = new byte[first.Length];
         PlasmaRenderer.Render(moved, 4, 3, 1.25);
         Check(!first.SequenceEqual(moved), "time advances field");

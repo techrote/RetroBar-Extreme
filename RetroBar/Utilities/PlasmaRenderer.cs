@@ -29,7 +29,8 @@ namespace RetroBar.Utilities
         }
 
         // Reuses caller's BGRA32 buffer. Same time, size and palette => same bytes.
-        public static void Render(byte[] pixels, int width, int height, double seconds)
+        public static void Render(byte[] pixels, int width, int height, double seconds,
+            double sampleX = 1.0, double sampleY = 1.0)
         {
             if (pixels == null) throw new ArgumentNullException(nameof(pixels));
             if (width < 1 || height < 1 || (long)width * height > MaxPixels)
@@ -39,17 +40,23 @@ namespace RetroBar.Utilities
             if (!double.IsFinite(seconds) || seconds < 0)
                 throw new ArgumentOutOfRangeException(nameof(seconds));
 
+            if (!double.IsFinite(sampleX) || !double.IsFinite(sampleY)
+                || sampleX <= 0 || sampleY <= 0 || sampleX > 256 || sampleY > 256)
+                throw new ArgumentOutOfRangeException(nameof(sampleX));
+
             double t = seconds * 2.0 * Speed;
-            double cx = width / 2.0, cy = height / 2.0;
+            double cx = width * sampleX / 2.0, cy = height * sampleY / 2.0;
             int hueOffset = (int)(seconds * 0.6 * Palette.Length / 360.0) % Palette.Length;
             for (int y = 0; y < height; y++)
             {
-                double waveY = Math.Sin(y * 0.45 - t * 1.2);
+                double py = y * sampleY;
+                double waveY = Math.Sin(py * 0.45 - t * 1.2);
                 for (int x = 0; x < width; x++)
                 {
-                    double value = (Math.Sin(x * 0.35 + t) + waveY
-                        + Math.Sin((x + y) * 0.25 + t * 0.6)
-                        + Math.Sin(Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) * 0.6 - t)) / 4.0;
+                    double px = x * sampleX;
+                    double value = (Math.Sin(px * 0.35 + t) + waveY
+                        + Math.Sin((px + py) * 0.25 + t * 0.6)
+                        + Math.Sin(Math.Sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)) * 0.6 - t)) / 4.0;
                     int index = Math.Min(255, (int)(Math.Clamp((value + 1.0) / 2.0, 0, 1) * 256));
                     uint argb = Palette[(index + hueOffset) % 256];
                     int offset = (y * width + x) * 4;
