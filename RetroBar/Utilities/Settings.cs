@@ -313,6 +313,28 @@ namespace RetroBar.Utilities
             set => Set(ref _useSoftwareRendering, value);
         }
 
+        // PLASMA-M0: opt-in visual effect; settings are independent from styles.
+        private bool _plasmaBackgroundEnabled = false;
+        public bool PlasmaBackgroundEnabled
+        {
+            get => _plasmaBackgroundEnabled;
+            set => Set(ref _plasmaBackgroundEnabled, value);
+        }
+
+        private int _plasmaFrameRate = 20;
+        public int PlasmaFrameRate
+        {
+            get => _plasmaFrameRate;
+            set => Set(ref _plasmaFrameRate, Math.Clamp(value, 5, 60));
+        }
+
+        private int _plasmaResolutionDivisor = 4;
+        public int PlasmaResolutionDivisor
+        {
+            get => _plasmaResolutionDivisor;
+            set => Set(ref _plasmaResolutionDivisor, Math.Clamp(value, 2, 8));
+        }
+
         private AppBarEdge _edge = AppBarEdge.Bottom;
         public AppBarEdge Edge
         {

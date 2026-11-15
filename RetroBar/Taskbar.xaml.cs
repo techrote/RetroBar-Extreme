@@ -58,6 +58,7 @@ namespace RetroBar
             this.hotkeyManager = hotkeyManager;
 
             InitializeComponent();
+            InitializePlasmaBackground();
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
 
@@ -125,7 +126,13 @@ namespace RetroBar
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.Theme))
+            if (e.PropertyName == nameof(Settings.PlasmaBackgroundEnabled)
+                || e.PropertyName == nameof(Settings.PlasmaFrameRate)
+                || e.PropertyName == nameof(Settings.PlasmaResolutionDivisor))
+            {
+                RefreshPlasmaBackground();
+            }
+            else if (e.PropertyName == nameof(Settings.Theme))
             {
                 bool newTransparency = AppBarMode == AppBarMode.AutoHide || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
 
