@@ -119,6 +119,22 @@
         <system:String>Row 14</system:String>
         <system:String>Row 15</system:String>
         <system:String>Row 16</system:String>
+        <system:String>Row 17</system:String>
+        <system:String>Row 18</system:String>
+        <system:String>Row 19</system:String>
+        <system:String>Row 20</system:String>
+        <system:String>Row 21</system:String>
+        <system:String>Row 22</system:String>
+        <system:String>Row 23</system:String>
+        <system:String>Row 24</system:String>
+        <system:String>Row 25</system:String>
+        <system:String>Row 26</system:String>
+        <system:String>Row 27</system:String>
+        <system:String>Row 28</system:String>
+        <system:String>Row 29</system:String>
+        <system:String>Row 30</system:String>
+        <system:String>Row 31</system:String>
+        <system:String>Row 32</system:String>
         <system:String>Lowest row</system:String>
     </x:Array>
     <system:String x:Key="uxui_rows_align">Alig_n row:</system:String>

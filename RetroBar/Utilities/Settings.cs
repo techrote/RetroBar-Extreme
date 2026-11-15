@@ -323,7 +323,7 @@ namespace RetroBar.Utilities
         // The maximum is part of the supported taskbar layout, not a per-profile cap.
         // Older settings.json files saved RowLimit=5; honouring that stored default
         // would prevent existing installations from selecting the new row range.
-        internal const int MaximumTaskbarRows = 16;
+        internal const int MaximumTaskbarRows = 32;
 
         private int _rowCount = 1;
         public int RowCount

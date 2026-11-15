@@ -12,7 +12,7 @@ namespace RetroBar.Controls
     // the end of the list. Rules save as you type.
     public partial class LayoutEditor
     {
-        private const int LastRowChoice = Settings.MaximumTaskbarRows; // rows 1-16, then relative "Lowest row"
+        private const int LastRowChoice = Settings.MaximumTaskbarRows; // rows 1-32, then relative "Lowest row"
         private bool _loadingRow;
 
         private int PickedRow => cboRowPick.SelectedIndex < 0 ? 1 : cboRowPick.SelectedIndex == LastRowChoice ? -1 : cboRowPick.SelectedIndex + 1;
