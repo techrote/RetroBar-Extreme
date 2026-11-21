@@ -27,6 +27,7 @@ namespace RetroBar
         private readonly double _dpiScale;
         private readonly NotificationArea _notificationArea;
         private readonly AppBarScreen _screen;
+        private readonly AppBarEdge _ownerEdge;
 
         private FileSystemWatcher _themesWatcher;
 
@@ -68,13 +69,14 @@ namespace RetroBar
             get => 1;
         }
 
-        private PropertiesWindow(NotificationArea notificationArea, DictionaryManager dictionaryManager, AppBarScreen screen, double dpiScale, double barSize)
+        private PropertiesWindow(NotificationArea notificationArea, DictionaryManager dictionaryManager, AppBarScreen screen, double dpiScale, double barSize, AppBarEdge? ownerEdge = null)
         {
             _barSize = barSize;
             _dictionaryManager = dictionaryManager;
             _dpiScale = dpiScale;
             _notificationArea = notificationArea;
             _screen = screen;
+            _ownerEdge = ownerEdge ?? Settings.Instance.Edge;
 
             InitializeComponent();
             IconsTab.NotificationArea = notificationArea; // UXUI-Extreme
@@ -111,11 +113,11 @@ namespace RetroBar
             }
         }
 
-        public static PropertiesWindow Open(NotificationArea notificationArea, DictionaryManager dictionaryManager, AppBarScreen screen, double dpiScale, double barSize)
+        public static PropertiesWindow Open(NotificationArea notificationArea, DictionaryManager dictionaryManager, AppBarScreen screen, double dpiScale, double barSize, AppBarEdge? ownerEdge = null)
         {
             if (_instance == null)
             {
-                _instance = new PropertiesWindow(notificationArea, dictionaryManager, screen, dpiScale, barSize);
+                _instance = new PropertiesWindow(notificationArea, dictionaryManager, screen, dpiScale, barSize, ownerEdge);
                 _instance.Show();
             }
             else
@@ -280,7 +282,7 @@ namespace RetroBar
 
         private void UpdateWindowPosition()
         {
-            switch (Settings.Instance.Edge)
+            switch (_ownerEdge)
             {
                 case AppBarEdge.Left:
                     Left = (_screen.Bounds.Left / _dpiScale) + _barSize + 10;
@@ -357,11 +359,11 @@ namespace RetroBar
             top = (_screen.WorkingArea.Top / _dpiScale) + 10;
             bottom = (_screen.WorkingArea.Bottom / _dpiScale) - 10;
 
-            if (Settings.Instance.Edge == AppBarEdge.Bottom)
+            if (_ownerEdge == AppBarEdge.Bottom)
             {
                 bottom = Math.Min(bottom, (_screen.Bounds.Bottom / _dpiScale) - _barSize - 10);
             }
-            else if (Settings.Instance.Edge == AppBarEdge.Top)
+            else if (_ownerEdge == AppBarEdge.Top)
             {
                 top = Math.Max(top, (_screen.Bounds.Top / _dpiScale) + _barSize + 10);
             }

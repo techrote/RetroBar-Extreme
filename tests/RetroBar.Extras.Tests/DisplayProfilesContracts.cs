@@ -27,6 +27,8 @@ internal static partial class Program
         Check(DisplayTaskbarProfiles.AllowsApplication("powershell.exe", p), "Terminal family includes Windows PowerShell.");
         Check(DisplayTaskbarProfiles.AllowsApplication("pwsh.exe", p), "Terminal family includes PowerShell 7.");
         Check(DisplayTaskbarProfiles.AllowsApplication("WindowsTerminal.exe", p), "Terminal family includes Windows Terminal.");
+        Check(DisplayTaskbarProfiles.AllowsApplication("Microsoft.WindowsTerminal_8wekyb3d8bbwe!App", p),
+            "Terminal family includes the Windows Terminal package AUMID.");
         Check(!DisplayTaskbarProfiles.AllowsApplication("firefox.exe", p), "Explicit exclusion overrides inclusion.");
         Check(!DisplayTaskbarProfiles.AllowsApplication("explorer.exe", p), "Include list restricts unrelated windows.");
         Check(DisplayTaskbarProfiles.MatchesAny("firefox.exe", "firefox"), "Executable stem matches without .exe.");
