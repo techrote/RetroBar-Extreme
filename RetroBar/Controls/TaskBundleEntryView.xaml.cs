@@ -42,8 +42,7 @@ namespace RetroBar.Controls
             // The outer entry must be free to grow when expanded horizontally; apply
             // fixed button widths to header/individual buttons, never to the whole entry.
             Width = horizontal ? double.NaN : (Host?.ButtonWidth ?? double.NaN);
-            GroupButton.Width = Host?.ButtonWidth ?? double.NaN;
-            SingleButton.Width = Host?.ButtonWidth ?? double.NaN;
+            // Child widths are bound to the same per-app converter as legacy TaskButton.
             ExpandedWindows.Visibility = bundled && entry.Expansion == TaskBundleExpansion.Inline &&
                 Host?.BundleExpanded(entry.Key) == true ? Visibility.Visible : Visibility.Collapsed;
         }
