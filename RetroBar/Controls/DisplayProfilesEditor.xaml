@@ -43,6 +43,7 @@
                         <TextBox x:Name="WidthText" Grid.Column="1" Width="55" HorizontalAlignment="Left"/>
                     </Grid>
                     <CheckBox x:Name="AutoHide" Content="Auto-hide taskbar"/>
+                    <CheckBox x:Name="ShowDesktop" Content="Show Desktop button"/>
                     <StackPanel Orientation="Horizontal">
                         <CheckBox x:Name="ShowStart" Content="Start button" Margin="0,2,10,2"/>
                         <CheckBox x:Name="ShowQuickLaunch" Content="Quick launch" Margin="0,2,0,2"/>
