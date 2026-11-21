@@ -36,7 +36,7 @@ namespace RetroBar
             nameof(Settings.ClockOrientation),
             nameof(Settings.QuickLaunchLength),
             nameof(Settings.QuickLaunchFirst),
-            nameof(SettingHasQuickLaunch),
+            nameof(Settings.ShowQuickLaunch),
             nameof(Settings.QuickLaunchButtonFill),
             nameof(Settings.ClockCustomMargin),
             nameof(Settings.ClockMargin),
