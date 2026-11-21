@@ -3,6 +3,7 @@ using ManagedShell.AppBar;
 using ManagedShell.Common.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace RetroBar.Utilities
@@ -15,6 +16,11 @@ namespace RetroBar.Utilities
         private int _pendingDisplayEvents;
         private List<AppBarScreen> _screenState = new List<AppBarScreen>();
         private List<Taskbar> _taskbars = new List<Taskbar>();
+        private string _shellHostDeviceName = "";
+
+        // One selected taskbar handles shell/tray integration even when the primary monitor has no bar.
+        public bool IsShellHost(AppBarScreen screen) => screen != null &&
+            string.Equals(_shellHostDeviceName, screen.DeviceName, StringComparison.OrdinalIgnoreCase);
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
@@ -43,7 +49,9 @@ namespace RetroBar.Utilities
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.ShowMultiMon))
+            if (e.PropertyName == nameof(Settings.ShowMultiMon) ||
+                e.PropertyName == nameof(Settings.UseDisplayProfiles) ||
+                e.PropertyName == nameof(Settings.DisplayTaskbarProfiles))
             {
                 // Update screen state in case it has changed since last checked
                 _screenState = AppBarScreen.FromAllScreens();
@@ -139,12 +147,36 @@ namespace RetroBar.Utilities
 
             ShellLogger.Debug($"WindowManager: Opening taskbars");
 
+            if (Settings.Instance.UseDisplayProfiles)
+            {
+                var enabled = _screenState.Select(screen => new {
+                    Screen = screen,
+                    Profile = DisplayTaskbarProfiles.Find(Settings.Instance.DisplayTaskbarProfiles, screen.DeviceName)
+                }).Where(item => item.Profile?.Enabled == true).ToList();
+
+                if (enabled.Count == 0)
+                {
+                    // Recovery: never strand the owner if saved displays disappear or every bar is disabled.
+                    AppBarScreen fallback = AppBarScreen.FromPrimaryScreen();
+                    _shellHostDeviceName = fallback.DeviceName;
+                    ShellLogger.Debug("WindowManager: No enabled connected profiles; opening recovery taskbar");
+                    openTaskbar(fallback);
+                    return;
+                }
+
+                var host = enabled.FirstOrDefault(item => item.Screen.Primary && item.Profile.ShowTray)
+                           ?? enabled.FirstOrDefault(item => item.Profile.ShowTray)
+                           ?? enabled.FirstOrDefault(item => item.Screen.Primary)
+                           ?? enabled[0];
+                _shellHostDeviceName = host.Screen.DeviceName;
+                foreach (var item in enabled) openTaskbar(item.Screen, item.Profile);
+                return;
+            }
+
+            _shellHostDeviceName = AppBarScreen.FromPrimaryScreen().DeviceName;
             if (Settings.Instance.ShowMultiMon)
             {
-                foreach (var screen in _screenState)
-                {
-                    openTaskbar(screen);
-                }
+                foreach (var screen in _screenState) openTaskbar(screen);
             }
             else
             {
@@ -152,12 +184,14 @@ namespace RetroBar.Utilities
             }
         }
 
-        private void openTaskbar(AppBarScreen screen)
+        private void openTaskbar(AppBarScreen screen, DisplayTaskbarProfile profile = null)
         {
             ShellLogger.Debug($"WindowManager: Opening taskbar on screen {screen.DeviceName}");
-            Taskbar taskbar = new Taskbar(this, _dictionaryManager, _shellManager, _startMenuMonitor, _updater, _hotkeyManager, screen, Settings.Instance.Edge, Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal);
+            var edge = profile?.Edge ?? Settings.Instance.Edge;
+            bool hide = profile?.AutoHide ?? Settings.Instance.AutoHide;
+            Taskbar taskbar = new Taskbar(this, _dictionaryManager, _shellManager, _startMenuMonitor,
+                _updater, _hotkeyManager, screen, edge, hide ? AppBarMode.AutoHide : AppBarMode.Normal, profile);
             taskbar.Show();
-
             _taskbars.Add(taskbar);
         }
 
