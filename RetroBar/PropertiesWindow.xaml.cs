@@ -83,6 +83,11 @@ namespace RetroBar
 
             LoadPreviewHeight();
             LoadAutoStart();
+            if (EvaluationSession.IsEnabled)
+            {
+                btnSetQuickLaunchLocation.IsEnabled = false;
+                btnSetQuickLaunchLocation.ToolTip = "Evaluation mode uses a private Quick Launch folder.";
+            }
             LoadLanguages();
             LoadStyleTab(); // UXUI-Extreme (UX-005)
             LoadOSSupport();
@@ -148,6 +153,13 @@ namespace RetroBar
 
         private void LoadAutoStart()
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                cbAutoStart.IsChecked = false;
+                cbAutoStart.IsEnabled = false;
+                cbAutoStart.ToolTip = "Evaluation mode cannot edit Windows startup settings.";
+                return;
+            }
             try
             {
                 RegistryKey rKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false);
@@ -310,6 +322,7 @@ namespace RetroBar
 
         private void SetQuickLaunchLocation_OnClick(object sender, RoutedEventArgs e)
         {
+            if (EvaluationSession.IsEnabled) return;
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             fbd.Description = (string)FindResource("quick_launch_folder");
 #if NETCOREAPP3_0_OR_GREATER
@@ -386,6 +399,7 @@ namespace RetroBar
 
         private void CbAutoStart_OnChecked(object sender, RoutedEventArgs e)
         {
+            if (EvaluationSession.IsEnabled) return;
             try
             {
                 RegistryKey rKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");

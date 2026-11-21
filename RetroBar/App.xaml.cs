@@ -144,6 +144,15 @@ namespace RetroBar
 
         public void RestartApp()
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                // Crash/restart recovery must never restart as a production
+                // instance or race the running shell-owner mutex. Exit and
+                // require a deliberate fresh launch from the evaluation ZIP.
+                ShellLogger.Warning("Evaluation restart suppressed: close and launch the isolated evaluator again.");
+                ExitGracefully();
+                return;
+            }
             try
             {
                 // run the program again

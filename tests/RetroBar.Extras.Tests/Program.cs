@@ -52,6 +52,7 @@ internal static partial class Program
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
             ("Opt-in display profiles preserve legacy state and application filters", DisplayProfileContracts),
+            ("Isolated evaluator launch, settings and shortcut paths are fail-closed", EvaluationIsolationContracts),
             ("Affinity grouping and hybrid presentation policies", TaskAffinityContracts),
             ("Bundled task entry invariants", TaskBundleContracts),
         })

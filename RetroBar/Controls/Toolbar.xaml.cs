@@ -226,6 +226,18 @@ namespace RetroBar.Controls
         public void AddDropped(List<ShellDrop.Dropped> items)
         {
             string sourcePath = Environment.ExpandEnvironmentVariables(Path);
+            if (EvaluationSession.IsEnabled)
+            {
+                // Additional toolbars can point at any path. An evaluator
+                // may write shortcuts only into its own private Quick Launch.
+                if (!EvaluationSession.IsAllowedQuickLaunchWriteFolder(sourcePath))
+                {
+                    ShellLogger.Warning("Evaluation mode blocked a shortcut write outside its isolated Quick Launch.");
+                    foreach (ShellDrop.Dropped item in items) ShellDrop.Free(item);
+                    return;
+                }
+                System.IO.Directory.CreateDirectory(sourcePath);
+            }
 
             foreach (ShellDrop.Dropped item in items)
             {
