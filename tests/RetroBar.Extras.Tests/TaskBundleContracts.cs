@@ -1,3 +1,4 @@
+using System;
 using RetroBar.Utilities;
 using RetroBar.Converters;
 using ManagedShell.AppBar;
