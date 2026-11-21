@@ -12,7 +12,8 @@ namespace RetroBar.Controls
     public partial class TaskBundleEntryView : UserControl
     {
         public static readonly DependencyProperty HostProperty =
-            DependencyProperty.Register(nameof(Host), typeof(TaskList), typeof(TaskBundleEntryView));
+            DependencyProperty.Register(nameof(Host), typeof(TaskList), typeof(TaskBundleEntryView),
+                new PropertyMetadata(null, (d, e) => ((TaskBundleEntryView)d).RefreshEntry()));
         public TaskList Host
         {
             get => (TaskList)GetValue(HostProperty);
@@ -36,8 +37,13 @@ namespace RetroBar.Controls
             bool bundled = entry?.IsBundle == true;
             GroupButton.Visibility = bundled ? Visibility.Visible : Visibility.Collapsed;
             SingleButton.Visibility = bundled ? Visibility.Collapsed : Visibility.Visible;
-            EntryStack.Orientation = Host?.Host?.Orientation == Orientation.Horizontal
-                ? Orientation.Horizontal : Orientation.Vertical;
+            bool horizontal = Host?.Host?.Orientation == Orientation.Horizontal;
+            EntryStack.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
+            // The outer entry must be free to grow when expanded horizontally; apply
+            // fixed button widths to header/individual buttons, never to the whole entry.
+            Width = horizontal ? double.NaN : (Host?.ButtonWidth ?? double.NaN);
+            GroupButton.Width = Host?.ButtonWidth ?? double.NaN;
+            SingleButton.Width = Host?.ButtonWidth ?? double.NaN;
             ExpandedWindows.Visibility = bundled && entry.Expansion == TaskBundleExpansion.Inline &&
                 Host?.BundleExpanded(entry.Key) == true ? Visibility.Visible : Visibility.Collapsed;
         }

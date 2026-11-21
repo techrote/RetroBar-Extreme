@@ -40,6 +40,9 @@ namespace RetroBar.Controls
             if (string.IsNullOrWhiteSpace(key)) return;
             if (expanded) _inlineExpanded.Add(key);
             else _inlineExpanded.Remove(key);
+            // Horizontal expansion can exceed the nominal per-row button budget.
+            if (_bundlesVisible && Host?.Orientation == Orientation.Horizontal && expanded)
+                SetScrollable(true);
         }
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
@@ -422,6 +425,12 @@ namespace RetroBar.Controls
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             SetTaskButtonWidth();
+        }
+
+        private void BundledTasksList_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_bundlesVisible)
+                SetTaskButtonWidth();
         }
 
         private void SetTaskButtonWidth()

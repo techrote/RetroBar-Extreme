@@ -25,10 +25,19 @@
         </Grid>
         <ItemsControl x:Name="ExpandedWindows" ItemsSource="{Binding Windows}"
                       Visibility="Collapsed" Margin="8,1,0,3">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <!-- Vertical bars expand downwards; horizontal bars expand along the bar. -->
+                    <StackPanel Orientation="{Binding Path=Host.Host.Orientation,
+                        RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <local:TaskButton Host="{Binding ElementName=Root, Path=Host}"
-                                      Width="{Binding Path=Host.ButtonWidth, ElementName=Root}" />
+                    <!-- Template boundaries do not inherit ElementName=Root's namescope. -->
+                    <local:TaskButton
+                        Host="{Binding Path=Host, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}}"
+                        Width="{Binding Path=Host.ButtonWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}}" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

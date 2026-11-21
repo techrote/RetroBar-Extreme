@@ -88,7 +88,8 @@
             </ItemsControl>
             <!-- A separate projected view only for Bundle/Hybrid, leaving legacy task items unchanged. -->
             <ItemsControl x:Name="BundledTasksList" Focusable="False"
-                          HorizontalAlignment="Stretch" Visibility="Collapsed">
+                          HorizontalAlignment="Stretch" Visibility="Collapsed"
+                          SizeChanged="BundledTasksList_SizeChanged">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}">
@@ -103,8 +104,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <local:TaskBundleEntryView
-                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}"
-                            Width="{Binding Path=ButtonWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}" />
+                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
