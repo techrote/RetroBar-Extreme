@@ -1,5 +1,6 @@
 using RetroBar.Utilities;
 using System.Collections.Generic;
+using System;
 
 internal static partial class Program
 {
@@ -36,5 +37,23 @@ internal static partial class Program
             "Separate groups remain separate.");
         Check(TaskAffinityRules.BucketFor("explorer.exe", groups).StartsWith("app:"),
             "Unlisted apps have their own identity.");
+
+        // Reused HWNDs must not inherit the dead window's first-seen affinity
+        // rank, and long-running taskbar sessions must not retain closed windows.
+        var order = new TaskWindowOrderTracker();
+        var first = new object();
+        var second = new object();
+        var initial = order.Reconcile(new[] { (new IntPtr(101), first), (new IntPtr(102), second) });
+        long firstRank = initial[new IntPtr(101)];
+        long secondRank = initial[new IntPtr(102)];
+        Check(firstRank < secondRank && order.Count == 2, "First-seen live window ordering is deterministic.");
+        var reused = new object();
+        var next = order.Reconcile(new[] { (new IntPtr(102), second), (new IntPtr(101), reused) });
+        Check(next[new IntPtr(101)] > secondRank, "Recycled HWND obtains a fresh first-seen order.");
+        Check(next[new IntPtr(102)] == secondRank, "Still-live HWND retains its order.");
+        Check(order.Reconcile(Array.Empty<(IntPtr Handle, object Identity)>()).Count == 0 && order.Count == 0,
+            "Removal and reset prune all stale ordering records.");
+        var reopened = order.Reconcile(new[] { (new IntPtr(101), new object()) });
+        Check(reopened[new IntPtr(101)] > next[new IntPtr(101)], "Reopened HWND never inherits discarded history.");
     }
 }

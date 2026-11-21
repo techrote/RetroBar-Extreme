@@ -31,6 +31,26 @@ namespace RetroBar.Controls
 
         private readonly DispatcherTimer _clock = new DispatcherTimer(DispatcherPriority.Background);
         private bool _isLoaded;
+        private bool? _displayClockOverride;
+
+        // A taskbar's display profile is authoritative for its clock. Null retains
+        // the legacy global behaviour, including changes while RetroBar is running.
+        public bool? DisplayClockOverride
+        {
+            get => _displayClockOverride;
+            set
+            {
+                if (_displayClockOverride == value) return;
+                _displayClockOverride = value;
+                if (_isLoaded) ApplyClockPolicy();
+            }
+        }
+
+        private void ApplyClockPolicy()
+        {
+            if (DisplayClockOverride ?? Settings.Instance.ShowClock) StartClock();
+            else StopClock();
+        }
 
         private const int LOCALE_NAME_MAX_LENGTH = 85;
 
@@ -46,14 +66,7 @@ namespace RetroBar.Controls
         private void Initialize()
         {
             UpdateUserCulture();
-            if (Settings.Instance.ShowClock)
-            {
-                StartClock();
-            }
-            else
-            {
-                Visibility = Visibility.Collapsed;
-            }
+            ApplyClockPolicy();
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
             SystemEvents.TimeChanged += TimeChanged;
@@ -81,14 +94,7 @@ namespace RetroBar.Controls
             switch (e.PropertyName)
             {
                 case nameof(Settings.ShowClock):
-                    if (Settings.Instance.ShowClock)
-                    {
-                        StartClock();
-                    }
-                    else
-                    {
-                        StopClock();
-                    }
+                    ApplyClockPolicy();
                     break;
                 case nameof(Settings.ShowClockSeconds):
                 case nameof(Settings.OverrideClockFormat):

@@ -72,6 +72,7 @@ namespace RetroBar
             QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
             TaskbarNotifyIcons.Visibility = next.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
             ClockHost.Visibility = next.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+            TaskbarClock.DisplayClockOverride = next.ShowClock;
             NotificationAreaHost.Visibility = next.ShowTray || IsShellHost || next.ShowClock
                 ? Visibility.Visible : Visibility.Collapsed;
             UpdateStartButton();
@@ -109,6 +110,7 @@ namespace RetroBar
             this.hotkeyManager = hotkeyManager;
 
             InitializeComponent();
+            TaskbarClock.DisplayClockOverride = DisplayProfile?.ShowClock;
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
 
