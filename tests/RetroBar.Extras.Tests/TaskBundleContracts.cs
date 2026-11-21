@@ -12,6 +12,9 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using ManagedShell.WindowsTasks;
+using ManagedShell.Interop;
 using System.Reflection;
 using RetroBar.Controls;
 
@@ -50,6 +53,20 @@ internal static partial class Program
             typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
         Check(fallback is double bw && bw == 172.0, "Bundle width adapter uses normal taskbar width when no representative is available.");
         BundleHorizontalNavigationContracts();
+        BundleProductionVisualTreeContracts();
+    }
+
+    // Construct harmless ApplicationWindow identities without launching a
+    // shell process, exactly as the existing task-row contract fixtures do.
+    private static ApplicationWindow BundleFixtureApp(string name)
+    {
+        var app = new ApplicationWindow(null, IntPtr.Zero);
+        var file = typeof(ApplicationWindow).GetField("_winFileName", BindingFlags.NonPublic | BindingFlags.Instance);
+        var aumid = typeof(ApplicationWindow).GetField("_appUserModelId", BindingFlags.NonPublic | BindingFlags.Instance);
+        Check(file != null && aumid != null, "ManagedShell identity fixture fields are available.");
+        file.SetValue(app, @"C:\Fixture\" + name + ".exe");
+        aumid.SetValue(app, "fixture." + name);
+        return app;
     }
 
     private static IEnumerable<T> BundleDescendants<T>(DependencyObject root) where T : DependencyObject
@@ -141,6 +158,192 @@ internal static partial class Program
             Layout(210);
             Check(viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
                 "Vertical taskbars never activate horizontal bundle navigation.");
+        }
+        finally
+        {
+            foreach (string key in keys)
+            {
+                if (previous[key].Present) resources[key] = previous[key].Value;
+                else resources.Remove(key);
+            }
+        }
+    }
+
+    private static void BundleProductionVisualTreeContracts()
+    {
+        using var settings = new LayoutSettingsScope("TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow",
+            "RowCount", "Edge", "TaskButtonAppRules", "TaskButtonWidthPx");
+        settings.Set("RowCount", 2);
+        settings.Set("Edge", AppBarEdge.Bottom);
+        settings.Set("TaskEndApps", "");
+        settings.Set("TaskEndAppsBottomRow", false);
+        settings.Set("TaskButtonWidthPx", 96.0);
+        settings.Set("TaskRowRules", new List<TaskRowRule> {
+            new TaskRowRule { Row = 2, Apps = "firefox", OnlyListed = true }
+        });
+
+        using Stream stream = typeof(TaskList).Assembly.GetManifestResourceStream("RetroBar.Themes.System.xaml");
+        Check(stream != null, "Production TaskList theme is embedded in the application.");
+        XNamespace p = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var document = XDocument.Load(stream);
+        string[] themeKeys = { "TaskListScrollButton", "TaskListScrollButtonText",
+            "TaskListScrollButtonGrid", "TaskListScrollViewer", "TaskListWrapPanel" };
+        var supplied = new Dictionary<string, object> {
+            ["TaskButton"] = new Style(typeof(Button)),
+            ["TaskButtonActive"] = new Style(typeof(Button)),
+            ["TaskButtonFlashing"] = new Style(typeof(Button)),
+            ["TaskIcon"] = new Style(typeof(System.Windows.Controls.Image)),
+            ["TaskLabel"] = new Style(typeof(System.Windows.Controls.TextBlock)),
+            ["TaskOverlayIcon"] = new Style(typeof(System.Windows.Controls.Image)),
+            ["TaskButtonMargin"] = new Thickness(0, 0, 3, 0),
+            ["TaskButtonVerticalMargin"] = new Thickness(),
+            ["TaskButtonWidth"] = 96.0,
+            ["TaskButtonMinWidth"] = 44.0,
+            ["menuTextRenderingModeConverter"] = new RetroBar.Converters.BoolToTextRenderingModeConverter()
+        };
+        var resources = Application.Current.Resources;
+        var keys = themeKeys.Concat(supplied.Keys).Distinct().ToArray();
+        var previous = keys.ToDictionary(key => key,
+            key => (Present: resources.Contains(key), Value: resources.Contains(key) ? resources[key] : null));
+        foreach (var kv in supplied) resources[kv.Key] = kv.Value;
+        try
+        {
+            foreach (string key in themeKeys)
+            {
+                var node = document.Descendants(p + "Style").Single(el => (string)el.Attribute(x + "Key") == key);
+                resources[key] = XamlReader.Parse(node.ToString());
+            }
+            var list = new TaskList {
+                ButtonWidth = 96,
+                ButtonsPerRow = 2,
+                ButtonMarginTotal = 3,
+                IconOnlyWidth = 47,
+                DefaultWidthWithMargin = 99
+            };
+            var bundled = (ItemsControl)list.FindName("BundledTasksList");
+            var legacy = (ItemsControl)list.FindName("TasksList");
+            var scroll = (ScrollViewer)list.FindName("TasksScrollViewer");
+            Check(bundled != null && legacy != null && scroll != null,
+                "Production TaskList XAML exposes both actual renderers and scroll host.");
+            var entries = (ObservableCollection<TaskBundleEntry>)typeof(TaskList)
+                .GetField("_bundleEntries", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(list);
+            var firefox = new TaskBundleEntry { Key = "bundle:firefox.exe", CanBundle = true, Expansion = TaskBundleExpansion.Inline };
+            for (int i = 0; i < 20; i++) firefox.Windows.Add(BundleFixtureApp("firefox"));
+            var explorer = new TaskBundleEntry { Key = "single:explorer", CanBundle = false };
+            explorer.Windows.Add(BundleFixtureApp("explorer"));
+            entries.Add(explorer);
+            entries.Add(firefox);
+            bundled.ItemsSource = entries;
+            legacy.Visibility = Visibility.Collapsed;
+            bundled.Visibility = Visibility.Visible;
+            typeof(TaskList).GetField("_bundlesVisible", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(list, true);
+            list.SetBundleExpanded(firefox.Key, true);
+            void Layout(double width, double height = 75)
+            {
+                for (int pass = 0; pass < 4; pass++)
+                {
+                    list.InvalidateMeasure();
+                    list.Measure(new Size(width, height));
+                    list.Arrange(new Rect(0, 0, width, height));
+                    list.UpdateLayout();
+                }
+            }
+            Layout(230);
+            var rowPanel = BundleDescendants<TaskRowPanel>(bundled).Single();
+            var views = BundleDescendants<TaskBundleEntryView>(bundled).ToArray();
+            Check(views.Length == 2, "Actual bundled ItemTemplate renders two production entry views.");
+            var firefoxView = views.Single(v => ReferenceEquals(v.DataContext, firefox));
+            var explorerView = views.Single(v => ReferenceEquals(v.DataContext, explorer));
+            var children = (ItemsControl)firefoxView.FindName("ExpandedWindows");
+            var header = (Button)firefoxView.FindName("GroupButton");
+            var visibleChildren = BundleDescendants<TaskButton>(children).ToArray();
+            Check(header.Visibility == Visibility.Visible && children.Visibility == Visibility.Visible &&
+                  visibleChildren.Length == 20, "Real bundle header and 20 native TaskButtons render inline.");
+            Check(rowPanel.GetBindingExpression(TaskRowPanel.ViewportWidthProperty) != null &&
+                  rowPanel.ViewportWidth > 0 && scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto,
+                "Production bundled row panel receives a finite viewport from its real ScrollViewer.");
+            Check(scroll.ScrollableWidth > 800, "Actual 20-window bundle creates horizontal overflow.");
+            double firefoxTop = firefoxView.TransformToAncestor(rowPanel).Transform(new Point(0, 0)).Y;
+            double explorerTop = explorerView.TransformToAncestor(rowPanel).Transform(new Point(0, 0)).Y;
+            Check(firefoxTop > explorerTop + 8,
+                "Explicit/exclusive firefox row rule survives horizontal Inline expansion.");
+            var right = BundleDescendants<RepeatButton>(scroll)
+                .Single(b => b.Command == ScrollBar.PageRightCommand);
+            var peer = UIElementAutomationPeer.CreatePeerForElement(right) ?? new RepeatButtonAutomationPeer(right);
+            Check(peer is IInvokeProvider, "Production bundle right-arrow supports WPF automation.");
+            ((IInvokeProvider)peer).Invoke();
+            scroll.UpdateLayout();
+            Check(scroll.HorizontalOffset > 0, "Real bundled TaskList responds to right-page navigation.");
+            scroll.ScrollToRightEnd();
+            scroll.UpdateLayout();
+            Check(scroll.HorizontalOffset >= scroll.ScrollableWidth - 1,
+                "Production bundled TaskList can reach the final inline member.");
+
+            // Verify the actual visible header is the single rectangle owner for
+            // all 20 member HWND identities, independent of hidden legacy items.
+            firefoxView.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            var members = (List<ApplicationWindow>)typeof(TaskBundleEntryView)
+                .GetField("_rectMembers", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(firefoxView);
+            Check(members.Count == 20 && members.All(w => firefox.Windows.Contains(w)),
+                "Visible group header subscribes to each member window rectangle request.");
+            var policy = typeof(TaskList).GetMethod("MatchesRectRepresentation",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Check((bool)policy.Invoke(null, new object[] { true, true, true }) &&
+                  !(bool)policy.Invoke(null, new object[] { true, true, false }) &&
+                  !(bool)policy.Invoke(null, new object[] { false, true, true }),
+                "Only the visible bundle header can own bundle-member restore rectangles.");
+            var headerBounds = header.TransformToAncestor(firefoxView)
+                .TransformBounds(new Rect(0, 0, header.ActualWidth, header.ActualHeight));
+            Check(headerBounds.Width > 0 && headerBounds.Height > 0 &&
+                  headerBounds.Left >= -1 && headerBounds.Top >= -1,
+                "The production visible bundle header has nonzero visual bounds.");
+            firefoxView.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+            Check(members.Count == 0, "Unloaded bundle header releases all member-rectangle callbacks.");
+
+            header.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+            Layout(230);
+            Check(children.Visibility == Visibility.Collapsed &&
+                  scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
+                "Real bundle-header click collapses children and restores nonhorizontal scroll mode.");
+
+            // Side-docked Inline must subtract the 8-DIP indentation even when a
+            // per-app override requests full taskbar width.
+            settings.Set("Edge", AppBarEdge.Left);
+            var verticalHost = new TaskList {
+                ButtonWidth = 172, ButtonsPerRow = 1, ButtonMarginTotal = 0,
+                IconOnlyWidth = 24, DefaultWidthWithMargin = 172
+            };
+            var verticalEntries = (ObservableCollection<TaskBundleEntry>)typeof(TaskList)
+                .GetField("_bundleEntries", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(verticalHost);
+            verticalEntries.Add(firefox);
+            typeof(TaskList).GetField("_bundlesVisible", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(verticalHost, true);
+            verticalHost.SetBundleExpanded(firefox.Key, true);
+            var sideView = new TaskBundleEntryView {
+                Host = verticalHost, DataContext = firefox, Width = 172
+            };
+            ((StackPanel)sideView.FindName("EntryStack")).Orientation = Orientation.Vertical;
+            sideView.Measure(new Size(172, 700));
+            sideView.Arrange(new Rect(0, 0, 172, 700));
+            sideView.UpdateLayout();
+            var sideChildren = (ItemsControl)sideView.FindName("ExpandedWindows");
+            foreach (var stack in BundleDescendants<StackPanel>(sideChildren))
+                stack.Orientation = Orientation.Vertical;
+            sideView.InvalidateMeasure();
+            sideView.Measure(new Size(172, 700));
+            sideView.Arrange(new Rect(0, 0, 172, 700));
+            sideView.UpdateLayout();
+            var sideButtons = BundleDescendants<TaskButton>(sideChildren).ToArray();
+            Check(sideButtons.Length == 20 && sideChildren.Visibility == Visibility.Visible,
+                "Production vertical Inline template renders 20 expanded windows.");
+            Check(sideButtons.All(b => double.IsFinite(b.ActualWidth) && b.ActualWidth <= 164.5) &&
+                  sideChildren.Margin.Left == 8 && sideView.ActualWidth <= 172.5,
+                "Vertical Inline buttons fit the 172-DIP host after 8-DIP indentation.");
+            Check(verticalHost.FindName("TasksScrollViewer") is ScrollViewer sideScroll &&
+                  sideScroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
+                "Vertical Inline never enables horizontal scroll access.");
         }
         finally
         {

@@ -20,7 +20,7 @@
 
 ## Known limitations / HOLD
 - Flyout uses a standard WPF context-menu chooser; unlike an inline expanded TaskButton, its entries don't expose full live thumbnail previews or native per-window context menus.
-- Inline child buttons in horizontal taskbars now activate compact left/right paging only while expanded; source-matched WPF navigation tests accompany this change. Physical owner sizing/overflow acceptance remains required.
+- Inline children on horizontal taskbars use compact left/right paging; **production** TaskList/TaskRowPanel/TaskBundleEntryView WPF regressions cover 20 windows and explicit/exclusive row ownership. Visible bundle headers own minimize/restore rectangles for all their members, and vertical Inline children reserve the 8-DIP indentation. Physical owner sizing, pointer, shell rectangle animations and overflow acceptance are still required.
 - The combined #44 branch currently inherits the five-row cap from master. The separate, unmerged #38 implements 32 rows. The 1–32-row acceptance matrix must wait for an explicit integration; this candidate is limited to the existing 1–5 rows.
 - Display profile identity is `AppBarScreen.DeviceName`, with a primary-screen recovery fallback, pending EDID/connector identity hardening.
 - No fullscreen taskbar/dashboard. Explicitly deferred.
