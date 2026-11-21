@@ -5,9 +5,10 @@ Opt-in display profiles select which monitors run RetroBar, each monitor's Left/
 
 ## Backwards compatibility and recovery
 - `UseDisplayProfiles` defaults to false; original `ShowMultiMon`, `Edge`, `RowCount`, `TaskbarWidth`, `AutoHide` and `MultiMonMode` stay unchanged.
-- Profiles are indexed by Windows `AppBarScreen.DeviceName` and dormant when not connected. This is a provisional identity; future EDID mapping is recommended where Windows reassigns `DISPLAYn`.
+- Profiles are indexed by Windows `AppBarScreen.DeviceName` and dormant when not connected. **This is not a physical-monitor identity**: if Windows reassigns `DISPLAYn`, restrictive or disabled settings may attach to a different physical screen. After reconnect/re-enumeration, inspect every profile in the Displays editor; stable EDID/connector mapping remains a separate pre-merge hardening requirement if arbitrary topology changes must be supported.
 - If none of the configured enabled profiles matches an active screen, **always create a temporary primary-monitor recovery taskbar**. Settings are not erased.
-- The selected shell host is an enabled profile with notification area preference, falling back to the primary among enabled screens or the first enabled screen. Primary-disabled scenarios need physical tray/Win+number qualification.
+- The selected shell host is an enabled profile with notification area preference, falling back to the primary among enabled screens or the first enabled screen. This host owns missed/live balloons independently of `Screen.Primary`; profile-enabled Start buttons use their own HWND-targeted launch. Primary-disabled scenarios still need physical tray/Start/Win+number qualification.
+- Shared notification-area icon filtering now uses a static predicate and reference-counted view ownership; teardown of one monitor does not leave its control captured or clear another active monitor's filter.
 - The editor applies changes on explicit Apply, avoiding AppBar rebuilds per text keystroke.
 
 ## Windows owner acceptance
