@@ -2,6 +2,8 @@ using ManagedShell.AppBar;
 using RetroBar.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Windows;
+using RetroBar.Controls;
 
 internal static partial class Program
 {
@@ -39,5 +41,32 @@ internal static partial class Program
         Check(!DisplayTaskbarProfiles.MatchesAny("google.chromium!App", "microsoft.windows.terminal"),
             "Unrelated AUMID never matches.");
         Check(settingsType.GetProperty("DisplayTaskbarProfiles").GetValue(settings) != null, "Profile storage nonnull.");
+
+        // Exercise the real Clock Loaded/Unloaded and settings-change handlers on STA
+        // without launching ManagedShell or creating a Windows taskbar.
+        using (var clockSettings = new LayoutSettingsScope("ShowClock"))
+        {
+            clockSettings.Set("ShowClock", false);
+            var clock = new Clock { DisplayClockOverride = true };
+            try
+            {
+                clock.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+                Check(clock.Visibility == Visibility.Visible, "Display clock override can enable clock with global clock disabled.");
+                clock.DisplayClockOverride = false;
+                Check(clock.Visibility == Visibility.Collapsed, "Profile update stops the clock while loaded.");
+                clockSettings.Set("ShowClock", true);
+                Check(clock.Visibility == Visibility.Collapsed, "Global clock changes cannot override a disabled display clock.");
+                clock.DisplayClockOverride = null;
+                Check(clock.Visibility == Visibility.Visible, "Clearing the override inherits the enabled global clock.");
+                clockSettings.Set("ShowClock", false);
+                Check(clock.Visibility == Visibility.Collapsed, "Legacy clock follows the global setting.");
+                clock.DisplayClockOverride = true;
+                Check(clock.Visibility == Visibility.Visible, "A live profile change re-enables the clock.");
+            }
+            finally
+            {
+                clock.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+            }
+        }
     }
 }

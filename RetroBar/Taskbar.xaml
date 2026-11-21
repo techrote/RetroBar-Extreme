@@ -127,7 +127,7 @@
                     <!-- UXUI-Extreme (UX-012): turned by its host, so the clock fitter sees the turned room -->
                     <Border x:Name="ClockHost"
                             VerticalAlignment="Center">
-                        <controls:Clock VerticalAlignment="Center" />
+                        <controls:Clock x:Name="TaskbarClock" VerticalAlignment="Center" />
                     </Border>
                 </StackPanel>
             </GroupBox>
