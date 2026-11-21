@@ -128,7 +128,7 @@ namespace RetroBar.Controls
             }
             Thickness buttonMargin;
 
-            if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+            if ((Host?.AppBarEdge ?? Settings.Instance.Edge) == AppBarEdge.Left || (Host?.AppBarEdge ?? Settings.Instance.Edge) == AppBarEdge.Right)
             {
                 buttonMargin = Application.Current.FindResource("TaskButtonVerticalMargin") as Thickness? ?? new Thickness();
             }
@@ -246,6 +246,17 @@ namespace RetroBar.Controls
                     return false;
                 }
 
+                if (Host.DisplayProfile != null)
+                {
+                    var profile = Host.DisplayProfile;
+                    if (!DisplayTaskbarProfiles.AllowsApplication(TaskButtonRules.AppKey(window), profile))
+                        return false;
+                    if (profile.WindowSource == DisplayWindowSource.AllMonitors)
+                        return true;
+                    return window.HMonitor == Host.Screen.HMonitor ||
+                        (Host.IsShellHost && !Host.windowManager.IsValidHMonitor(window.HMonitor));
+                }
+
                 if (!Settings.Instance.ShowMultiMon || Settings.Instance.MultiMonMode == MultiMonOption.AllTaskbars)
                 {
                     return true;
@@ -304,7 +315,7 @@ namespace RetroBar.Controls
             if (Host is null)
                 return; // The state is trashed, but presumably it's just a transition
 
-            if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+            if ((Host?.AppBarEdge ?? Settings.Instance.Edge) == AppBarEdge.Left || (Host?.AppBarEdge ?? Settings.Instance.Edge) == AppBarEdge.Right)
             {
                 ExtraWidthCount = 0;
                 ButtonWidth = ActualWidth;

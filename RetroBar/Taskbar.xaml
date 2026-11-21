@@ -123,7 +123,7 @@
                                  Path="Orientation"
                                  RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                     </StackPanel.Orientation>
-                    <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
+                    <controls:NotifyIconList x:Name="TaskbarNotifyIcons" NotificationArea="{Binding NotificationArea}" />
                     <!-- UXUI-Extreme (UX-012): turned by its host, so the clock fitter sees the turned room -->
                     <Border x:Name="ClockHost"
                             VerticalAlignment="Center">

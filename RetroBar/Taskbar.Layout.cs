@@ -36,7 +36,7 @@ namespace RetroBar
             nameof(Settings.ClockOrientation),
             nameof(Settings.QuickLaunchLength),
             nameof(Settings.QuickLaunchFirst),
-            nameof(Settings.ShowQuickLaunch),
+            nameof(SettingHasQuickLaunch),
             nameof(Settings.QuickLaunchButtonFill),
             nameof(Settings.ClockCustomMargin),
             nameof(Settings.ClockMargin),
@@ -167,8 +167,8 @@ namespace RetroBar
             var s = Settings.Instance;
             bool atEnd = s.ShowDesktopPosition == ShowDesktopPositionOption.TaskbarEnd;
             // Beside, or inside, the quick launch area (when that is showing; otherwise it stays beside Start).
-            bool besideQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.BesideQuickLaunch && s.ShowQuickLaunch;
-            bool inQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.InQuickLaunch && s.ShowQuickLaunch;
+            bool besideQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.BesideQuickLaunch && HasQuickLaunch;
+            bool inQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.InQuickLaunch && HasQuickLaunch;
             ShowDesktopButtonTray.Visibility = s.ShowDesktopButton && atEnd ? Visibility.Visible : Visibility.Collapsed;
             ShowDesktopButtonStart.Visibility = s.ShowDesktopButton && !atEnd && !besideQuick && !inQuick ? Visibility.Visible : Visibility.Collapsed;
             QuickLaunchToolbar.SetDesktopCell(s.ShowDesktopButton && besideQuick, ShowDesktopButtonStart.TasksService);
