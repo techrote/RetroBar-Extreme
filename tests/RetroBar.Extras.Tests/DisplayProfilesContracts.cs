@@ -7,8 +7,10 @@ internal static partial class Program
 {
     private static void DisplayProfileContracts()
     {
-        var settings = Settings.Instance;
-        Check(!settings.UseDisplayProfiles, "Display profiles default off, preserving legacy settings.");
+        var settingsType = typeof(DisplayTaskbarProfiles).Assembly.GetType("RetroBar.Utilities.Settings", true);
+        var settings = Activator.CreateInstance(settingsType);
+        Check(settingsType.GetProperty("UseDisplayProfiles").GetValue(settings) is false,
+            "Display profiles default off, preserving legacy settings.");
         var p = new DisplayTaskbarProfile
         {
             DeviceName = @"\\.\DISPLAY3", Enabled = true,
@@ -34,6 +36,6 @@ internal static partial class Program
             "microsoft.windows.terminal_8wekyb3d8bbwe"), "Explicit AUMID family prefix matches.");
         Check(!DisplayTaskbarProfiles.MatchesAny("google.chromium!App", "microsoft.windows.terminal"),
             "Unrelated AUMID never matches.");
-        Check(settings.DisplayTaskbarProfiles != null, "Profile storage nonnull.");
+        Check(settingsType.GetProperty("DisplayTaskbarProfiles").GetValue(settings) != null, "Profile storage nonnull.");
     }
 }
