@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, taskbar-management-003-window-bundling ]
 
 permissions:
   contents: read
