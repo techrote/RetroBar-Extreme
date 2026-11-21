@@ -93,7 +93,7 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:ShowDesktopButton>
-            <GroupBox Style="{DynamicResource Tray}">
+            <GroupBox x:Name="NotificationAreaHost" Style="{DynamicResource Tray}">
                 <GroupBox.ContextMenu>
                     <ContextMenu>
                         <TextOptions.TextRenderingMode>

@@ -72,6 +72,8 @@ namespace RetroBar
             QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
             TaskbarNotifyIcons.Visibility = next.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
             ClockHost.Visibility = next.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+            NotificationAreaHost.Visibility = next.ShowTray || IsShellHost || next.ShowClock
+                ? Visibility.Visible : Visibility.Collapsed;
             UpdateStartButton();
             UpdateShowDesktopPlacement();
             RecalculateSize();
@@ -123,6 +125,8 @@ namespace RetroBar
             {
                 TaskbarNotifyIcons.Visibility = DisplayProfile.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
                 ClockHost.Visibility = DisplayProfile.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+                NotificationAreaHost.Visibility = DisplayProfile.ShowTray || IsShellHost || DisplayProfile.ShowClock
+                    ? Visibility.Visible : Visibility.Collapsed;
             }
 
             InitLayoutOptions(); // UXUI-Extreme (UX-012): also places the Show desktop button
