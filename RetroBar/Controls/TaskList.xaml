@@ -14,6 +14,7 @@
             <converters:ThumbOverlayConverter x:Key="thumbOverlayConverter" />
             <converters:EdgeOrientationConverter x:Key="orientationConverter" />
             <converters:TaskButtonWidthConverter x:Key="taskButtonWidthConverter" />
+            <converters:TaskBundleEntryWidthConverter x:Key="bundleEntryWidthConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <DockPanel>
@@ -105,7 +106,14 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <local:TaskBundleEntryView
-                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}" />
+                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}">
+                            <local:TaskBundleEntryView.Width>
+                                <MultiBinding Converter="{StaticResource bundleEntryWidthConverter}">
+                                    <Binding Path="Host.Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                    <Binding Path="ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                </MultiBinding>
+                            </local:TaskBundleEntryView.Width>
+                        </local:TaskBundleEntryView>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

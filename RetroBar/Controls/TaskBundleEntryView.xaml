@@ -10,7 +10,7 @@
     <UserControl.Resources>
         <converters:TaskBundleButtonWidthConverter x:Key="bundleWidthConverter" />
     </UserControl.Resources>
-    <StackPanel x:Name="EntryStack" Orientation="Vertical">
+    <StackPanel x:Name="EntryStack" Orientation="{Binding Path=Host.Host.Orientation, ElementName=Root, FallbackValue=Vertical}">
         <Grid>
             <local:TaskButton x:Name="SingleButton"
                               Host="{Binding ElementName=Root, Path=Host}"
