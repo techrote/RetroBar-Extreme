@@ -32,7 +32,7 @@ namespace RetroBar
         public bool IsShellHost => windowManager?.IsShellHost(Screen) ?? Screen.Primary;
         public int Rows
         {
-            get => DisplayProfile?.Rows ?? Settings.Instance.RowCount;
+            get => Math.Clamp(DisplayProfile?.Rows ?? Settings.Instance.RowCount, 1, Settings.Instance.RowLimit);
             set
             {
                 if (DisplayProfile == null) Settings.Instance.RowCount = value;
@@ -46,7 +46,7 @@ namespace RetroBar
         }
         public int WidthUnits
         {
-            get => DisplayProfile?.Width ?? Settings.Instance.TaskbarWidth;
+            get => Math.Clamp(DisplayProfile?.Width ?? Settings.Instance.TaskbarWidth, 1, Settings.Instance.TaskbarWidthLimit);
             set
             {
                 if (DisplayProfile == null) Settings.Instance.TaskbarWidth = value;
@@ -159,7 +159,7 @@ namespace RetroBar
             {
                 bool newTransparency = AppBarMode == AppBarMode.AutoHide || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
 
-                if (AllowsTransparency != newTransparency && Screen.Primary)
+                if (AllowsTransparency != newTransparency && IsShellHost)
                 {
                     // Transparency cannot be changed on an open window.
                     windowManager.ReopenTaskbars();
@@ -187,7 +187,7 @@ namespace RetroBar
             {
                 FlowDirection newFlowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
 
-                if (FlowDirection != newFlowDirection && Screen.Primary)
+                if (FlowDirection != newFlowDirection && IsShellHost)
                 {
                     // It is necessary to reopen the taskbars to refresh menu sizes.
                     windowManager.ReopenTaskbars();
@@ -224,7 +224,7 @@ namespace RetroBar
                     if (DisplayProfile == null)
                         AppBarMode = Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal;
                 }
-                else if (Screen.Primary)
+                else if (IsShellHost)
                 {
                     // Auto hide requires transparency
                     // Transparency cannot be changed on an open window.
@@ -329,7 +329,7 @@ namespace RetroBar
 
         protected override bool ShouldAllowAutoHide()
         {
-            return (!_startMenuOpen || !Screen.Primary) && _openMenus < 1 && base.ShouldAllowAutoHide();
+            return (!_startMenuOpen || !IsShellHost) && _openMenus < 1 && base.ShouldAllowAutoHide();
         }
 
         protected override void OnAutoHideAnimationBegin(bool isHiding)
