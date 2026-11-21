@@ -80,6 +80,7 @@
                                     <Binding Path="ButtonMarginTotal" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                     <Binding Path="IconOnlyWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                     <Binding Path="DefaultWidthWithMargin" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                    <Binding Path="Host.AppBarEdge" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                 </MultiBinding>
                             </local:TaskButton.Width>
                         </local:TaskButton>
