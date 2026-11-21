@@ -34,6 +34,42 @@ namespace RetroBar.Controls
         private readonly HashSet<string> _inlineExpanded = new(StringComparer.OrdinalIgnoreCase);
         private bool _bundlesVisible;
 
+        private sealed class RectangleTarget
+        {
+            internal ApplicationWindow Window;
+            internal FrameworkElement Element;
+            internal bool IsBundleHeader;
+        }
+        private readonly List<RectangleTarget> _rectangleTargets = new();
+
+        internal void RegisterRectangleTarget(ApplicationWindow window, FrameworkElement element, bool header)
+        {
+            if (window == null || element == null ||
+                _rectangleTargets.Any(t => ReferenceEquals(t.Window, window) &&
+                    ReferenceEquals(t.Element, element) && t.IsBundleHeader == header))
+                return;
+            _rectangleTargets.Add(new RectangleTarget { Window = window, Element = element, IsBundleHeader = header });
+        }
+
+        internal void UnregisterRectangleTarget(ApplicationWindow window, FrameworkElement element, bool header)
+        {
+            _rectangleTargets.RemoveAll(t => ReferenceEquals(t.Window, window) &&
+                ReferenceEquals(t.Element, element) && t.IsBundleHeader == header);
+        }
+
+        // Only live WPF button/header representations count as candidates. Merely
+        // including an app in a display profile is not enough: a filtered-out or
+        // collapsed item must never win the election.
+        internal bool HasVisibleRectangleTarget(ApplicationWindow window)
+        {
+            if (window == null || !IsLoaded || !IsVisible || taskbarItems == null ||
+                !taskbarItems.Contains(window) || !Tasks_Filter(window))
+                return false;
+            bool bundled = IsBundledWindow(window);
+            return _rectangleTargets.Any(t => ReferenceEquals(t.Window, window) &&
+                MatchesRectRepresentation(t.Element.IsVisible, bundled, t.IsBundleHeader));
+        }
+
         public bool BundleExpanded(string key) => _inlineExpanded.Contains(key ?? "");
 
         internal bool IsBundledWindow(ApplicationWindow window) =>
@@ -46,11 +82,11 @@ namespace RetroBar.Controls
         internal bool CanOwnButtonRect(ApplicationWindow window, FrameworkElement target, bool isBundleHeader)
         {
             if (window == null || target == null || Host == null ||
-                !MatchesRectRepresentation(target.IsVisible, IsBundledWindow(window), isBundleHeader))
+                !MatchesRectRepresentation(target.IsVisible, IsBundledWindow(window), isBundleHeader) ||
+                !_rectangleTargets.Any(t => ReferenceEquals(t.Window, window) &&
+                    ReferenceEquals(t.Element, target) && t.IsBundleHeader == isBundleHeader))
                 return false;
-            if (Host.DisplayProfile is DisplayTaskbarProfile display)
-                return Host.IsShellHost || display.WindowSource == DisplayWindowSource.ThisMonitor;
-            return Host.Screen.Primary || Settings.Instance.MultiMonMode == MultiMonOption.SameAsWindow;
+            return Host.windowManager?.IsWindowRectangleOwner(Host, window) == true;
         }
         public void SetBundleExpanded(string key, bool expanded)
         {
@@ -381,6 +417,7 @@ namespace RetroBar.Controls
 
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
 
+            _rectangleTargets.Clear();
             isLoaded = false;
         }
 

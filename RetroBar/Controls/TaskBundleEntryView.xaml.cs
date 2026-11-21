@@ -23,13 +23,35 @@ namespace RetroBar.Controls
         }
 
         private TaskBundleEntry Entry => DataContext as TaskBundleEntry;
+        private sealed class MemberRectReceiver
+        {
+            internal readonly ApplicationWindow Member;
+            internal readonly TaskList RegisteredHost;
+            private readonly TaskBundleEntryView _view;
+
+            internal MemberRectReceiver(TaskBundleEntryView view, ApplicationWindow member, TaskList host)
+            {
+                _view = view;
+                Member = member;
+                RegisteredHost = host;
+            }
+
+            internal void OnGetButtonRect(ref NativeMethods.ShortRect rect) =>
+                _view.Member_GetButtonRect(Member, ref rect);
+        }
+
         private readonly List<ApplicationWindow> _rectMembers = new();
+        private readonly List<MemberRectReceiver> _rectReceivers = new();
         private bool _rectLoaded;
 
         private void DetachRectMembers()
         {
-            foreach (var member in _rectMembers)
-                member.GetButtonRect -= Member_GetButtonRect;
+            foreach (var receiver in _rectReceivers)
+            {
+                receiver.Member.GetButtonRect -= receiver.OnGetButtonRect;
+                receiver.RegisteredHost?.UnregisterRectangleTarget(receiver.Member, GroupButton, header: true);
+            }
+            _rectReceivers.Clear();
             _rectMembers.Clear();
         }
 
@@ -40,17 +62,23 @@ namespace RetroBar.Controls
             foreach (var member in Entry.Windows)
             {
                 if (member == null || _rectMembers.Exists(w => ReferenceEquals(w, member))) continue;
-                member.GetButtonRect += Member_GetButtonRect;
+                var receiver = new MemberRectReceiver(this, member, Host);
+                receiver.RegisteredHost?.RegisterRectangleTarget(member, GroupButton, header: true);
+                member.GetButtonRect += receiver.OnGetButtonRect;
+                _rectReceivers.Add(receiver);
                 _rectMembers.Add(member);
             }
         }
 
-        private void Member_GetButtonRect(ref NativeMethods.ShortRect rect)
+        private void Member_GetButtonRect(ApplicationWindow member, ref NativeMethods.ShortRect rect)
         {
-            // Every window in the same bundle shares the visible group-header
-            // target; hidden legacy buttons and inline children are suppressed.
-            if (Entry?.IsBundle != true || _rectMembers.Count == 0 ||
-                Host?.CanOwnButtonRect(_rectMembers[0], GroupButton, isBundleHeader: true) != true)
+            // The event has no sender argument: this receiver binds the exact
+            // requesting window rather than authorizing with the bundle's
+            // first member, which may belong to a different monitor.
+            if (!_rectLoaded || Entry?.IsBundle != true ||
+                !_rectMembers.Exists(w => ReferenceEquals(w, member)) ||
+                !Entry.Windows.Exists(w => ReferenceEquals(w, member)) ||
+                Host?.CanOwnButtonRect(member, GroupButton, isBundleHeader: true) != true)
                 return;
 
             Point first = GroupButton.PointToScreen(new Point(0, 0));

@@ -34,6 +34,7 @@ namespace RetroBar.Controls
 
         private DelayedActivationHandler dragHandler;
         private bool _isLoaded;
+        private TaskList _rectangleRegistrationHost;
 
         public TaskButton()
         {
@@ -99,6 +100,8 @@ namespace RetroBar.Controls
 
             if (Window != null)
             {
+                _rectangleRegistrationHost = Host;
+                _rectangleRegistrationHost?.RegisterRectangleTarget(Window, this, header: false);
                 Window.GetButtonRect += Window_GetButtonRect;
                 Window.PropertyChanged += Window_PropertyChanged;
             }
@@ -149,7 +152,9 @@ namespace RetroBar.Controls
             {
                 Window.GetButtonRect -= Window_GetButtonRect;
                 Window.PropertyChanged -= Window_PropertyChanged;
+                _rectangleRegistrationHost?.UnregisterRectangleTarget(Window, this, header: false);
             }
+            _rectangleRegistrationHost = null;
 
             _isLoaded = false;
         }
