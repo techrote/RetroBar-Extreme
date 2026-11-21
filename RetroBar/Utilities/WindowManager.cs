@@ -59,8 +59,46 @@ namespace RetroBar.Utilities
                 _screenState = AppBarScreen.FromAllScreens();
                 // Only the legacy ShowMultiMon switch is irrelevant on a single-screen desktop.
                 if (legacyMonitorsChanged && _screenState.Count < 2) return;
+                // Resizing, recolouring, filtering and moving a profile must not close
+                // the taskbar while its own mouse drag hook is active.
+                if (activeProfileChanged && TryApplyProfilesInPlace()) return;
                 ReopenTaskbars();
             }
+        }
+
+        private bool TryApplyProfilesInPlace()
+        {
+            var enabled = _screenState.Select(screen => new
+            {
+                Screen = screen,
+                Profile = DisplayTaskbarProfiles.Find(Settings.Instance.DisplayTaskbarProfiles, screen.DeviceName)
+            }).Where(item => item.Profile?.Enabled == true).ToList();
+
+            // A changed screen set, fallback bar, or shell owner requires a full rebuild.
+            if (enabled.Count == 0 || enabled.Count != _taskbars.Count)
+                return false;
+            var host = enabled.FirstOrDefault(item => item.Screen.Primary && item.Profile.ShowTray)
+                       ?? enabled.FirstOrDefault(item => item.Profile.ShowTray)
+                       ?? enabled.FirstOrDefault(item => item.Screen.Primary)
+                       ?? enabled[0];
+            if (!string.Equals(host.Screen.DeviceName, _shellHostDeviceName, StringComparison.OrdinalIgnoreCase))
+                return false;
+            foreach (var bar in _taskbars)
+            {
+                var next = enabled.FirstOrDefault(item =>
+                    string.Equals(item.Screen.DeviceName, bar.Screen.DeviceName, StringComparison.OrdinalIgnoreCase));
+                if (bar.DisplayProfile == null || next == null ||
+                    next.Profile.AutoHide != bar.DisplayProfile.AutoHide)
+                    return false;
+            }
+
+            foreach (var bar in _taskbars)
+            {
+                var next = enabled.First(item =>
+                    string.Equals(item.Screen.DeviceName, bar.Screen.DeviceName, StringComparison.OrdinalIgnoreCase));
+                bar.ApplyDisplayProfile(next.Profile);
+            }
+            return true;
         }
 
         public void ReopenTaskbars()
