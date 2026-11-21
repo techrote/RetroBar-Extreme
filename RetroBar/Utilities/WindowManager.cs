@@ -49,18 +49,16 @@ namespace RetroBar.Utilities
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.ShowMultiMon) ||
-                e.PropertyName == nameof(Settings.UseDisplayProfiles) ||
-                e.PropertyName == nameof(Settings.DisplayTaskbarProfiles))
+            bool profilesToggled = e.PropertyName == nameof(Settings.UseDisplayProfiles);
+            bool activeProfileChanged = e.PropertyName == nameof(Settings.DisplayTaskbarProfiles) &&
+                Settings.Instance.UseDisplayProfiles;
+            bool legacyMonitorsChanged = e.PropertyName == nameof(Settings.ShowMultiMon) &&
+                !Settings.Instance.UseDisplayProfiles;
+            if (profilesToggled || activeProfileChanged || legacyMonitorsChanged)
             {
-                // Update screen state in case it has changed since last checked
                 _screenState = AppBarScreen.FromAllScreens();
-
-                if (_screenState.Count < 2)
-                {
-                    return;
-                }
-
+                // Only the legacy ShowMultiMon switch is irrelevant on a single-screen desktop.
+                if (legacyMonitorsChanged && _screenState.Count < 2) return;
                 ReopenTaskbars();
             }
         }
