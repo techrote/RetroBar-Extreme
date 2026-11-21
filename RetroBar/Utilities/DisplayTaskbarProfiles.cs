@@ -65,7 +65,9 @@ namespace RetroBar.Utilities
                 if (t == "terminals" || t == "terminal")
                 {
                     if (new[] { "windowsterminal", "wt", "powershell", "pwsh", "cmd", "wezterm",
-                        "alacritty", "mintty", "tabby", "hyper", "conemu", "bash", "wsl", "ubuntu" }.Contains(stem))
+                        "alacritty", "mintty", "tabby", "hyper", "conemu", "bash", "wsl", "ubuntu" }.Contains(stem) ||
+                        app.StartsWith("microsoft.windowsterminal_", StringComparison.OrdinalIgnoreCase) ||
+                        app.StartsWith("microsoft.powershell_", StringComparison.OrdinalIgnoreCase))
                         return true;
                 }
                 // Exact names and AUMIDs; do not substring-match arbitrary executable paths.
