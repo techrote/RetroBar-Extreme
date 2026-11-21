@@ -51,6 +51,25 @@ namespace RetroBar
                             "RetroBar evaluator blocked", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return 3;
                     }
+
+                    if (EvaluationSession.IsReparsePointDataAlias())
+                    {
+                        MessageBox.Show("A RetroBar data directory is a junction or symbolic link. " +
+                            "Evaluation cannot prove that it is separate from installed settings. " +
+                            "Launch refused before taskbar takeover.",
+                            "RetroBar evaluator blocked", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return 3;
+                    }
+
+                    if (MessageBox.Show(
+                        "ISOLATED RETROBAR EVALUATION\r\n\r\n" +
+                        "The settings folder is separate, but this program will temporarily " +
+                        "replace the Windows Explorer taskbar.\r\n\r\n" +
+                        "Continue only after saving your work and preparing Task Manager/Explorer " +
+                        "recovery. No other RetroBar instance is running.\r\n\r\nContinue?",
+                        "Confirm taskbar evaluation", MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                        return 4;
                 }
                 else if (!SingleInstanceCheck())
                 {

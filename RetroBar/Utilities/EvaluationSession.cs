@@ -51,6 +51,20 @@ namespace RetroBar.Utilities
             return false;
         }
 
+        public static bool IsReparsePointDataAlias()
+        {
+            if (!IsEnabled) return false;
+            // A junction/symlink that redirects the evaluator directory onto
+            // the installed directory defeats root separation; refuse it.
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            foreach (string root in new[] { GetDataDirectory(local, true), GetDataDirectory(local, false) })
+            {
+                if (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
+                    return true;
+            }
+            return false;
+        }
+
         public static void Configure(bool evaluation)
         {
             if (_configured)

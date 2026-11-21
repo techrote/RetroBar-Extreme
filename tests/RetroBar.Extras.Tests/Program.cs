@@ -36,8 +36,18 @@ internal static partial class Program
             var field = settingsType.GetField("_settingsPath", BindingFlags.Static | BindingFlags.NonPublic);
             var actual = (string)field.GetValue(null);
             var expected = Path.Combine(EvaluationSession.DataDirectory, "settings.json");
-            return string.Equals(Path.GetFullPath(actual), Path.GetFullPath(expected),
-                StringComparison.OrdinalIgnoreCase) ? 0 : 42;
+            if (!string.Equals(Path.GetFullPath(actual), Path.GetFullPath(expected),
+                StringComparison.OrdinalIgnoreCase)) return 42;
+
+            var settings = settingsType.GetProperty("Instance").GetValue(null);
+            var quickLaunch = settingsType.GetProperty("QuickLaunchPath");
+            if (!string.Equals((string)quickLaunch.GetValue(settings),
+                    EvaluationSession.QuickLaunchDirectory, StringComparison.OrdinalIgnoreCase)) return 43;
+            // Even an explicit attempt to select a Windows pinned folder must
+            // not divert an evaluator's default Quick Launch folder.
+            quickLaunch.SetValue(settings, @"C:\Users\Fixture\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch");
+            return string.Equals((string)quickLaunch.GetValue(settings),
+                EvaluationSession.QuickLaunchDirectory, StringComparison.OrdinalIgnoreCase) ? 0 : 44;
         }
 
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "extras-evidence");
