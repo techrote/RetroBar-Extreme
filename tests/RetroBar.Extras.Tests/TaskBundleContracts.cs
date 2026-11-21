@@ -1,4 +1,7 @@
 using RetroBar.Utilities;
+using RetroBar.Converters;
+using ManagedShell.AppBar;
+using System.Windows.Controls;
 
 internal static partial class Program
 {
@@ -25,5 +28,14 @@ internal static partial class Program
         Check(TaskAffinityRules.PresentationFor("explorer.exe", profile) == TaskApplicationPresentation.Separate, "Explorer stays separate.");
         Check(TaskAffinityRules.ExpansionFor("explorer.exe", profile) == TaskBundleExpansion.Inline, "Dormant expansion settings persist.");
         Check(TaskAffinityRules.PresentationFor("pwsh.exe", profile) == TaskApplicationPresentation.Affinity, "Other apps retain affinity.");
+        var outer = new TaskBundleEntryWidthConverter();
+        var vertical = outer.Convert(new object[] { Orientation.Vertical, 172.0 }, typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
+        var horizontal = outer.Convert(new object[] { Orientation.Horizontal, 172.0 }, typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
+        Check(vertical is double vw && vw == 172.0, "Vertical bundle width follows the taskbar.");
+        Check(horizontal is double hw && double.IsNaN(hw), "Horizontal bundle width grows with inline children.");
+        var inner = new TaskBundleButtonWidthConverter();
+        var fallback = inner.Convert(new object[] { new TaskBundleEntry(), 172.0, 0, 1, null, 0.0, 24.0, 172.0, AppBarEdge.Right },
+            typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
+        Check(fallback is double bw && bw == 172.0, "Bundle width adapter uses normal taskbar width when no representative is available.");
     }
 }
