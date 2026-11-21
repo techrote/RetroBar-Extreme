@@ -2,6 +2,8 @@ using ManagedShell.AppBar;
 using RetroBar.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Windows.Data;
 using System.Windows;
 using RetroBar.Controls;
 
@@ -41,6 +43,45 @@ internal static partial class Program
         Check(!DisplayTaskbarProfiles.MatchesAny("google.chromium!App", "microsoft.windows.terminal"),
             "Unrelated AUMID never matches.");
         Check(settingsType.GetProperty("DisplayTaskbarProfiles").GetValue(settings) != null, "Profile storage nonnull.");
+
+        // Selected secondary shell host delivers each balloon exactly once.
+        Check(NotifyIcon.ShouldDeliverBalloon(true, false, true, true),
+            "Selected secondary shell host delivers a matching balloon.");
+        Check(!NotifyIcon.ShouldDeliverBalloon(false, false, true, true),
+            "Non-host displays cannot deliver a shell-host balloon.");
+        Check(!NotifyIcon.ShouldDeliverBalloon(true, true, true, true),
+            "Already-handled live balloons are never duplicated.");
+        Check(!NotifyIcon.ShouldDeliverBalloon(true, false, false, true) &&
+              !NotifyIcon.ShouldDeliverBalloon(true, false, true, false),
+            "Mismatched and hidden icon balloons are rejected.");
+        Check(StartButton.UseTargetedStartLauncher(true, false, false),
+            "Profile-enabled secondary Start targets its own HWND.");
+        Check(!StartButton.UseTargetedStartLauncher(false, false, false) &&
+              StartButton.UseTargetedStartLauncher(false, true, true),
+            "Legacy Start launcher routing is unchanged.");
+
+        var source = new ObservableCollection<object> { "keep", "drop" };
+        var sharedView = new ListCollectionView(source);
+        Predicate<object> previous = item => (string)item != "drop";
+        sharedView.Filter = previous;
+        UnpinnedIconFilterLease.Acquire(sharedView);
+        UnpinnedIconFilterLease.Acquire(sharedView);
+        Check(UnpinnedIconFilterLease.OwnerCount(sharedView) == 2 &&
+              !ReferenceEquals(sharedView.Filter, previous),
+            "Two trays use a shared static predicate without capturing UI controls.");
+        UnpinnedIconFilterLease.Release(sharedView);
+        Check(UnpinnedIconFilterLease.OwnerCount(sharedView) == 1,
+            "Unloading one of two trays retains the other filter lease.");
+        UnpinnedIconFilterLease.Release(sharedView);
+        Check(UnpinnedIconFilterLease.OwnerCount(sharedView) == 0 &&
+              ReferenceEquals(sharedView.Filter, previous),
+            "Final tray unload conditionally restores the previous predicate.");
+        UnpinnedIconFilterLease.Acquire(sharedView);
+        Predicate<object> external = item => true;
+        sharedView.Filter = external;
+        UnpinnedIconFilterLease.Release(sharedView);
+        Check(ReferenceEquals(sharedView.Filter, external),
+            "An external replacement filter is not clobbered on tray unload.");
 
         // Exercise the real Clock Loaded/Unloaded and settings-change handlers on STA
         // without launching ManagedShell or creating a Windows taskbar.
