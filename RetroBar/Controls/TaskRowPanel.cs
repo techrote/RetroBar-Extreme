@@ -20,6 +20,18 @@ namespace RetroBar.Controls
         private Rect[] _slots = Array.Empty<Rect>();
         private bool _custom;
 
+        // ScrollViewer horizontally measures content at infinity. Keep a
+        // finite packing width for rule-constrained rows even during Inline
+        // expansion, while reporting the genuine wider scrollable extent.
+        public static readonly DependencyProperty ViewportWidthProperty =
+            DependencyProperty.Register(nameof(ViewportWidth), typeof(double), typeof(TaskRowPanel),
+                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public double ViewportWidth
+        {
+            get => (double)GetValue(ViewportWidthProperty);
+            set => SetValue(ViewportWidthProperty, value);
+        }
+
         public TaskRowPanel()
         {
             Loaded += (s, e) => Settings.Instance.PropertyChanged += Settings_PropertyChanged;
@@ -36,17 +48,22 @@ namespace RetroBar.Controls
         }
 
         private static bool HasRules =>
-            (Settings.Instance.TaskRowRules?.Any(r => !string.IsNullOrWhiteSpace(r.Apps) || r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0) ?? false) ||
+            (Settings.Instance.TaskRowRules?.Any(r => r != null && (!string.IsNullOrWhiteSpace(r.Apps) ||
+                r.OnlyListed || r.Align != TaskButtonAlignOption.Left || r.HeightAdjust != 0)) ?? false) ||
             !string.IsNullOrWhiteSpace(Settings.Instance.TaskEndApps);
 
         protected override Size MeasureOverride(Size constraint)
         {
-            _custom = Orientation == Orientation.Horizontal && HasRules && !double.IsInfinity(constraint.Width);
+            _custom = Orientation == Orientation.Horizontal && HasRules;
             if (!_custom)
             {
+                _slots = Array.Empty<Rect>();
+                _totalHeight = 0;
                 return base.MeasureOverride(constraint);
             }
 
+            double rowWidth = double.IsFinite(constraint.Width) ? Math.Max(0, constraint.Width) :
+                double.IsFinite(ViewportWidth) ? Math.Max(0, ViewportWidth) : 0;
             var unlimited = new Size(double.PositiveInfinity, double.PositiveInfinity);
             UIElement[] children = InternalChildren.Cast<UIElement>().Where(c => c.Visibility != Visibility.Collapsed).ToArray();
             foreach (UIElement child in children)
@@ -62,10 +79,12 @@ namespace RetroBar.Controls
             }
 
             int rows = Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
-                : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount) : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
-            _slots = Place(children, rows, rowHeight, constraint.Width);
-            double width = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
-            return new Size(width, _slots.Length == 0 ? rows * rowHeight : Math.Max(rows * rowHeight, _totalHeight));
+                : FindScrollHost() != null || double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount)
+                : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
+            _slots = Place(children, rows, rowHeight, rowWidth);
+            double extent = _slots.Length == 0 ? 0 : _slots.Max(r => r.Right);
+            return new Size(Math.Max(rowWidth, extent),
+                _slots.Length == 0 ? rows * rowHeight : Math.Max(rows * rowHeight, _totalHeight));
         }
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -83,12 +102,24 @@ namespace RetroBar.Controls
             return finalSize;
         }
 
+        private ScrollViewer FindScrollHost()
+        {
+            DependencyObject parent = System.Windows.Media.VisualTreeHelper.GetParent(this);
+            while (parent != null)
+            {
+                if (parent is ScrollViewer viewer) return viewer;
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            }
+            return null;
+        }
+
         private double _totalHeight;
 
         private Rect[] Place(UIElement[] children, int rows, double rowHeight, double rowWidth)
         {
             Settings settings = Settings.Instance;
             var rules = (settings.TaskRowRules ?? new List<TaskRowRule>())
+                .Where(rule => rule != null)
                 .Select(r => (row: r.Row > 0 ? r.Row - 1 : rows + r.Row, rule: r))
                 .Where(r => r.row >= 0 && r.row < rows)
                 .ToList();
@@ -173,10 +204,12 @@ namespace RetroBar.Controls
         // The app a button stands for: its exe name (lower case, no extension), and for Store apps its AppUserModelID.
         private static (string stem, string aumid) KeyOf(UIElement child)
         {
-            if (!(child is FrameworkElement element) || !(element.DataContext is ApplicationWindow window))
-            {
+            if (!(child is FrameworkElement element))
                 return ("", "");
-            }
+            ApplicationWindow window = element.DataContext as ApplicationWindow;
+            if (window == null && element.DataContext is TaskBundleEntry entry)
+                window = entry.Representative;
+            if (window == null) return ("", "");
 
             string file = TaskButtonRules.AppKey(window) ?? "";
             string stem = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();

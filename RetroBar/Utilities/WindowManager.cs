@@ -1,5 +1,6 @@
 using ManagedShell;
 using ManagedShell.AppBar;
+using ManagedShell.WindowsTasks;
 using ManagedShell.Common.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,23 @@ namespace RetroBar.Utilities
         // One selected taskbar handles shell/tray integration even when the primary monitor has no bar.
         public bool IsShellHost(AppBarScreen screen) => screen != null &&
             string.Equals(_shellHostDeviceName, screen.DeviceName, StringComparison.OrdinalIgnoreCase);
+
+        // ManagedShell invokes every GetButtonRect subscriber without stopping
+        // after one handler. Elect a single taskbar at request time so changes
+        // to filters, window location and monitor topology cannot leave a stale
+        // cached rectangle owner or cause multiple writers.
+        public bool IsWindowRectangleOwner(Taskbar requester, ApplicationWindow window)
+        {
+            if (requester == null || window == null) return false;
+
+            var options = _taskbars.Select((bar, index) => new WindowRectangleCandidate(
+                index, bar.Screen.DeviceName, bar.Screen.HMonitor, bar.IsShellHost,
+                bar.IsLoaded && bar.IsVisible &&
+                bar.TaskButtonsHost?.HasVisibleRectangleTarget(window) == true)).ToArray();
+            int selected = WindowRectangleOwnership.Select(window.HMonitor, options);
+            return selected >= 0 && selected < _taskbars.Count &&
+                   ReferenceEquals(_taskbars[selected], requester);
+        }
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
