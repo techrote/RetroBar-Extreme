@@ -19,6 +19,7 @@ namespace RetroBar.Utilities
         public bool ShowQuickLaunch { get; set; } = true;
         public bool ShowTray { get; set; } = true;
         public bool ShowClock { get; set; } = true;
+        public bool ShowDesktop { get; set; } = true;
         public DisplayWindowSource WindowSource { get; set; } = DisplayWindowSource.AllMonitors;
         // Comma, semicolon or newline-separated executable names, families or AppUserModelIDs.
         public string IncludeApps { get; set; } = "";
@@ -31,7 +32,7 @@ namespace RetroBar.Utilities
         {
             DeviceName = DeviceName, Enabled = Enabled, Edge = Edge, AutoHide = AutoHide,
             Rows = Rows, Width = Width, ShowStart = ShowStart, ShowQuickLaunch = ShowQuickLaunch,
-            ShowTray = ShowTray, ShowClock = ShowClock, WindowSource = WindowSource,
+            ShowTray = ShowTray, ShowClock = ShowClock, ShowDesktop = ShowDesktop, WindowSource = WindowSource,
             IncludeApps = IncludeApps, ExcludeApps = ExcludeApps,
             ArrangementOverride = ArrangementOverride,
             ApplicationOverrides = (ApplicationOverrides ?? new List<TaskApplicationPolicy>())

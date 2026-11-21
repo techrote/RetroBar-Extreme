@@ -40,6 +40,7 @@ namespace RetroBar.Controls
             ShowQuickLaunch = Settings.Instance.ShowQuickLaunch,
             ShowTray = true,
             ShowClock = Settings.Instance.ShowClock,
+            ShowDesktop = Settings.Instance.ShowDesktopButton,
             WindowSource = Settings.Instance.MultiMonMode == MultiMonOption.AllTaskbars ||
                 (screen.Primary && Settings.Instance.MultiMonMode == MultiMonOption.SameAsWindowAndPrimary)
                 ? DisplayWindowSource.AllMonitors : DisplayWindowSource.ThisMonitor
@@ -76,6 +77,7 @@ namespace RetroBar.Controls
             ShowQuickLaunch.IsChecked = profile.ShowQuickLaunch;
             ShowTray.IsChecked = profile.ShowTray;
             ShowClock.IsChecked = profile.ShowClock;
+            ShowDesktop.IsChecked = profile.ShowDesktop;
             IncludeApps.Text = profile.IncludeApps ?? "";
             ExcludeApps.Text = profile.ExcludeApps ?? "";
             _loading = false;
@@ -124,6 +126,7 @@ namespace RetroBar.Controls
             p.ShowQuickLaunch = ShowQuickLaunch.IsChecked == true;
             p.ShowTray = ShowTray.IsChecked == true;
             p.ShowClock = ShowClock.IsChecked == true;
+            p.ShowDesktop = ShowDesktop.IsChecked == true;
             p.IncludeApps = IncludeApps.Text.Trim();
             p.ExcludeApps = ExcludeApps.Text.Trim();
             Settings.Instance.SaveDisplayTaskbarProfile(p);
