@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace RetroBar.Utilities
 {
@@ -90,6 +91,31 @@ namespace RetroBar.Utilities
                 value = value.FindAll(item => item is not null);
             }
             Set(ref field, value, propertyName);
+        }
+
+        // TASKBAR-MANAGEMENT-001: opt-in per-monitor taskbars; legacy settings remain authoritative until enabled.
+        private bool _useDisplayProfiles = false;
+        public bool UseDisplayProfiles
+        {
+            get => _useDisplayProfiles;
+            set => Set(ref _useDisplayProfiles, value);
+        }
+
+        private List<DisplayTaskbarProfile> _displayTaskbarProfiles = new();
+        public List<DisplayTaskbarProfile> DisplayTaskbarProfiles
+        {
+            get => _displayTaskbarProfiles;
+            set => SetList(ref _displayTaskbarProfiles, value ?? new List<DisplayTaskbarProfile>());
+        }
+
+        public void SaveDisplayTaskbarProfile(DisplayTaskbarProfile profile)
+        {
+            if (profile == null || string.IsNullOrWhiteSpace(profile.DeviceName)) return;
+            var profiles = (DisplayTaskbarProfiles ?? new List<DisplayTaskbarProfile>())
+                .Where(p => !string.Equals(p.DeviceName, profile.DeviceName, StringComparison.OrdinalIgnoreCase))
+                .Select(p => p.Clone()).ToList();
+            profiles.Add(profile.Clone());
+            DisplayTaskbarProfiles = profiles;
         }
 
         #region Properties

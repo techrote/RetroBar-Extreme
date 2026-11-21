@@ -84,12 +84,20 @@ namespace RetroBar.Controls
             SetStartMenuState(false);
         }
 
+        // Independent display profiles target their actual Start-hosting taskbar.
+        // The legacy global configuration retains its existing routing decision.
+        public static bool UseTargetedStartLauncher(bool hasDisplayProfile,
+            bool legacyMultiMonitor, bool legacyMultiStart) =>
+            hasDisplayProfile || (legacyMultiMonitor && legacyMultiStart);
+
         private void OpenStartMenu()
         {
             Host?.SetTrayHost();
             Host?.SetStartMenuOpen(true);
             pendingOpenTimer.Start();
-            if (Host != null && StartMenuMonitor != null && Settings.Instance.ShowMultiMon && Settings.Instance.ShowStartButtonMultiMon)
+            if (Host != null && StartMenuMonitor != null &&
+                UseTargetedStartLauncher(Host.DisplayProfile != null,
+                    Settings.Instance.ShowMultiMon, Settings.Instance.ShowStartButtonMultiMon))
             {
                 StartMenuMonitor.ShowStartMenu(Host.Handle);
             }

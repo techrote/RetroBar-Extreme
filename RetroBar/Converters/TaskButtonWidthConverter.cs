@@ -49,13 +49,15 @@ namespace RetroBar.Converters
         // UXUI-Extreme (UX-014): a remembered per-app width.
         // values[4] = the button's ApplicationWindow, values[5] = the rules (so changes re-run this),
         // values[6] = button margins, values[7] = icon-only width, values[8] = default width (both incl. margins).
+        // values[9] = this taskbar's edge (independent for each display profile).
         // Icon only is always narrow. Other widths apply as set when the row has room; when buttons
         // are being shrunk to fit, a wider app button shrinks with them rather than overflowing.
         private static object AppWidth(object[] values, double width, double baseWidth)
         {
+            AppBarEdge edge = values.Length > 9 && values[9] is AppBarEdge hostEdge ? hostEdge : Settings.Instance.Edge;
             if (values.Length < 9 || !(values[4] is ApplicationWindow window) ||
                 !(values[6] is double margin) || !(values[7] is double iconOnly) || !(values[8] is double defaultWidth) ||
-                Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+                edge == AppBarEdge.Left || edge == AppBarEdge.Right)
             {
                 return width;
             }

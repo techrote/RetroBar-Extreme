@@ -113,9 +113,15 @@ namespace RetroBar.Controls
 
         private void Window_GetButtonRect(ref NativeMethods.ShortRect rect)
         {
-            if (Host?.Host?.Screen.Primary != true && Settings.Instance.MultiMonMode != MultiMonOption.SameAsWindow)
+            if (Host?.Host?.DisplayProfile is DisplayTaskbarProfile display)
             {
-                // If there are multiple instances of a button, use the button on the primary display only
+                // Prefer the designated shell host for all-monitor views, including primary-disabled layouts.
+                if (!Host.Host.IsShellHost && display.WindowSource != DisplayWindowSource.ThisMonitor)
+                    return;
+            }
+            else if (Host?.Host?.Screen.Primary != true && Settings.Instance.MultiMonMode != MultiMonOption.SameAsWindow)
+            {
+                // Legacy duplicate-button positioning stays unchanged.
                 return;
             }
 

@@ -19,6 +19,12 @@ namespace RetroBar.Controls
         private bool isLoaded;
         private ManagedShell.WindowsTray.NotifyIcon TrayIcon;
 
+        // Designated shell-host ownership is independent of Windows primary display.
+        // Observing Handled also prevents duplicate live-balloon delivery.
+        public static bool ShouldDeliverBalloon(bool isShellHost, bool alreadyHandled,
+            bool matchesIcon, bool allowedBehavior) =>
+            isShellHost && !alreadyHandled && matchesIcon && allowedBehavior;
+
         public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(NotifyIcon));
 
         public Taskbar Host
@@ -99,7 +105,11 @@ namespace RetroBar.Controls
                 // If a notification was received before we started listening, it will be here. Show the first one that is not expired.
                 NotificationBalloon firstUnexpiredNotification = TrayIcon.MissedNotifications.FirstOrDefault(balloon => balloon.Received.AddMilliseconds(balloon.Timeout) > DateTime.Now);
 
-                if (firstUnexpiredNotification != null && Host != null && Host.Screen.Primary)
+                if (firstUnexpiredNotification != null &&
+                    ShouldDeliverBalloon(Host?.IsShellHost == true, false,
+                        ReferenceEquals(firstUnexpiredNotification.NotifyIcon, TrayIcon),
+                        TrayIcon.GetBehavior() != NotifyIconBehavior.AlwaysHide &&
+                        TrayIcon.GetBehavior() != NotifyIconBehavior.Remove))
                 {
                     BalloonControl.Show(firstUnexpiredNotification, NotifyIconBorder);
                     TrayIcon.MissedNotifications.Remove(firstUnexpiredNotification);
@@ -122,17 +132,10 @@ namespace RetroBar.Controls
 
         private void TrayIcon_NotificationBalloonShown(object sender, NotificationBalloonEventArgs e)
         {
-            if (Host == null || !Host.Screen.Primary)
-            {
-                return;
-            }
-
-            if (TrayIcon == null || TrayIcon.GetBehavior() == NotifyIconBehavior.AlwaysHide || TrayIcon.GetBehavior() == NotifyIconBehavior.Remove)
-            {
-                return;
-            }
-
-            if (NotifyIconBorder.DataContext != e.Balloon.NotifyIcon)
+            if (TrayIcon == null || !ShouldDeliverBalloon(Host?.IsShellHost == true, e.Handled,
+                ReferenceEquals(NotifyIconBorder.DataContext, e.Balloon.NotifyIcon),
+                TrayIcon.GetBehavior() != NotifyIconBehavior.AlwaysHide &&
+                TrayIcon.GetBehavior() != NotifyIconBehavior.Remove))
             {
                 return;
             }
