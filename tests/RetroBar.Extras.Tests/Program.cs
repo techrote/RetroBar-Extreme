@@ -51,6 +51,9 @@ internal static partial class Program
             ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
+            ("Opt-in display profiles preserve legacy state and application filters", DisplayProfileContracts),
+            ("Affinity grouping and hybrid presentation policies", TaskAffinityContracts),
+            ("Bundled task entry invariants", TaskBundleContracts),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }
