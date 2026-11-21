@@ -77,7 +77,7 @@ namespace RetroBar.Controls
             {
                 NotificationArea.NotificationBalloonShown += NotificationArea_NotificationBalloonShown;
                 NotificationArea.UnpinnedIcons.CollectionChanged += UnpinnedIcons_CollectionChanged;
-                NotificationArea.UnpinnedIcons.Filter = UnpinnedNotifyIcons_Filter;
+                UnpinnedIconFilterLease.Acquire(NotificationArea.UnpinnedIcons);
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
 
                 collectionView = new ListCollectionView(NotificationArea.TrayIcons);
@@ -116,17 +116,6 @@ namespace RetroBar.Controls
                     && notifyIcon.GetBehavior() != NotifyIconBehavior.Remove;
             }
             return false;
-        }
-
-        private bool UnpinnedNotifyIcons_Filter(object obj)
-        {
-            // This filter is used when we check if the toggle should hide
-            if (obj is Tray.NotifyIcon notifyIcon)
-            {
-                return !notifyIcon.IsPinned && !notifyIcon.IsHidden && notifyIcon.GetBehavior() != NotifyIconBehavior.Remove;
-            }
-
-            return true;
         }
 
         private void NotificationArea_NotificationBalloonShown(object sender, NotificationBalloonEventArgs e)
@@ -205,7 +194,7 @@ namespace RetroBar.Controls
             {
                 NotificationArea.NotificationBalloonShown -= NotificationArea_NotificationBalloonShown;
                 NotificationArea.UnpinnedIcons.CollectionChanged -= UnpinnedIcons_CollectionChanged;
-                NotificationArea.UnpinnedIcons.Filter = UnpinnedNotifyIcons_Filter;
+                UnpinnedIconFilterLease.Release(NotificationArea.UnpinnedIcons);
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             }
 
