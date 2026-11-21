@@ -265,7 +265,14 @@ internal static partial class Program
             Check(rowPanel.GetBindingExpression(TaskRowPanel.ViewportWidthProperty) != null &&
                   rowPanel.ViewportWidth > 0 && scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto,
                 "Production bundled row panel receives a finite viewport from its real ScrollViewer.");
-            Check(scroll.ScrollableWidth > 800, "Actual 20-window bundle creates horizontal overflow.");
+            Check(scroll.ScrollableWidth > 800,
+                $"Actual 20-window bundle creates horizontal overflow: scrollable={scroll.ScrollableWidth}, " +
+                $"extent={scroll.ExtentWidth}, viewport={scroll.ViewportWidth}, panelViewport={rowPanel.ViewportWidth}, " +
+                $"panelDesired={rowPanel.DesiredSize.Width}, panelActual={rowPanel.ActualWidth}, " +
+                $"bundledActual={bundled.ActualWidth}, firefoxActual={firefoxView.ActualWidth}, " +
+                $"inlineActual={children.ActualWidth}, lastButton={visibleChildren[^1].ActualWidth}, " +
+                $"inlineOrientation={((StackPanel)firefoxView.FindName("EntryStack")).Orientation}, " +
+                $"scrollMode={scroll.HorizontalScrollBarVisibility}");
             double firefoxTop = firefoxView.TransformToAncestor(rowPanel).Transform(new Point(0, 0)).Y;
             double explorerTop = explorerView.TransformToAncestor(rowPanel).Transform(new Point(0, 0)).Y;
             Check(firefoxTop > explorerTop + 8,
