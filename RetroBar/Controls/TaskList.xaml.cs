@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Data;
 using System.Windows;
@@ -29,6 +30,17 @@ namespace RetroBar.Controls
         private readonly Dictionary<IntPtr, long> _originalOrder = new();
         private long _nextOrder;
         private bool _sorting;
+        private readonly ObservableCollection<TaskBundleEntry> _bundleEntries = new();
+        private readonly HashSet<string> _inlineExpanded = new(StringComparer.OrdinalIgnoreCase);
+        private bool _bundlesVisible;
+
+        public bool BundleExpanded(string key) => _inlineExpanded.Contains(key ?? "");
+        public void SetBundleExpanded(string key, bool expanded)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return;
+            if (expanded) _inlineExpanded.Add(key);
+            else _inlineExpanded.Remove(key);
+        }
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
 
@@ -171,6 +183,7 @@ namespace RetroBar.Controls
                 }
 
                 TasksList.ItemsSource = taskbarItems;
+                BundledTasksList.ItemsSource = _bundleEntries;
                 ApplyAffinityOrder();
 
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
@@ -218,15 +231,23 @@ namespace RetroBar.Controls
         }
         private void TaskList_TaskbarHotkeyPressed(object sender, HotkeyManager.TaskbarHotkeyEventArgs e)
         {
-            if (Settings.Instance.WinNumHotkeysAction == WinNumHotkeysOption.SwitchTasks && Host.Screen.Primary)
+            if (Settings.Instance.WinNumHotkeysAction == WinNumHotkeysOption.SwitchTasks && Host.IsShellHost)
             {
                 try
                 {
-                    bool exists = taskbarItems.MoveCurrentToPosition(e.index);
-
-                    if (exists)
+                    ApplicationWindow window = null;
+                    if (_bundlesVisible)
                     {
-                        ApplicationWindow window = taskbarItems.CurrentItem as ApplicationWindow;
+                        if (e.index >= 0 && e.index < _bundleEntries.Count)
+                            window = _bundleEntries[e.index].Representative;
+                    }
+                    else if (taskbarItems.MoveCurrentToPosition(e.index))
+                    {
+                        window = taskbarItems.CurrentItem as ApplicationWindow;
+                    }
+
+                    if (window != null)
+                    {
 
                         if (e.isShiftPressed)
                         {
@@ -317,8 +338,12 @@ namespace RetroBar.Controls
 
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (!_sorting && e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
-                ApplyAffinityOrder();
+            if (!_sorting)
+            {
+                if (e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+                    ApplyAffinityOrder();
+                else RebuildBundleEntries();
+            }
             SetTaskButtonWidth();
         }
 
@@ -348,6 +373,49 @@ namespace RetroBar.Controls
                 }
             }
             finally { _sorting = false; }
+            RebuildBundleEntries();
+        }
+
+        private void RebuildBundleEntries()
+        {
+            if (taskbarItems == null || Host == null) return;
+            var mode = TaskAffinityRules.ModeFor(Host.DisplayProfile);
+            _bundlesVisible = mode == TaskArrangementMode.Bundle || mode == TaskArrangementMode.Hybrid;
+            TasksList.Visibility = _bundlesVisible ? Visibility.Collapsed : Visibility.Visible;
+            BundledTasksList.Visibility = _bundlesVisible ? Visibility.Visible : Visibility.Collapsed;
+            if (!_bundlesVisible)
+            {
+                _bundleEntries.Clear();
+                return;
+            }
+
+            var buckets = new Dictionary<string, TaskBundleEntry>(StringComparer.OrdinalIgnoreCase);
+            var ordered = new List<TaskBundleEntry>();
+            foreach (var window in taskbarItems.OfType<ApplicationWindow>())
+            {
+                string app = TaskButtonRules.AppKey(window);
+                // Missing executable identities must never collapse unrelated windows.
+                if (string.IsNullOrWhiteSpace(app)) app = "unknown:" + window.Handle.ToInt64();
+                bool combine = TaskAffinityRules.PresentationFor(app, Host.DisplayProfile) ==
+                               TaskApplicationPresentation.Bundle;
+                string bucket = "bundle:" + app.ToLowerInvariant();
+                if (!combine || !buckets.TryGetValue(bucket, out var item))
+                {
+                    item = new TaskBundleEntry
+                    {
+                        Key = combine ? bucket : "single:" + window.Handle.ToInt64(),
+                        CanBundle = combine,
+                        Expansion = TaskAffinityRules.ExpansionFor(app, Host.DisplayProfile)
+                    };
+                    if (combine) buckets[bucket] = item;
+                    ordered.Add(item);
+                }
+                item.Windows.Add(window);
+            }
+
+            _bundleEntries.Clear();
+            foreach (var item in ordered) _bundleEntries.Add(item);
+            SetTaskButtonWidth();
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -371,12 +439,13 @@ namespace RetroBar.Controls
             double height = ActualHeight;
             int rows = Host.Rows;
 
-            int taskCount = TasksList.Items.Count;
+            int taskCount = _bundlesVisible ? BundledTasksList.Items.Count : TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex
+            BundledTasksList.AlternationCount = taskCount;
 
             double margin = TaskButtonLeftMargin + TaskButtonRightMargin;
             ButtonsPerRow = Math.Max(1, (int)Math.Ceiling((double)taskCount / rows));
-            double maxWidth = TasksList.ActualWidth / ButtonsPerRow;
+            double maxWidth = (_bundlesVisible ? BundledTasksList.ActualWidth : TasksList.ActualWidth) / ButtonsPerRow;
             double defaultWidth = DefaultButtonWidth + margin;
             double minWidth = MinButtonWidth + margin;
 
@@ -399,7 +468,7 @@ namespace RetroBar.Controls
                 // across the columns so the row fills the taskbar.
                 double baseWidth = Math.Floor(maxWidth);
                 ButtonWidth = baseWidth;
-                ExtraWidthCount = (int)Math.Floor(TasksList.ActualWidth) - (int)baseWidth * ButtonsPerRow;
+                ExtraWidthCount = (int)Math.Floor(_bundlesVisible ? BundledTasksList.ActualWidth : TasksList.ActualWidth) - (int)baseWidth * ButtonsPerRow;
                 SetScrollable(false);
             }
         }

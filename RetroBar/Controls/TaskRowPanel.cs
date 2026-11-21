@@ -173,10 +173,12 @@ namespace RetroBar.Controls
         // The app a button stands for: its exe name (lower case, no extension), and for Store apps its AppUserModelID.
         private static (string stem, string aumid) KeyOf(UIElement child)
         {
-            if (!(child is FrameworkElement element) || !(element.DataContext is ApplicationWindow window))
-            {
+            if (!(child is FrameworkElement element))
                 return ("", "");
-            }
+            ApplicationWindow window = element.DataContext as ApplicationWindow;
+            if (window == null && element.DataContext is TaskBundleEntry entry)
+                window = entry.Representative;
+            if (window == null) return ("", "");
 
             string file = TaskButtonRules.AppKey(window) ?? "";
             string stem = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();

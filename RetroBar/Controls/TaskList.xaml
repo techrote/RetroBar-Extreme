@@ -47,6 +47,7 @@
                       Focusable="False"
                       PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
                       VerticalScrollBarVisibility="Disabled">
+            <Grid>
             <ItemsControl x:Name="TasksList"
                           Focusable="False"
                           HorizontalAlignment="Stretch"
@@ -85,6 +86,29 @@
                     </ItemContainerTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <!-- A separate projected view only for Bundle/Hybrid, leaving legacy task items unchanged. -->
+            <ItemsControl x:Name="BundledTasksList" Focusable="False"
+                          HorizontalAlignment="Stretch" Visibility="Collapsed">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}">
+                            <WrapPanel.Orientation>
+                                <Binding Converter="{StaticResource orientationConverter}"
+                                         Path="Orientation"
+                                         RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                            </WrapPanel.Orientation>
+                        </local:TaskRowPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:TaskBundleEntryView
+                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}"
+                            Width="{Binding Path=ButtonWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            </Grid>
         </ScrollViewer>
     </DockPanel>
 </UserControl>
