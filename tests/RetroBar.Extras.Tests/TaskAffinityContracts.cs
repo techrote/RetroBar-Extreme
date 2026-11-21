@@ -6,7 +6,10 @@ internal static partial class Program
     private static void TaskAffinityContracts()
     {
         var profile = new DisplayTaskbarProfile();
-        Check(Settings.Instance.TaskArrangement == TaskArrangementMode.Separate, "Legacy mode remains the default.");
+        var settingsType = typeof(TaskAffinityRules).Assembly.GetType("RetroBar.Utilities.Settings", true);
+        var settings = System.Activator.CreateInstance(settingsType);
+        Check(settingsType.GetProperty("TaskArrangement").GetValue(settings) is TaskArrangementMode.Separate,
+            "Legacy mode remains the default.");
         Check(TaskAffinityRules.ModeFor(profile) == TaskArrangementMode.Separate, "Null per-display override inherits global mode.");
         profile.ArrangementOverride = TaskArrangementMode.Hybrid;
         Check(TaskAffinityRules.ModeFor(profile) == TaskArrangementMode.Hybrid, "Per-display override selects Hybrid.");
