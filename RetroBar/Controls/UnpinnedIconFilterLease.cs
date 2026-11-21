@@ -1,7 +1,7 @@
 using ManagedShell.WindowsTray;
 using System;
 using System.Collections.Generic;
-using System.Windows.Data;
+using System.ComponentModel;
 using TrayIcon = ManagedShell.WindowsTray.NotifyIcon;
 
 namespace RetroBar.Controls
