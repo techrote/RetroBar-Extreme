@@ -49,6 +49,19 @@ internal static partial class Program
         var horizontal = outer.Convert(new object[] { Orientation.Horizontal, 172.0 }, typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
         Check(vertical is double vw && vw == 172.0, "Vertical bundle width follows the taskbar.");
         Check(horizontal is double hw && double.IsNaN(hw), "Horizontal bundle width grows with inline children.");
+        using (var edgeScope = new LayoutSettingsScope("Edge"))
+        {
+            edgeScope.Set("Edge", AppBarEdge.Bottom);
+            object unresolved = outer.Convert(new object[] { DependencyProperty.UnsetValue, 172.0 },
+                typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
+            Check(unresolved is double h && double.IsNaN(h),
+                "Missing taskbar orientation on horizontal dock never caps a 20-window bundle at one button.");
+            edgeScope.Set("Edge", AppBarEdge.Left);
+            unresolved = outer.Convert(new object[] { DependencyProperty.UnsetValue, 172.0 },
+                typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
+            Check(unresolved is double v && v == 172.0,
+                "Missing taskbar orientation on vertical dock retains fixed width.");
+        }
         var inner = new TaskBundleButtonWidthConverter();
         var fallback = inner.Convert(new object[] { new TaskBundleEntry(), 172.0, 0, 1, null, 0.0, 24.0, 172.0, AppBarEdge.Right },
             typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
