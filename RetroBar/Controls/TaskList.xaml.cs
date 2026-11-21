@@ -27,8 +27,8 @@ namespace RetroBar.Controls
         private double TaskButtonLeftMargin;
         private double TaskButtonRightMargin;
         private ICollectionView taskbarItems;
-        private readonly Dictionary<IntPtr, long> _originalOrder = new();
-        private long _nextOrder;
+        private readonly TaskWindowOrderTracker _windowOrder = new();
+        private Dictionary<IntPtr, long> _originalOrder = new();
         private bool _sorting;
         private readonly ObservableCollection<TaskBundleEntry> _bundleEntries = new();
         private readonly HashSet<string> _inlineExpanded = new(StringComparer.OrdinalIgnoreCase);
@@ -40,9 +40,26 @@ namespace RetroBar.Controls
             if (string.IsNullOrWhiteSpace(key)) return;
             if (expanded) _inlineExpanded.Add(key);
             else _inlineExpanded.Remove(key);
-            // Horizontal expansion can exceed the nominal per-row button budget.
-            if (_bundlesVisible && Host?.Orientation == Orientation.Horizontal && expanded)
-                SetScrollable(true);
+            // Horizontal overflow belongs to the horizontal axis, not the
+            // vertical task-list scrollbar. Collapse restores ordinary wrapping.
+            RefreshHorizontalBundleAccess();
+        }
+
+        // Dedicated to temporary inline expansion. With normal Bundle/Hybrid,
+        // keep WrapPanel's finite-width multi-row layout unchanged.
+        internal static void ConfigureHorizontalBundleAccess(ScrollViewer viewer, Orientation orientation, bool expandedInline)
+        {
+            viewer.HorizontalScrollBarVisibility = orientation == Orientation.Horizontal && expandedInline
+                ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
+        }
+
+        private void RefreshHorizontalBundleAccess()
+        {
+            bool expandedInline = _bundlesVisible && _bundleEntries.Any(entry =>
+                entry.IsBundle && entry.Expansion == TaskBundleExpansion.Inline &&
+                _inlineExpanded.Contains(entry.Key));
+            ConfigureHorizontalBundleAccess(TasksScrollViewer,
+                Host?.Orientation ?? Orientation.Vertical, expandedInline);
         }
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
@@ -350,21 +367,19 @@ namespace RetroBar.Controls
 
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
+            // A source reset may mean closed HWNDs were removed. Reconcile
+            // identity history and the projected bundle list for every change.
+            // Sort-induced resets are guarded by _sorting.
             if (!_sorting)
-            {
-                if (e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
-                    ApplyAffinityOrder();
-                else RebuildBundleEntries();
-            }
+                ApplyAffinityOrder();
             SetTaskButtonWidth();
         }
 
         private void RememberWindowOrder()
         {
             if (taskbarItems == null) return;
-            foreach (var item in taskbarItems)
-                if (item is ApplicationWindow w && !_originalOrder.ContainsKey(w.Handle))
-                    _originalOrder[w.Handle] = ++_nextOrder;
+            _originalOrder = _windowOrder.Reconcile(taskbarItems.OfType<ApplicationWindow>()
+                .Select(window => (window.Handle, (object)window)));
         }
 
         private void ApplyAffinityOrder()
@@ -399,6 +414,7 @@ namespace RetroBar.Controls
             if (!_bundlesVisible)
             {
                 _bundleEntries.Clear();
+                RefreshHorizontalBundleAccess();
                 return;
             }
 
@@ -428,11 +444,13 @@ namespace RetroBar.Controls
 
             _bundleEntries.Clear();
             foreach (var item in ordered) _bundleEntries.Add(item);
+            RefreshHorizontalBundleAccess();
             SetTaskButtonWidth();
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
+            RefreshHorizontalBundleAccess();
             SetTaskButtonWidth();
         }
 
