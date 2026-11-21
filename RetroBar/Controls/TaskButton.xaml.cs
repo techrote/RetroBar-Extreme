@@ -113,17 +113,10 @@ namespace RetroBar.Controls
 
         private void Window_GetButtonRect(ref NativeMethods.ShortRect rect)
         {
-            if (Host?.Host?.DisplayProfile is DisplayTaskbarProfile display)
-            {
-                // Prefer the designated shell host for all-monitor views, including primary-disabled layouts.
-                if (!Host.Host.IsShellHost && display.WindowSource != DisplayWindowSource.ThisMonitor)
-                    return;
-            }
-            else if (Host?.Host?.Screen.Primary != true && Settings.Instance.MultiMonMode != MultiMonOption.SameAsWindow)
-            {
-                // Legacy duplicate-button positioning stays unchanged.
+            // Hidden legacy controls and expanded bundle children must not
+            // override the visible group-header minimize/restore destination.
+            if (Host?.CanOwnButtonRect(Window, this, isBundleHeader: false) != true)
                 return;
-            }
 
             Point buttonTopLeft = PointToScreen(new Point(0, 0));
             Point buttonBottomRight = PointToScreen(new Point(ActualWidth, ActualHeight));

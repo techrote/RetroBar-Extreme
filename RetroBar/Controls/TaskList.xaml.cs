@@ -35,6 +35,23 @@ namespace RetroBar.Controls
         private bool _bundlesVisible;
 
         public bool BundleExpanded(string key) => _inlineExpanded.Contains(key ?? "");
+
+        internal bool IsBundledWindow(ApplicationWindow window) =>
+            window != null && _bundlesVisible && _bundleEntries.Any(entry =>
+                entry.IsBundle && entry.Windows.Any(member => ReferenceEquals(member, window)));
+
+        internal static bool MatchesRectRepresentation(bool visible, bool bundled, bool header) =>
+            visible && bundled == header;
+
+        internal bool CanOwnButtonRect(ApplicationWindow window, FrameworkElement target, bool isBundleHeader)
+        {
+            if (window == null || target == null || Host == null ||
+                !MatchesRectRepresentation(target.IsVisible, IsBundledWindow(window), isBundleHeader))
+                return false;
+            if (Host.DisplayProfile is DisplayTaskbarProfile display)
+                return Host.IsShellHost || display.WindowSource == DisplayWindowSource.ThisMonitor;
+            return Host.Screen.Primary || Settings.Instance.MultiMonMode == MultiMonOption.SameAsWindow;
+        }
         public void SetBundleExpanded(string key, bool expanded)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
@@ -58,8 +75,10 @@ namespace RetroBar.Controls
             bool expandedInline = _bundlesVisible && _bundleEntries.Any(entry =>
                 entry.IsBundle && entry.Expansion == TaskBundleExpansion.Inline &&
                 _inlineExpanded.Contains(entry.Key));
-            ConfigureHorizontalBundleAccess(TasksScrollViewer,
-                Host?.Orientation ?? Orientation.Vertical, expandedInline);
+            Orientation orientation = Host?.Orientation ??
+                ((Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+                    ? Orientation.Vertical : Orientation.Horizontal);
+            ConfigureHorizontalBundleAccess(TasksScrollViewer, orientation, expandedInline);
         }
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));

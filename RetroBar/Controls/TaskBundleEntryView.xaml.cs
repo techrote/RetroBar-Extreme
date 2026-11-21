@@ -1,4 +1,6 @@
 using ManagedShell.WindowsTasks;
+using ManagedShell.Interop;
+using System.Collections.Generic;
 using RetroBar.Utilities;
 using System;
 using System.Windows;
@@ -21,13 +23,59 @@ namespace RetroBar.Controls
         }
 
         private TaskBundleEntry Entry => DataContext as TaskBundleEntry;
+        private readonly List<ApplicationWindow> _rectMembers = new();
+        private bool _rectLoaded;
+
+        private void DetachRectMembers()
+        {
+            foreach (var member in _rectMembers)
+                member.GetButtonRect -= Member_GetButtonRect;
+            _rectMembers.Clear();
+        }
+
+        private void RefreshRectMembers()
+        {
+            DetachRectMembers();
+            if (!_rectLoaded || Entry?.IsBundle != true) return;
+            foreach (var member in Entry.Windows)
+            {
+                if (member == null || _rectMembers.Exists(w => ReferenceEquals(w, member))) continue;
+                member.GetButtonRect += Member_GetButtonRect;
+                _rectMembers.Add(member);
+            }
+        }
+
+        private void Member_GetButtonRect(ref NativeMethods.ShortRect rect)
+        {
+            // Every window in the same bundle shares the visible group-header
+            // target; hidden legacy buttons and inline children are suppressed.
+            if (Entry?.IsBundle != true || _rectMembers.Count == 0 ||
+                Host?.CanOwnButtonRect(_rectMembers[0], GroupButton, isBundleHeader: true) != true)
+                return;
+
+            Point first = GroupButton.PointToScreen(new Point(0, 0));
+            Point last = GroupButton.PointToScreen(new Point(GroupButton.ActualWidth, GroupButton.ActualHeight));
+            rect.Top = (short)first.Y;
+            rect.Left = (short)first.X;
+            rect.Bottom = (short)last.Y;
+            rect.Right = (short)last.X;
+        }
 
         public TaskBundleEntryView()
         {
             InitializeComponent();
         }
 
-        private void Entry_Loaded(object sender, RoutedEventArgs e) => RefreshEntry();
+        private void Entry_Loaded(object sender, RoutedEventArgs e)
+        {
+            _rectLoaded = true;
+            RefreshEntry();
+        }
+        private void Entry_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _rectLoaded = false;
+            DetachRectMembers();
+        }
         private void Entry_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => RefreshEntry();
 
         private void RefreshEntry()
@@ -41,6 +89,7 @@ namespace RetroBar.Controls
             // after creation can retain a stale zero-width bundle entry.
             ExpandedWindows.Visibility = bundled && entry.Expansion == TaskBundleExpansion.Inline &&
                 Host?.BundleExpanded(entry.Key) == true ? Visibility.Visible : Visibility.Collapsed;
+            RefreshRectMembers();
         }
 
         private void GroupButton_Click(object sender, RoutedEventArgs e)
