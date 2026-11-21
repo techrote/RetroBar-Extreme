@@ -1,4 +1,6 @@
 using ManagedShell.WindowsTray;
+using RetroBar.Extensions;
+using RetroBar.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
