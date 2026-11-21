@@ -60,6 +60,27 @@ namespace RetroBar
         }
         public bool HasQuickLaunch => DisplayProfile?.ShowQuickLaunch ?? Settings.Instance.ShowQuickLaunch;
 
+        // Non-topology updates are applied live. In particular, a resize must not tear down
+        // the AppBar window that is holding the drag hook.
+        public void ApplyDisplayProfile(DisplayTaskbarProfile next)
+        {
+            if (DisplayProfile == null || next == null) return;
+            var oldEdge = AppBarEdge;
+            DisplayProfile = next.Clone();
+            if (AppBarEdge != next.Edge) AppBarEdge = next.Edge;
+
+            QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
+            TaskbarNotifyIcons.Visibility = next.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
+            ClockHost.Visibility = next.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+            UpdateStartButton();
+            UpdateShowDesktopPlacement();
+            RecalculateSize();
+            if (oldEdge != AppBarEdge) UpdatePosition();
+            OnPropertyChanged(nameof(Rows));
+            ScheduleLayoutOptions();
+            TaskButtonsHost.ApplyProfileRefresh();
+        }
+
         private bool _startMenuOpen;
         private LowLevelMouseHook _mouseDragHook;
         private Point? _mouseDragStart = null;

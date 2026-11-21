@@ -168,6 +168,15 @@ namespace RetroBar.Controls
             DefaultWidthWithMargin = DefaultButtonWidth + ButtonMarginTotal;
         }
 
+        public void ApplyProfileRefresh()
+        {
+            if (!isLoaded) return;
+            SetStyles();
+            taskbarItems?.Refresh();
+            ApplyAffinityOrder();
+            SetTaskButtonWidth();
+        }
+
         private void TaskList_OnLoaded(object sender, RoutedEventArgs e)
         {
             SetStyles();
