@@ -28,7 +28,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <local:TaskButton Host="{Binding ElementName=Root, Path=Host}"
-                                      Width="{Binding Path=ButtonWidth, ElementName=Root}" />
+                                      Width="{Binding Path=Host.ButtonWidth, ElementName=Root}" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

@@ -369,7 +369,8 @@ namespace RetroBar.Controls
                 else
                 {
                     RememberWindowOrder();
-                    view.CustomSort = new TaskAffinityComparer(Settings.Instance.TaskAffinityGroups, _originalOrder);
+                    view.CustomSort = new TaskAffinityComparer(Settings.Instance.TaskAffinityGroups,
+                        _originalOrder, taskbarItems.OfType<ApplicationWindow>().ToList(), Host?.DisplayProfile);
                 }
             }
             finally { _sorting = false; }

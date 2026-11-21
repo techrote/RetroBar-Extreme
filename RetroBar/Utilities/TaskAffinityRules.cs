@@ -68,36 +68,41 @@ namespace RetroBar.Utilities
         }
     }
 
-    // Total, deterministic comparer: every window remains a separate element in Affinity mode.
-    // Never return a nonzero comparison for the same window, unlike a common upstream prototype.
+    // Total, deterministic comparator. Explicit family priorities lead; unknown families
+    // stay ordered by first observation, and Hybrid/Separate windows retain individual slots.
     internal sealed class TaskAffinityComparer : IComparer
     {
-        private readonly Dictionary<IntPtr, long> _order;
-        private readonly Dictionary<string, int> _bucketOrder = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<IntPtr, long> _original;
+        private readonly Dictionary<string, long> _bucketRanks = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<TaskAffinityGroupRule> _groups;
+        private readonly DisplayTaskbarProfile _profile;
 
-        public TaskAffinityComparer(IEnumerable<TaskAffinityGroupRule> groups, Dictionary<IntPtr, long> windowOrder)
+        public TaskAffinityComparer(IEnumerable<TaskAffinityGroupRule> groups,
+            Dictionary<IntPtr, long> original, IEnumerable<ApplicationWindow> windows,
+            DisplayTaskbarProfile profile)
         {
-            _order = windowOrder;
+            _original = original;
+            _profile = profile;
             _groups = groups?.Where(g => g != null).Select(g => g.Clone()).ToList() ?? new();
+            foreach (var window in windows ?? Enumerable.Empty<ApplicationWindow>())
+            {
+                string bucket = Bucket(window);
+                long order = Original(window);
+                if (!_bucketRanks.TryGetValue(bucket, out long first) || first > order)
+                    _bucketRanks[bucket] = order;
+            }
         }
 
-        private string Bucket(ApplicationWindow w) =>
-            TaskAffinityRules.BucketFor(TaskButtonRules.AppKey(w) ?? ("window:" + w.Handle), _groups);
+        private long Original(ApplicationWindow w) =>
+            _original.TryGetValue(w.Handle, out long index) ? index : long.MaxValue;
 
-        private long Rank(ApplicationWindow w)
+        private string Bucket(ApplicationWindow w)
         {
-            string bucket = Bucket(w);
-            if (bucket.StartsWith("group:", StringComparison.Ordinal))
-                return int.Parse(bucket.Substring(6));
-            // Unlisted applications keep first-seen affinity groups rather than jumping alphabetically.
-            long rank = long.MaxValue;
-            foreach (var entry in _order)
-            {
-                // Rank of unlisted buckets is assigned in OrderFor below; this is a fallback only.
-                if (entry.Key == w.Handle) rank = entry.Value;
-            }
-            return 1000000 + rank;
+            string app = TaskButtonRules.AppKey(w);
+            if (string.IsNullOrWhiteSpace(app)) return "single:" + w.Handle.ToInt64();
+            if (TaskAffinityRules.PresentationFor(app, _profile) == TaskApplicationPresentation.Separate)
+                return "single:" + w.Handle.ToInt64();
+            return TaskAffinityRules.BucketFor(app, _groups);
         }
 
         public int Compare(object x, object y)
@@ -108,19 +113,19 @@ namespace RetroBar.Utilities
             string ak = Bucket(a), bk = Bucket(b);
             if (!string.Equals(ak, bk, StringComparison.OrdinalIgnoreCase))
             {
-                bool ar = ak.StartsWith("group:", StringComparison.Ordinal);
-                bool br = bk.StartsWith("group:", StringComparison.Ordinal);
-                if (ar && br) return string.Compare(ak, bk, StringComparison.Ordinal);
-                if (ar) return -1;
-                if (br) return 1;
-                // Unlisted application affinity is lexically deterministic until a first-seen
-                // rank is persisted for the bucket.
+                bool ag = ak.StartsWith("group:", StringComparison.Ordinal);
+                bool bg = bk.StartsWith("group:", StringComparison.Ordinal);
+                if (ag && bg) return string.Compare(ak, bk, StringComparison.Ordinal);
+                if (ag) return -1;
+                if (bg) return 1;
+                long ar = _bucketRanks.TryGetValue(ak, out var av) ? av : long.MaxValue;
+                long br = _bucketRanks.TryGetValue(bk, out var bv) ? bv : long.MaxValue;
+                int byFirstSeen = ar.CompareTo(br);
+                if (byFirstSeen != 0) return byFirstSeen;
                 return string.Compare(ak, bk, StringComparison.OrdinalIgnoreCase);
             }
-            long oa = _order.TryGetValue(a.Handle, out var va) ? va : long.MaxValue;
-            long ob = _order.TryGetValue(b.Handle, out var vb) ? vb : long.MaxValue;
-            int cmp = oa.CompareTo(ob);
-            return cmp != 0 ? cmp : a.Handle.ToInt64().CompareTo(b.Handle.ToInt64());
+            int byWindowOrder = Original(a).CompareTo(Original(b));
+            return byWindowOrder != 0 ? byWindowOrder : a.Handle.ToInt64().CompareTo(b.Handle.ToInt64());
         }
     }
 }

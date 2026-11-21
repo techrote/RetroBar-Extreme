@@ -68,8 +68,12 @@ namespace RetroBar.Controls
                 };
                 item.Click += (s, args) =>
                 {
-                    if (window.State == ApplicationWindow.WindowState.Active && window.CanMinimize) window.Minimize();
-                    else window.BringToFront();
+                    try
+                    {
+                        if (window.State == ApplicationWindow.WindowState.Active && window.CanMinimize) window.Minimize();
+                        else window.BringToFront();
+                    }
+                    catch (InvalidOperationException) { /* Window exited after menu opened. */ }
                 };
                 menu.Items.Add(item);
             }
