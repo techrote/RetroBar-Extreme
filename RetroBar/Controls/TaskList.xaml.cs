@@ -26,8 +26,8 @@ namespace RetroBar.Controls
         private double TaskButtonLeftMargin;
         private double TaskButtonRightMargin;
         private ICollectionView taskbarItems;
-        private readonly Dictionary<IntPtr, long> _originalOrder = new();
-        private long _nextOrder;
+        private readonly TaskWindowOrderTracker _windowOrder = new();
+        private Dictionary<IntPtr, long> _originalOrder = new();
         private bool _sorting;
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
@@ -326,7 +326,9 @@ namespace RetroBar.Controls
 
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (!_sorting && e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            // Filter resets (including removed windows) must reconcile the live
+            // identities too. CustomSort-induced resets are guarded by _sorting.
+            if (!_sorting)
                 ApplyAffinityOrder();
             SetTaskButtonWidth();
         }
@@ -334,9 +336,10 @@ namespace RetroBar.Controls
         private void RememberWindowOrder()
         {
             if (taskbarItems == null) return;
-            foreach (var item in taskbarItems)
-                if (item is ApplicationWindow w && !_originalOrder.ContainsKey(w.Handle))
-                    _originalOrder[w.Handle] = ++_nextOrder;
+            // A reused HWND is not the same window identity. Prune absent entries
+            // on every source/filter reset to avoid unbounded history.
+            _originalOrder = _windowOrder.Reconcile(taskbarItems.OfType<ApplicationWindow>()
+                .Select(window => (window.Handle, (object)window)));
         }
 
         private void ApplyAffinityOrder()
