@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,6 +27,19 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--probe-evaluation-profile")
+        {
+            // This child never creates Application, App, ManagedShell or taskbars.
+            // Check a *cold* Settings type initializer after profile selection.
+            EvaluationSession.Configure(true);
+            var settingsType = typeof(HotkeyManager).Assembly.GetType("RetroBar.Utilities.Settings", true);
+            var field = settingsType.GetField("_settingsPath", BindingFlags.Static | BindingFlags.NonPublic);
+            var actual = (string)field.GetValue(null);
+            var expected = Path.Combine(EvaluationSession.DataDirectory, "settings.json");
+            return string.Equals(Path.GetFullPath(actual), Path.GetFullPath(expected),
+                StringComparison.OrdinalIgnoreCase) ? 0 : 42;
+        }
+
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "extras-evidence");
         Directory.CreateDirectory(evidence);
         // Run before any Settings access: its static initializer can migrate and save a

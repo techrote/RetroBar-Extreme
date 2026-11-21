@@ -1,7 +1,7 @@
 using RetroBar.Utilities;
 using System;
 using System.IO;
-using System.Linq;
+using System.Diagnostics;
 
 internal static partial class Program
 {
@@ -41,7 +41,39 @@ internal static partial class Program
         // In eval mode the app's QuickLaunchPath getter ignores a stored
         // shared Windows pinned-folder setting. Assert the evaluator target
         // directory computation without touching settings or any user files.
-        Check(Path.GetFileName(Path.Combine(isolated, "QuickLaunch")) == "QuickLaunch",
-            "Evaluator Quick Launch is contained beneath its own independent data root.");
+        string evalQuickLaunch = Path.Combine(isolated, "QuickLaunch");
+        Check(EvaluationSession.IsAllowedQuickLaunchWriteFolder(evalQuickLaunch, evalQuickLaunch) &&
+              !EvaluationSession.IsAllowedQuickLaunchWriteFolder(
+                  Path.Combine(root, "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar"),
+                  evalQuickLaunch) &&
+              !EvaluationSession.IsAllowedQuickLaunchWriteFolder(
+                  Path.Combine(evalQuickLaunch, "..", "RetroBar", "QuickLaunch"), evalQuickLaunch),
+            "Evaluator shortcut destinations reject the actual Windows pinned folder and path escapes.");
+
+        // Spawn a *shell-free child test process* to prove Settings' real static
+        // initializer resolves the isolated path before any settings are loaded.
+        // Do not call EvaluationSession.Configure in this parent test process.
+        string command = Environment.ProcessPath;
+        Check(!string.IsNullOrWhiteSpace(command) && File.Exists(command),
+            "Windows test runner has an executable for the cold-start profile probe.");
+        var start = new ProcessStartInfo(command)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        if (string.Equals(Path.GetFileNameWithoutExtension(command), "dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            start.ArgumentList.Add("exec");
+            start.ArgumentList.Add(typeof(Program).Assembly.Location);
+        }
+        start.ArgumentList.Add("--probe-evaluation-profile");
+        using Process child = Process.Start(start);
+        Check(child != null && child.WaitForExit(30000),
+            "Isolated static Settings profile probe exits without ever creating ManagedShell.");
+        Check(child.ExitCode == 0, "Cold startup bound the actual SettingsManager to the isolated settings.json.");
+        string installedSettings = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RetroBar", "settings.json");
+        Check(!File.Exists(installedSettings),
+            "Cold evaluator startup did not create the owner's production settings.json.");
     }
 }

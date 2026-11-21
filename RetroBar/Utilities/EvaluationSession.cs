@@ -59,15 +59,20 @@ namespace RetroBar.Utilities
             _configured = true;
         }
 
-        public static bool IsAllowedQuickLaunchWriteFolder(string path)
+        public static bool IsAllowedQuickLaunchWriteFolder(string path) =>
+            !IsEnabled || IsAllowedQuickLaunchWriteFolder(path, QuickLaunchDirectory);
+
+        // Pure policy seam: tests can validate disallowed Windows pinned folders
+        // and path traversal without changing the process-wide startup profile.
+        public static bool IsAllowedQuickLaunchWriteFolder(string path, string evaluationFolder)
         {
-            if (!IsEnabled) return true;
-            if (string.IsNullOrWhiteSpace(path)) return false;
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(evaluationFolder))
+                return false;
             try
             {
                 string requested = Path.GetFullPath(Environment.ExpandEnvironmentVariables(path))
                     .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                string isolated = Path.GetFullPath(QuickLaunchDirectory)
+                string isolated = Path.GetFullPath(evaluationFolder)
                     .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 return string.Equals(requested, isolated, StringComparison.OrdinalIgnoreCase);
             }
