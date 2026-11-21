@@ -68,6 +68,7 @@ internal static partial class Program
         Check(fallback is double bw && bw == 172.0, "Bundle width adapter uses normal taskbar width when no representative is available.");
         BundleHorizontalNavigationContracts();
         BundleProductionVisualTreeContracts();
+        WindowRectangleOwnershipContracts();
     }
 
     // Construct harmless ApplicationWindow identities without launching a
@@ -309,6 +310,35 @@ internal static partial class Program
                 .GetField("_rectMembers", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(firefoxView);
             Check(members.Count == 20 && members.All(w => firefox.Windows.Contains(w)),
                 "Visible group header subscribes to each member window rectangle request.");
+
+            // ManagedShell fires a multicast GetButtonRect event without sender
+            // identity. Invoke the *real* installed member delegate for each
+            // ApplicationWindow and verify that its captured identity is that
+            // requesting window, not bundle.Windows[0]. The fixture remains
+            // shell-free, so the callback correctly declines screen projection.
+            var eventField = typeof(ApplicationWindow).GetField("GetButtonRect",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            Check(eventField != null, "ManagedShell GetButtonRect backing event exists.");
+            var receivers = new List<Delegate>();
+            foreach (var member in firefox.Windows)
+            {
+                var installed = (eventField.GetValue(member) as Delegate)?
+                    .GetInvocationList().Where(d => d.Target?.GetType().Name == "MemberRectReceiver").ToArray()
+                    ?? Array.Empty<Delegate>();
+                Check(installed.Length == 1,
+                    "Each bundle member has precisely one visible-header rectangle callback.");
+                var receiver = installed[0].Target;
+                var captured = receiver.GetType().GetField("Member",
+                    BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(receiver);
+                Check(ReferenceEquals(captured, member),
+                    "The bound rectangle callback retains its particular requesting ApplicationWindow.");
+                var cb = (ApplicationWindow.GetButtonRectEventHandler)installed[0];
+                var untouched = new NativeMethods.ShortRect();
+                cb(ref untouched);
+                receivers.Add(installed[0]);
+            }
+            Check(receivers.Select(d => d.Target).Distinct().Count() == 20,
+                "Mixed-monitor bundle windows use independent per-member delegate receivers.");
             var policy = typeof(TaskList).GetMethod("MatchesRectRepresentation",
                 BindingFlags.Static | BindingFlags.NonPublic);
             Check((bool)policy.Invoke(null, new object[] { true, true, true }) &&
@@ -322,6 +352,21 @@ internal static partial class Program
                 "The production visible bundle header has nonzero visual bounds.");
             firefoxView.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
             Check(members.Count == 0, "Unloaded bundle header releases all member-rectangle callbacks.");
+            foreach (var member in firefox.Windows)
+            {
+                var remaining = (eventField.GetValue(member) as Delegate)?
+                    .GetInvocationList().Count(d => d.Target?.GetType().Name == "MemberRectReceiver") ?? 0;
+                Check(remaining == 0,
+                    "Unloading the real group header removes that member's event delegate.");
+            }
+            firefoxView.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            foreach (var member in firefox.Windows)
+            {
+                var installed = (eventField.GetValue(member) as Delegate)?
+                    .GetInvocationList().Count(d => d.Target?.GetType().Name == "MemberRectReceiver") ?? 0;
+                Check(installed == 1, "Reload restores exactly one member-specific callback.");
+            }
+            firefoxView.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
 
             header.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
             Layout(230);
@@ -374,5 +419,82 @@ internal static partial class Program
                 else resources.Remove(key);
             }
         }
+    }
+
+    private static void WindowRectangleOwnershipContracts()
+    {
+        // These are the actual selection rules invoked by WindowManager at
+        // GetButtonRect time, supplied with candidate eligibility derived from
+        // profile filtering and whether a visible WPF representation is registered.
+        var local2 = new IntPtr(2002);
+        var local3 = new IntPtr(3003);
+        var host = new DisplayTaskbarProfile
+        {
+            DeviceName = @"\\.\DISPLAY2", Enabled = true,
+            WindowSource = DisplayWindowSource.AllMonitors,
+            IncludeApps = "*"
+        };
+        var terminalBar = new DisplayTaskbarProfile
+        {
+            DeviceName = @"\\.\DISPLAY3", Enabled = true,
+            WindowSource = DisplayWindowSource.ThisMonitor,
+            IncludeApps = "terminals"
+        };
+        var terminalKey = "pwsh.exe";
+        WindowRectangleCandidate Host(bool rendered = true) => new(
+            0, host.DeviceName, local2, true,
+            rendered && host.Enabled && DisplayTaskbarProfiles.AllowsApplication(terminalKey, host));
+        WindowRectangleCandidate Local(bool rendered = true) => new(
+            1, terminalBar.DeviceName, local3, false,
+            rendered && terminalBar.Enabled &&
+            DisplayTaskbarProfiles.AllowsApplication(terminalKey, terminalBar));
+
+        int Choose(IntPtr windowMonitor, params WindowRectangleCandidate[] options) =>
+            WindowRectangleOwnership.Select(windowMonitor, options);
+        var overlap = new[] { Host(), Local() };
+        Check(Choose(local3, overlap) == 1,
+            "Local monitor wins over all-monitor shell host for the same terminal HWND.");
+        Check(Choose(local3, overlap.Reverse().ToArray()) == 1,
+            "Owner selection does not depend on delegate or taskbar enumeration order.");
+        Check(overlap.Count(c => c.Index == Choose(local3, overlap)) == 1,
+            "Overlapping local and all-monitor bars yield exactly one writer.");
+        Check(Choose(local2, overlap) == 0,
+            "After moving the terminal to monitor 2, its eligible local shell host wins.");
+        Check(Choose(local3, Host(), Local(rendered: false)) == 0,
+            "A nonrendered local representation does not block the visible shell-host fallback.");
+        Check(Choose(local3, Host(rendered: false), Local()) == 1,
+            "A temporarily unavailable shell host does not mask a live local target.");
+
+        host.IncludeApps = "firefox.exe";
+        terminalBar.WindowSource = DisplayWindowSource.AllMonitors;
+        Check(Choose(local2, Host(), Local()) == 1,
+            "A filtered shell host yields rectangle ownership to a nonhost AllMonitors taskbar.");
+        Check(Choose(local3, Host(), Local()) == 1,
+            "The nonhost AllMonitors fallback also serves windows on other monitors.");
+        Check(Choose(local3, Host(), Local(rendered: false)) == -1,
+            "No provider is invented when every taskbar really hides the window.");
+
+        host.IncludeApps = "*";
+        terminalBar.WindowSource = DisplayWindowSource.ThisMonitor;
+        var twoLocal = new[] { Host(), Local() };
+        Check(Choose(local2, twoLocal) == 0 && Choose(local3, twoLocal) == 1,
+            "Two same-app windows on different monitors select different per-HWND hosts.");
+        Check(Choose(IntPtr.Zero, twoLocal) == 0,
+            "Unknown or detached HMONITOR selects eligible shell-host fallback.");
+        Check(Choose(local3, Host()) == 0,
+            "Detaching the local monitor falls back to the remaining rendered host.");
+        Check(Choose(local3, Host(), Local()) == 1,
+            "Reconnecting the local monitor immediately restores local priority.");
+
+        var onlyAll = new[]
+        {
+            new WindowRectangleCandidate(6, @"\\.\DISPLAY4", new IntPtr(4004), false, true),
+            new WindowRectangleCandidate(4, @"\\.\DISPLAY3", local3, false, true)
+        };
+        Check(Choose(IntPtr.Zero, onlyAll) == 4 &&
+              Choose(IntPtr.Zero, onlyAll.Reverse().ToArray()) == 4,
+            "Without a shell host, visible AllMonitors bars use stable device-name fallback.");
+        Check(Choose(local3, onlyAll) == 4,
+            "A window move is reflected immediately, without a cached owner mapping.");
     }
 }
