@@ -23,13 +23,19 @@ namespace RetroBar.Utilities
         // Comma, semicolon or newline-separated executable names, families or AppUserModelIDs.
         public string IncludeApps { get; set; } = "";
         public string ExcludeApps { get; set; } = "";
+        // Null inherits the global arrangement; non-null permits a different mode per taskbar.
+        public TaskArrangementMode? ArrangementOverride { get; set; }
+        public List<TaskApplicationPolicy> ApplicationOverrides { get; set; } = new();
 
         public DisplayTaskbarProfile Clone() => new()
         {
             DeviceName = DeviceName, Enabled = Enabled, Edge = Edge, AutoHide = AutoHide,
             Rows = Rows, Width = Width, ShowStart = ShowStart, ShowQuickLaunch = ShowQuickLaunch,
             ShowTray = ShowTray, ShowClock = ShowClock, WindowSource = WindowSource,
-            IncludeApps = IncludeApps, ExcludeApps = ExcludeApps
+            IncludeApps = IncludeApps, ExcludeApps = ExcludeApps,
+            ArrangementOverride = ArrangementOverride,
+            ApplicationOverrides = (ApplicationOverrides ?? new List<TaskApplicationPolicy>())
+                .Where(p => p != null).Select(p => p.Clone()).ToList()
         };
     }
 

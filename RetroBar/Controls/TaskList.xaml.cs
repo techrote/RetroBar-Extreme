@@ -4,6 +4,10 @@ using ManagedShell.Common.Helpers;
 using RetroBar.Utilities;
 using System;
 using System.ComponentModel;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,6 +26,9 @@ namespace RetroBar.Controls
         private double TaskButtonLeftMargin;
         private double TaskButtonRightMargin;
         private ICollectionView taskbarItems;
+        private readonly Dictionary<IntPtr, long> _originalOrder = new();
+        private long _nextOrder;
+        private bool _sorting;
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
 
@@ -164,6 +171,7 @@ namespace RetroBar.Controls
                 }
 
                 TasksList.ItemsSource = taskbarItems;
+                ApplyAffinityOrder();
 
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
                 Host.hotkeyManager.TaskbarHotkeyPressed += TaskList_TaskbarHotkeyPressed;
@@ -182,6 +190,13 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == nameof(Settings.TaskArrangement) ||
+                e.PropertyName == nameof(Settings.TaskAffinityGroups) ||
+                e.PropertyName == nameof(Settings.TaskApplicationPolicies))
+            {
+                ApplyAffinityOrder();
+                return;
+            }
             if (e.PropertyName == nameof(Settings.TaskButtonWidthPx)) // UXUI-Extreme (UX-014)
             {
                 SetStyles();
@@ -302,7 +317,37 @@ namespace RetroBar.Controls
 
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
+            if (!_sorting && e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+                ApplyAffinityOrder();
             SetTaskButtonWidth();
+        }
+
+        private void RememberWindowOrder()
+        {
+            if (taskbarItems == null) return;
+            foreach (var item in taskbarItems)
+                if (item is ApplicationWindow w && !_originalOrder.ContainsKey(w.Handle))
+                    _originalOrder[w.Handle] = ++_nextOrder;
+        }
+
+        private void ApplyAffinityOrder()
+        {
+            if (taskbarItems is not ListCollectionView view || _sorting) return;
+            _sorting = true;
+            try
+            {
+                var mode = TaskAffinityRules.ModeFor(Host?.DisplayProfile);
+                if (mode == TaskArrangementMode.Separate)
+                {
+                    if (view.CustomSort != null) view.CustomSort = null;
+                }
+                else
+                {
+                    RememberWindowOrder();
+                    view.CustomSort = new TaskAffinityComparer(Settings.Instance.TaskAffinityGroups, _originalOrder);
+                }
+            }
+            finally { _sorting = false; }
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)

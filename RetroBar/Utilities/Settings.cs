@@ -118,6 +118,28 @@ namespace RetroBar.Utilities
             DisplayTaskbarProfiles = profiles;
         }
 
+        // TASKBAR-MANAGEMENT-002: global affinity/presentation defaults, overridable per display and app.
+        private TaskArrangementMode _taskArrangement = TaskArrangementMode.Separate;
+        public TaskArrangementMode TaskArrangement
+        {
+            get => _taskArrangement;
+            set => SetEnum(ref _taskArrangement, value);
+        }
+
+        private List<TaskAffinityGroupRule> _taskAffinityGroups = new();
+        public List<TaskAffinityGroupRule> TaskAffinityGroups
+        {
+            get => _taskAffinityGroups;
+            set => SetList(ref _taskAffinityGroups, value ?? new List<TaskAffinityGroupRule>());
+        }
+
+        private List<TaskApplicationPolicy> _taskApplicationPolicies = new();
+        public List<TaskApplicationPolicy> TaskApplicationPolicies
+        {
+            get => _taskApplicationPolicies;
+            set => SetList(ref _taskApplicationPolicies, value ?? new List<TaskApplicationPolicy>());
+        }
+
         #region Properties
         private string _language = "System";
         public string Language
