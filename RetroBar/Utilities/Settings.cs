@@ -659,6 +659,14 @@ namespace RetroBar.Utilities
             set => Set(ref _quickLaunchFirst, value);
         }
 
+        // Side-taskbar-only, opt-in: pack the complete Quick Launch group beside Start if it fits.
+        private bool _packQuickLaunchBesideStart = false;
+        public bool PackQuickLaunchBesideStart
+        {
+            get => _packQuickLaunchBesideStart;
+            set => Set(ref _packQuickLaunchBesideStart, value);
+        }
+
         private TaskButtonAlignOption _quickLaunchAlignH = TaskButtonAlignOption.Left;
         public TaskButtonAlignOption QuickLaunchAlignH
         {

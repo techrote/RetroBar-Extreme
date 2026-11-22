@@ -51,6 +51,7 @@ internal static partial class Program
             ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
+            ("Side-taskbar Quick Launch packing and stacked fallback", SideQuickLaunchPacking),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }
