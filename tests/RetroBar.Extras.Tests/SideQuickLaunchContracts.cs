@@ -71,8 +71,11 @@ internal static partial class Program
         quick.Visibility = Visibility.Visible;
         panel.Orientation = Orientation.Horizontal;
         Layout(220);
-        Check(Near(X(quick), 76) && Near(Y(quick), 0),
-            "horizontal taskbar preserves consecutive Dock.Left geometry without an extra gap");
+        // Dock.Left gives both controls the full taskbar height. A shorter child may
+        // legitimately be vertically centred inside its slot by WPF.
+        Check(Near(X(quick), 76) && Y(quick) >= -0.01 &&
+              Y(quick) + quick.ActualHeight <= panel.ActualHeight + 0.01,
+            $"horizontal taskbar preserves consecutive Dock.Left geometry without a gap (x={X(quick)}, y={Y(quick)})");
 
         // A custom Start image or size change alters the decision without replacing the controls.
         panel.Orientation = Orientation.Vertical;
