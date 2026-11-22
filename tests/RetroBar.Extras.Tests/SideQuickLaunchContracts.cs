@@ -13,8 +13,10 @@ internal static partial class Program
             Orientation = Orientation.Vertical,
             PackBesideStart = true,
         };
-        var start = new Border { Width = 76, Height = 28 };
-        var quick = new Border { Width = 90, Height = 24 };
+        // Explicit widths define natural measurement; Left alignment prevents WPF from
+        // centring a fixed-width Border within the panel's full-width fallback slot.
+        var start = new Border { Width = 76, Height = 28, HorizontalAlignment = HorizontalAlignment.Left };
+        var quick = new Border { Width = 90, Height = 24, HorizontalAlignment = HorizontalAlignment.Left };
         panel.Children.Add(start);
         panel.Children.Add(quick);
 
@@ -35,7 +37,7 @@ internal static partial class Program
         Check(Near(panel.DesiredSize.Height, 28), "packed: height is that of one row");
 
         Layout(171);
-        Check(Near(X(quick), 0) && Near(Y(quick), 28), "one DIP below fit threshold stacks complete toolbar");
+        Check(Near(X(quick), 0) && Near(Y(quick), 28), $"one DIP below fit threshold stacks complete toolbar (x={X(quick)}, y={Y(quick)})");
         Check(Near(panel.DesiredSize.Height, 52), "stacked: each section retains its own height");
         Check(ReferenceEquals(VisualTreeHelper.GetParent(quick), panel),
             "switching layout does not reparent or unload shortcut controls");
