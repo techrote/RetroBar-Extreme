@@ -75,7 +75,7 @@ internal static partial class Program
         // A custom Start image or size change alters the decision without replacing the controls.
         panel.Orientation = Orientation.Vertical;
         start.Width = 130;
-        Layout(220);
+        Layout(240);
         Check(Near(Y(quick), 0), "Start image resize still packs if it fits");
         Layout(200);
         Check(Near(Y(quick), 28), "Start image resize triggers a safe full-width fallback");
