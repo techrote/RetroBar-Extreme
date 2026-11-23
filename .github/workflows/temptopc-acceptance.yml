@@ -1,0 +1,50 @@
+name: TempToPC Windows project acceptance
+# Install this workflow in the actual PROJECT BEING TESTED, on its default branch.
+# Generated from TempToPC via scripts/generate-caller.sh to pin its implementation.
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Human acceptance window (manual launch)"
+        type: choice
+        required: true
+        default: "120"
+        options: ["30", "60", "120", "240", "300"]
+      candidate_run_id:
+        description: "Optional successful build Actions run ID in this same repository"
+        type: string
+        required: false
+        default: "44931387490"
+      candidate_artifact:
+        description: "Optional exact artifact name from that run"
+        type: string
+        required: false
+        default: "RetroBar Isolated Evaluation 64-bit"
+      candidate_sha:
+        description: "Optional matching full 40-hex source commit SHA from that run"
+        type: string
+        required: false
+        default: "377610e0b1a8fbbf6d39b5f967a3f2224a520039"
+      candidate_prs:
+        description: "Comma-separated PR-number@head-SHA source snapshots (max 16; never executed)"
+        type: string
+        required: false
+        default: "38@655b30e55f8e2745111b976f2af650c84fe46929,39@aba2cb505dd3495282bd2d715fe519da080843b7,41@58a58085d5d65012bb8682aaf27a97298cc88a7c,42@08c1337849bdb7069435c34cbb27e0b346e05cfe,43@9b7d7a5ceab5fa86d524137853bedf6d40f8a3ee,44@9b7d7a5ceab5fa86d524137853bedf6d40f8a3ee,46@377610e0b1a8fbbf6d39b5f967a3f2224a520039,47@23b70c46499059d4fe9e0fc639e341703ffd822a"
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  interactive-acceptance:
+    uses: techrote/temptopc/.github/workflows/windows-desktop.yml@309640fa5e6258a941426ae8c6316a7de5faa878
+    with:
+      minutes: ${{ fromJSON(inputs.minutes) }}
+      candidate_run_id: ${{ inputs.candidate_run_id }}
+      candidate_artifact: ${{ inputs.candidate_artifact }}
+      candidate_sha: ${{ inputs.candidate_sha }}
+      candidate_prs: ${{ inputs.candidate_prs }}
+    secrets:
+      TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+      TEMPTOPC_RDP_PASSWORD: ${{ secrets.TEMPTOPC_RDP_PASSWORD }}
