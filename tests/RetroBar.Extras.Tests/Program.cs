@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,6 +27,29 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--probe-evaluation-profile")
+        {
+            // This child never creates Application, App, ManagedShell or taskbars.
+            // Check a *cold* Settings type initializer after profile selection.
+            EvaluationSession.Configure(true);
+            var settingsType = typeof(HotkeyManager).Assembly.GetType("RetroBar.Utilities.Settings", true);
+            var field = settingsType.GetField("_settingsPath", BindingFlags.Static | BindingFlags.NonPublic);
+            var actual = (string)field.GetValue(null);
+            var expected = Path.Combine(EvaluationSession.DataDirectory, "settings.json");
+            if (!string.Equals(Path.GetFullPath(actual), Path.GetFullPath(expected),
+                StringComparison.OrdinalIgnoreCase)) return 42;
+
+            var settings = settingsType.GetProperty("Instance").GetValue(null);
+            var quickLaunch = settingsType.GetProperty("QuickLaunchPath");
+            if (!string.Equals((string)quickLaunch.GetValue(settings),
+                    EvaluationSession.QuickLaunchDirectory, StringComparison.OrdinalIgnoreCase)) return 43;
+            // Even an explicit attempt to select a Windows pinned folder must
+            // not divert an evaluator's default Quick Launch folder.
+            quickLaunch.SetValue(settings, @"C:\Users\Fixture\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch");
+            return string.Equals((string)quickLaunch.GetValue(settings),
+                EvaluationSession.QuickLaunchDirectory, StringComparison.OrdinalIgnoreCase) ? 0 : 44;
+        }
+
         evidence = Path.GetFullPath(args.Length > 0 ? args[0] : "extras-evidence");
         Directory.CreateDirectory(evidence);
         // Run before any Settings access: its static initializer can migrate and save a
@@ -51,6 +75,7 @@ internal static partial class Program
             ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
+            ("Isolated evaluator launch, settings and shortcut paths are fail-closed", EvaluationIsolationContracts),
         })
         {
             try { test.Body(); results.Add(new { test.Name, Passed = true }); Console.WriteLine("PASS " + test.Name); }

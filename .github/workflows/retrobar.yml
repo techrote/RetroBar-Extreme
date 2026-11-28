@@ -138,3 +138,36 @@ jobs:
       with:
         name: RetroBar Portable
         path: RetroBar\portable\
+  evaluation-portable:
+    name: Isolated evaluation x64 (no shell launch)
+    needs: [ build ]
+    runs-on: windows-2025
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download x64 portable build
+        uses: actions/download-artifact@v8
+        with:
+          name: RetroBar Portable 64-bit
+          path: RetroBar\isolated-evaluation\
+
+      - name: Mark evaluator and include its safety launcher
+        shell: pwsh
+        run: |
+          $target = "RetroBar/isolated-evaluation"
+          if (!(Test-Path "$target/RetroBar.exe")) { throw "Expected x64 portable executable is missing" }
+          Copy-Item tools/evaluation/RUN-ISOLATED-EVALUATION.cmd "$target/RUN-ISOLATED-EVALUATION.cmd"
+          Copy-Item tools/evaluation/README.md "$target/README-EVALUATION.md"
+          Set-Content -LiteralPath "$target/RetroBar-Evaluation.marker" -Value "RetroBar isolated evaluator" -Encoding utf8
+          foreach ($needed in @("RetroBar.exe", "RetroBar-Evaluation.marker", "RUN-ISOLATED-EVALUATION.cmd", "README-EVALUATION.md")) {
+            if (!(Test-Path "$target/$needed")) { throw "Evaluation package missing $needed" }
+          }
+
+      - name: Upload isolated evaluation candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: RetroBar Isolated Evaluation 64-bit
+          path: RetroBar/isolated-evaluation/

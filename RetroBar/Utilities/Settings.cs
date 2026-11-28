@@ -237,8 +237,14 @@ namespace RetroBar.Utilities
         private string _quickLaunchPath = "%appdata%\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar";
         public string QuickLaunchPath
         {
-            get => _quickLaunchPath;
-            set => Set(ref _quickLaunchPath, value);
+            // Evaluation must not read from or deposit shortcuts into the
+            // owner's shared Windows Quick Launch directory. Even a saved
+            // evaluator JSON edited to contain a different folder is ignored.
+            get => EvaluationSession.IsEnabled ? EvaluationSession.QuickLaunchDirectory : _quickLaunchPath;
+            set
+            {
+                if (!EvaluationSession.IsEnabled) Set(ref _quickLaunchPath, value);
+            }
         }
 
         private bool _collapseNotifyIcons = false;
