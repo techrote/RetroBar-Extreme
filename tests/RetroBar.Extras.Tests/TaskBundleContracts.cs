@@ -66,9 +66,74 @@ internal static partial class Program
         var fallback = inner.Convert(new object[] { new TaskBundleEntry(), 172.0, 0, 1, null, 0.0, 24.0, 172.0, AppBarEdge.Right },
             typeof(double), null, System.Globalization.CultureInfo.InvariantCulture);
         Check(fallback is double bw && bw == 172.0, "Bundle width adapter uses normal taskbar width when no representative is available.");
+        MergedTaskbarAccessContracts();
         BundleHorizontalNavigationContracts();
         BundleProductionVisualTreeContracts();
         WindowRectangleOwnershipContracts();
+    }
+
+    // Joint regression: per-host orientation and row limits must not depend on
+    // global edge/row settings, and collapsing Inline cannot disable access
+    // required by rules. Exercise genuine WPF measure/arrange with bundle keys.
+    private static void MergedTaskbarAccessContracts()
+    {
+        var configure = typeof(TaskList).GetMethod("ConfigureHorizontalTaskAccess",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Check(configure != null, "Unified horizontal access policy is available.");
+        var viewer = new ScrollViewer();
+        foreach (Orientation orientation in new[] { Orientation.Horizontal, Orientation.Vertical })
+        foreach (bool rules in new[] { false, true })
+        foreach (bool expanded in new[] { false, true })
+        {
+            configure.Invoke(null, new object[] { viewer, orientation, rules, expanded });
+            bool expected = orientation == Orientation.Horizontal && (rules || expanded);
+            Check((viewer.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto) == expected,
+                $"Horizontal access policy: {orientation}, rules={rules}, inline={expanded}");
+        }
+
+        using var scope = new LayoutSettingsScope("RowCount", "Edge", "TaskRowRules", "TaskEndApps", "TaskEndAppsBottomRow");
+        scope.Set("RowCount", 1);
+        scope.Set("Edge", AppBarEdge.Left);
+        scope.Set("TaskEndApps", "");
+        scope.Set("TaskEndAppsBottomRow", false);
+        scope.Set("TaskRowRules", new List<TaskRowRule> {
+            new TaskRowRule { Row = -1, Apps = "firefox" }
+        });
+
+        var bundle = new TaskBundleEntry { Key = "bundle:firefox.exe", CanBundle = true };
+        bundle.Windows.Add(BundleFixtureApp("firefox"));
+        bundle.Windows.Add(BundleFixtureApp("firefox"));
+        (TaskRowPanel panel, Button header, Button sibling) Fixture(int rows)
+        {
+            var panel = new TaskRowPanel { HostRows = rows, Orientation = Orientation.Horizontal,
+                ViewportWidth = 100, OuterViewportWidth = 100 };
+            var header = new Button { Width = 96, Height = 18, DataContext = bundle };
+            var sibling = new Button { Width = 96, Height = 18, DataContext = BundleFixtureApp("explorer") };
+            panel.Children.Add(header);
+            panel.Children.Add(sibling);
+            return (panel, header, sibling);
+        }
+        void ArrangeHost(TaskRowPanel panel, int rows)
+        {
+            panel.Measure(new Size(100, rows * 18));
+            panel.Arrange(new Rect(0, 0, 100, rows * 18));
+        }
+
+        var first = Fixture(32);
+        var second = Fixture(5);
+        ArrangeHost(first.panel, 32);
+        ArrangeHost(second.panel, 5);
+        Check(Math.Abs(VisualTreeHelper.GetOffset(first.header).Y - 31 * 18) < 0.5 &&
+              Math.Abs(VisualTreeHelper.GetOffset(second.header).Y - 4 * 18) < 0.5,
+            "Same relative rule and bundle identity map to distinct host-specific final rows.");
+        Check(Math.Abs(VisualTreeHelper.GetOffset(first.sibling).Y) < 0.5 &&
+              Math.Abs(VisualTreeHelper.GetOffset(second.sibling).Y) < 0.5,
+            "Unrelated task stays in the first row on both horizontal hosts.");
+        first.panel.HostRows = 3;
+        ArrangeHost(first.panel, 3);
+        Check(Math.Abs(VisualTreeHelper.GetOffset(first.header).Y - 2 * 18) < 0.5 &&
+              Math.Abs(VisualTreeHelper.GetOffset(second.header).Y - 4 * 18) < 0.5,
+            "Changing one monitor row count does not disturb the other monitor's layout.");
     }
 
     // Construct harmless ApplicationWindow identities without launching a

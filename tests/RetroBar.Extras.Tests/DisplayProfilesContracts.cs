@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.Windows;
+using System.Windows.Controls;
 using RetroBar.Controls;
 
 internal static partial class Program

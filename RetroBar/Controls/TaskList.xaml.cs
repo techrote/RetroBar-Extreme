@@ -614,14 +614,12 @@ namespace RetroBar.Controls
                 // Room to spare: keep the default width and leave the trailing gap.
                 ExtraWidthCount = 0;
                 ButtonWidth = defaultWidth;
-                SetScrollable(ruleConstrained);
+                SetScrollable(false);
             }
             else if (maxWidth < minWidth)
             {
                 ExtraWidthCount = 0;
-                ButtonWidth = ruleConstrained
-                    ? Math.Max(minWidth, Math.Ceiling(defaultWidth / 2))
-                    : Math.Ceiling(defaultWidth / 2);
+                ButtonWidth = Math.Ceiling(defaultWidth / 2);
                 SetScrollable(true);
             }
             else
@@ -631,7 +629,7 @@ namespace RetroBar.Controls
                 double baseWidth = Math.Floor(maxWidth);
                 ButtonWidth = baseWidth;
                 ExtraWidthCount = Math.Max(0, (int)Math.Floor(viewport) - (int)baseWidth * ButtonsPerRow);
-                SetScrollable(ruleConstrained);
+                SetScrollable(false);
             }
         }
 
