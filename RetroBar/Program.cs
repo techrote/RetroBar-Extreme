@@ -54,7 +54,7 @@ namespace RetroBar
 
                     if (EvaluationSession.IsReparsePointDataAlias())
                     {
-                        MessageBox.Show("A RetroBar data directory is a junction or symbolic link. " +
+                        MessageBox.Show("A RetroBar profile contains an unsafe filesystem alias or inaccessible entry. " +
                             "Evaluation cannot prove that it is separate from installed settings. " +
                             "Launch refused before taskbar takeover.",
                             "RetroBar evaluator blocked", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -70,6 +70,15 @@ namespace RetroBar
                         "Confirm taskbar evaluation", MessageBoxButtons.YesNo,
                         MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
                         return 4;
+
+                    // Recheck after the interactive confirmation, immediately before
+                    // any settings initialization or shell takeover.
+                    if (EvaluationSession.IsReparsePointDataAlias())
+                    {
+                        MessageBox.Show("The evaluator profile changed or is unsafe. Launch refused.",
+                            "RetroBar evaluator blocked", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return 3;
+                    }
                 }
                 else if (!SingleInstanceCheck())
                 {

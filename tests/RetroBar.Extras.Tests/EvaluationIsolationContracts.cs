@@ -50,6 +50,46 @@ internal static partial class Program
                   Path.Combine(evalQuickLaunch, "..", "RetroBar", "QuickLaunch"), evalQuickLaunch),
             "Evaluator shortcut destinations reject the actual Windows pinned folder and path escapes.");
 
+        // A real Windows junction inside the isolated profile must be rejected
+        // even though its lexical path looks private. No shell is initialized.
+        string fixture = Path.Combine(Path.GetTempPath(), "retrobar-eval-alias-" + Guid.NewGuid().ToString("N"));
+        string fixtureProfile = EvaluationSession.GetDataDirectory(fixture, true);
+        string installedFixture = EvaluationSession.GetDataDirectory(fixture, false);
+        string junction = Path.Combine(fixtureProfile, "QuickLaunch");
+        try
+        {
+            Directory.CreateDirectory(fixtureProfile);
+            Directory.CreateDirectory(installedFixture);
+            Check(EvaluationSession.IsProfileTreeSafe(fixture), "ordinary separate profile directories are accepted");
+            Check(EvaluationSession.IsProfilePathSafe(Path.Combine(junction, "new.lnk"), fixtureProfile),
+                "a new private shortcut path is accepted");
+            Check(!EvaluationSession.IsProfilePathSafe(Path.Combine(installedFixture, "settings.json"), fixtureProfile),
+                "canonical sibling production profile is rejected");
+            Check(!EvaluationSession.IsProfilePathSafe(Path.Combine(fixtureProfile, "settings.json:stream"), fixtureProfile),
+                "alternate data stream is rejected");
+            var junctionStart = new ProcessStartInfo("cmd.exe")
+            {
+                Arguments = "/d /c mklink /J \"" + junction + "\" \"" + installedFixture + "\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (Process mklink = Process.Start(junctionStart))
+            {
+                Check(mklink != null && mklink.WaitForExit(15000) && mklink.ExitCode == 0,
+                    "Windows fixture created a real junction");
+            }
+            Check(!EvaluationSession.IsProfileTreeSafe(fixture),
+                "preflight rejects a junction nested in the evaluator tree");
+            Check(!EvaluationSession.IsProfilePathSafe(Path.Combine(junction, "settings.json"), fixtureProfile),
+                "per-path guard rejects a nested junction before shortcut or settings access");
+        }
+        finally
+        {
+            // Remove the junction itself, never recursively delete through it.
+            if (Directory.Exists(junction)) Directory.Delete(junction);
+            if (Directory.Exists(fixture)) Directory.Delete(fixture, true);
+        }
+
         // Spawn a *shell-free child test process* to prove Settings' real static
         // initializer resolves the isolated path before any settings are loaded.
         // Do not call EvaluationSession.Configure in this parent test process.
@@ -67,6 +107,9 @@ internal static partial class Program
             start.ArgumentList.Add(typeof(Program).Assembly.Location);
         }
         start.ArgumentList.Add("--probe-evaluation-profile");
+        Check(!Directory.Exists(EvaluationSession.GetDataDirectory(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), true)),
+            "cold profile probe requires a clean disposable Windows evaluator profile");
         using Process child = Process.Start(start);
         Check(child != null && child.WaitForExit(30000),
             "Isolated static Settings profile probe exits without ever creating ManagedShell.");

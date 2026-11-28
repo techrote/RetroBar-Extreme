@@ -30,6 +30,32 @@ jobs:
         Profile: ${{ matrix.publishprofile[0] }}
         Framework: ${{ matrix.publishprofile[1] }}
 
+    - name: Record exact build provenance
+      shell: pwsh
+      env:
+        Profile: ${{ matrix.publishprofile[0] }}
+        Framework: ${{ matrix.publishprofile[1] }}
+        SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        $sourceHead = $env:SOURCE_HEAD
+        $sourceTree = (git rev-parse ($sourceHead + '^{tree}')).Trim()
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $testedCommit = (git rev-parse HEAD).Trim()
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $testedTree = (git rev-parse 'HEAD^{tree}').Trim()
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $manifest = [ordered]@{
+          source_head = $sourceHead
+          source_tree = $sourceTree
+          tested_commit = $testedCommit
+          tested_tree = $testedTree
+          workflow_run = $env:GITHUB_RUN_ID
+          workflow_attempt = $env:GITHUB_RUN_ATTEMPT
+        }
+        $destination = "RetroBar/bin/Release/$env:Framework/publish-$env:Profile/source-provenance.json"
+        $manifest | ConvertTo-Json | Set-Content -LiteralPath $destination -Encoding utf8
+        Write-Host "Published source $sourceHead tree $sourceTree; CI checkout $testedCommit tree $testedTree"
+
     - name: Copy license
       run: cp DistLicense.txt RetroBar\bin\Release\${{ matrix.publishprofile[1] }}\publish-${{ matrix.publishprofile[0] }}\License.txt
 
@@ -159,10 +185,17 @@ jobs:
         run: |
           $target = "RetroBar/isolated-evaluation"
           if (!(Test-Path "$target/RetroBar.exe")) { throw "Expected x64 portable executable is missing" }
+          if (!(Test-Path "$target/source-provenance.json")) { throw "Missing build provenance" }
+          $provenance = Get-Content "$target/source-provenance.json" -Raw | ConvertFrom-Json
+          $actualTree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($LASTEXITCODE -ne 0 -or $provenance.tested_commit -ne $env:GITHUB_SHA -or $provenance.tested_tree -ne $actualTree -or $provenance.workflow_run -ne $env:GITHUB_RUN_ID -or $provenance.workflow_attempt -ne $env:GITHUB_RUN_ATTEMPT) {
+            throw "Evaluator payload and workflow checkout provenance disagree"
+          }
+          (Get-FileHash -Algorithm SHA256 "$target/RetroBar.exe").Hash.ToLowerInvariant() | Set-Content "$target/RetroBar.exe.sha256" -Encoding utf8
           Copy-Item tools/evaluation/RUN-ISOLATED-EVALUATION.cmd "$target/RUN-ISOLATED-EVALUATION.cmd"
           Copy-Item tools/evaluation/README.md "$target/README-EVALUATION.md"
           Set-Content -LiteralPath "$target/RetroBar-Evaluation.marker" -Value "RetroBar isolated evaluator" -Encoding utf8
-          foreach ($needed in @("RetroBar.exe", "RetroBar-Evaluation.marker", "RUN-ISOLATED-EVALUATION.cmd", "README-EVALUATION.md")) {
+          foreach ($needed in @("RetroBar.exe", "RetroBar-Evaluation.marker", "RUN-ISOLATED-EVALUATION.cmd", "README-EVALUATION.md", "source-provenance.json", "RetroBar.exe.sha256")) {
             if (!(Test-Path "$target/$needed")) { throw "Evaluation package missing $needed" }
           }
 

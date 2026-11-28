@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace RetroBar.Utilities
 {
@@ -51,18 +52,103 @@ namespace RetroBar.Utilities
             return false;
         }
 
-        public static bool IsReparsePointDataAlias()
+        // Fail closed on existing junctions, symlinks, non-directory roots or
+        // inaccessible entries, including aliases *inside* the evaluator tree.
+        // Never enumerate the installed profile. This is an accidental-data-
+        // isolation guard, not a security boundary against concurrent edits.
+        public static bool IsReparsePointDataAlias() =>
+            IsEnabled && !IsProfileTreeSafe(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+
+        private static FileAttributes? ExistingAttributes(string path)
         {
-            if (!IsEnabled) return false;
-            // A junction/symlink that redirects the evaluator directory onto
-            // the installed directory defeats root separation; refuse it.
-            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            foreach (string root in new[] { GetDataDirectory(local, true), GetDataDirectory(local, false) })
+            try { return File.GetAttributes(path); }
+            catch (FileNotFoundException) { return null; }
+            catch (DirectoryNotFoundException) { return null; }
+        }
+
+        private static bool IsPlainDirectoryOrMissing(FileAttributes? attributes) =>
+            !attributes.HasValue ||
+            ((attributes.Value & FileAttributes.Directory) != 0 &&
+             (attributes.Value & FileAttributes.ReparsePoint) == 0);
+
+        public static bool IsProfileTreeSafe(string localAppData)
+        {
+            try
             {
-                if (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
-                    return true;
+                string local = Path.GetFullPath(localAppData);
+                string isolated = GetDataDirectory(local, true);
+                string installed = GetDataDirectory(local, false);
+                if (!IsPlainDirectoryOrMissing(ExistingAttributes(local)) ||
+                    !IsPlainDirectoryOrMissing(ExistingAttributes(installed)) ||
+                    !IsPlainDirectoryOrMissing(ExistingAttributes(isolated)))
+                    return false;
+
+                if (!ExistingAttributes(isolated).HasValue) return true;
+                var pending = new Stack<string>();
+                pending.Push(isolated);
+                while (pending.Count > 0)
+                {
+                    foreach (string entry in Directory.EnumerateFileSystemEntries(pending.Pop()))
+                    {
+                        FileAttributes? attributes = ExistingAttributes(entry);
+                        if (!attributes.HasValue || (attributes.Value & FileAttributes.ReparsePoint) != 0)
+                            return false;
+                        if ((attributes.Value & FileAttributes.Directory) != 0)
+                            pending.Push(entry);
+                    }
+                }
+                return true;
             }
-            return false;
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException ||
+                ex is ArgumentException || ex is NotSupportedException || ex is System.Security.SecurityException)
+            {
+                return false;
+            }
+        }
+
+        // Check the canonical path and each existing component without following
+        // reparse points. Missing descendants may be created by the caller.
+        public static bool IsProfilePathSafe(string path, string root)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(root)) return false;
+            try
+            {
+                string canonicalRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string target = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string prefix = canonicalRoot + Path.DirectorySeparatorChar;
+                if (!string.Equals(target, canonicalRoot, StringComparison.OrdinalIgnoreCase) &&
+                    !target.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
+
+                if (!IsPlainDirectoryOrMissing(ExistingAttributes(Path.GetDirectoryName(canonicalRoot))) ||
+                    !IsPlainDirectoryOrMissing(ExistingAttributes(canonicalRoot))) return false;
+                if (string.Equals(target, canonicalRoot, StringComparison.OrdinalIgnoreCase)) return true;
+
+                string[] parts = target.Substring(prefix.Length).Split(Path.DirectorySeparatorChar);
+                string current = canonicalRoot;
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    // NTFS alternate data streams and ambiguous empty path components
+                    // are not valid evaluator storage paths.
+                    if (parts[i].Length == 0 || parts[i].Contains(":")) return false;
+                    current = Path.Combine(current, parts[i]);
+                    FileAttributes? attributes = ExistingAttributes(current);
+                    if (attributes.HasValue && ((attributes.Value & FileAttributes.ReparsePoint) != 0 ||
+                        (i < parts.Length - 1 && (attributes.Value & FileAttributes.Directory) == 0)))
+                        return false;
+                }
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException ||
+                ex is ArgumentException || ex is NotSupportedException || ex is System.Security.SecurityException)
+            {
+                return false;
+            }
+        }
+
+        public static void RequireSafeProfilePath(string path)
+        {
+            if (IsEnabled && !IsProfilePathSafe(path, DataDirectory))
+                throw new InvalidOperationException("Evaluator storage path is outside the private profile or contains an unsafe filesystem alias.");
         }
 
         public static void Configure(bool evaluation)
@@ -74,7 +160,9 @@ namespace RetroBar.Utilities
         }
 
         public static bool IsAllowedQuickLaunchWriteFolder(string path) =>
-            !IsEnabled || IsAllowedQuickLaunchWriteFolder(path, QuickLaunchDirectory);
+            !IsEnabled || (IsAllowedQuickLaunchWriteFolder(path, QuickLaunchDirectory) &&
+                IsProfilePathSafe(Environment.ExpandEnvironmentVariables(path), DataDirectory) &&
+                IsPlainDirectoryOrMissing(ExistingAttributes(QuickLaunchDirectory)));
 
         // Pure policy seam: tests can validate disallowed Windows pinned folders
         // and path traversal without changing the process-wide startup profile.

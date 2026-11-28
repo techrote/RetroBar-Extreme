@@ -150,6 +150,19 @@ namespace RetroBar.Controls
 
         private void SetupFolder(string path)
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                if (!EvaluationSession.IsAllowedQuickLaunchWriteFolder(path))
+                {
+                    ShellLogger.Warning("Evaluation mode blocked a toolbar outside its private Quick Launch.");
+                    UnloadFolder();
+                    ToolbarItems.ItemsSource = null;
+                    return;
+                }
+                string privateFolder = Environment.ExpandEnvironmentVariables(path);
+                System.IO.Directory.CreateDirectory(privateFolder);
+                EvaluationSession.RequireSafeProfilePath(privateFolder);
+            }
             Folder?.Dispose();
             Folder = new ShellFolder(Environment.ExpandEnvironmentVariables(path), IntPtr.Zero, true);
         }
@@ -236,7 +249,17 @@ namespace RetroBar.Controls
                     foreach (ShellDrop.Dropped item in items) ShellDrop.Free(item);
                     return;
                 }
-                System.IO.Directory.CreateDirectory(sourcePath);
+                try
+                {
+                    System.IO.Directory.CreateDirectory(sourcePath);
+                    EvaluationSession.RequireSafeProfilePath(sourcePath);
+                }
+                catch (Exception ex)
+                {
+                    ShellLogger.Warning($"Evaluation mode could not open private Quick Launch: {ex.Message}");
+                    foreach (ShellDrop.Dropped item in items) ShellDrop.Free(item);
+                    return;
+                }
             }
 
             foreach (ShellDrop.Dropped item in items)
@@ -257,6 +280,7 @@ namespace RetroBar.Controls
                         destinationPath = System.IO.Path.Combine(sourcePath, $"{destinationFileName} ({dupCount}).lnk");
                     }
 
+                    EvaluationSession.RequireSafeProfilePath(destinationPath);
                     if (item.Path == null)
                     {
                         ShellDrop.SaveShortcut(item.IdList, destinationPath);

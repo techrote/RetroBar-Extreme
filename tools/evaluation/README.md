@@ -30,6 +30,16 @@ package. No changes to ordinary RetroBar startup defaults are required.
 RetroBar takes over shell taskbar responsibilities and may hide the native
 Explorer taskbar. Do not launch until other important Windows work is finished.
 
+The startup guard rejects junctions, symlinks, inaccessible entries and other
+reparse points anywhere in the existing evaluator profile; private path access
+also checks the existing path components. Do not redirect or modify the private
+profile while the evaluator is running. This does not defend against a hostile
+local account, hardlinks, or concurrent filesystem modification.
+
+The marked artifact includes source-provenance.json (source head/tree, tested
+checkout/tree, workflow run/attempt) and RetroBar.exe.sha256. Check these against
+the acceptance record; use the current exact-tree package only.
+
 ## When ready for Windows acceptance
 
 1. Finish ongoing work and save documents. Do not test while Windows
@@ -40,8 +50,8 @@ Explorer taskbar. Do not launch until other important Windows work is finished.
 3. Extract the entire **RetroBar Isolated Evaluation 64-bit** artifact into a
    fresh folder, including `RetroBar-Evaluation.marker`.
 4. Run `RUN-ISOLATED-EVALUATION.cmd` or the marked `RetroBar.exe` directly.
-5. Confirm the evaluator uses private settings. Follow the existing #44
-   3-monitor acceptance checklist; capture PASS/FAIL, screenshots, logs.
+5. Confirm the evaluator uses private settings. Follow the current milestone-specific acceptance checklist;
+   capture PASS/FAIL, screenshots and logs.
 6. Exit normally, verify Explorer's native taskbar returns, and confirm
    `%LOCALAPPDATA%\RetroBar\settings.json` is unchanged.
 
@@ -55,6 +65,6 @@ shutdown, so recovery may require manual action.
 
 ## Limits
 
-Not approved for production use. `DISPLAYn` identity can be reassigned after
-monitor topology changes. #44 remains scoped to 1–5 rows; #38's 32-row work
-stays separate. Fullscreen taskbar is out of scope. Draft/HOLD, no merge.
+Not approved for production use. The standalone M001 candidate is based on
+master; #38, #44, #47 and #39 are not incorporated. Fullscreen is out of scope.
+Draft/HOLD, no merge. See issue #48 for the integrated acceptance gates.

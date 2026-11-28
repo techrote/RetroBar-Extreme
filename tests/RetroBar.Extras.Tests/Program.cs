@@ -32,6 +32,9 @@ internal static partial class Program
             // This child never creates Application, App, ManagedShell or taskbars.
             // Check a *cold* Settings type initializer after profile selection.
             EvaluationSession.Configure(true);
+            if (EvaluationSession.IsReparsePointDataAlias() ||
+                Directory.Exists(EvaluationSession.DataDirectory) || File.Exists(EvaluationSession.DataDirectory))
+                return 41;
             var settingsType = typeof(HotkeyManager).Assembly.GetType("RetroBar.Utilities.Settings", true);
             var field = settingsType.GetField("_settingsPath", BindingFlags.Static | BindingFlags.NonPublic);
             var actual = (string)field.GetValue(null);

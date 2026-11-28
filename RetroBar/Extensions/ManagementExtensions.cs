@@ -9,13 +9,7 @@ internal static class ManagementExtensions
     {
         string root = EvaluationSession.DataDirectory;
         string result = Path.GetFullPath(Path.Combine(root, path1, path2));
-        if (EvaluationSession.IsEnabled)
-        {
-            string canonicalRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (!string.Equals(result, canonicalRoot, StringComparison.OrdinalIgnoreCase) &&
-                !result.StartsWith(canonicalRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Evaluation profile path must stay inside its isolated data directory.");
-        }
+        EvaluationSession.RequireSafeProfilePath(result);
         return result;
     }
 
