@@ -54,35 +54,33 @@
                             CenterX="0"
                             CenterY="0" />
         </ContentControl.LayoutTransform>
-        <DockPanel>
+        <DockPanel x:Name="TaskbarMainDock">
             <Button Visibility="Collapsed" x:Name="FocusDummyButton" />
-            <!-- UXUI-Extreme (UX-012): Start area — the Start button, plus the Show desktop button
-                 when it is tucked beside or under it (orientation and anchor set in code). -->
-            <StackPanel x:Name="StartArea"
-                        Orientation="Horizontal">
+            <!-- One stable host prevents toolbar teardown while the side taskbar packs/unpacks.
+                 Only the host docks to the main taskbar; the two children retain their parent. -->
+            <controls:AdaptiveStartQuickPanel x:Name="StartQuickHost"
+                                              Orientation="{Binding Orientation, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                              PackBesideStart="{Binding Source={x:Static utilities:Settings.Instance}, Path=PackQuickLaunchBesideStart}"
+                                              QuickLaunchFirst="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchFirst}">
                 <DockPanel.Dock>
                     <Binding Converter="{StaticResource dockOrientationConverter}"
                              ConverterParameter="leading"
                              Path="Orientation"
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
-                <controls:StartButton x:Name="StartButton"
-                                      Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
-                <controls:ShowDesktopButton x:Name="ShowDesktopButtonStart"
-                                            TasksService="{Binding TasksService}"
-                                            Visibility="Collapsed" />
-            </StackPanel>
-            <controls:Toolbar x:Name="QuickLaunchToolbar"
-                              Visibility="Collapsed"
-                              Path="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchPath}"
-                              Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}">
-                <DockPanel.Dock>
-                    <Binding Converter="{StaticResource dockOrientationConverter}"
-                             ConverterParameter="leading"
-                             Path="Orientation"
-                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                </DockPanel.Dock>
-            </controls:Toolbar>
+                <!-- The Start button and Show Desktop stay together in every placement mode. -->
+                <StackPanel x:Name="StartArea" Orientation="Horizontal">
+                    <controls:StartButton x:Name="StartButton"
+                                          Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                    <controls:ShowDesktopButton x:Name="ShowDesktopButtonStart"
+                                                TasksService="{Binding TasksService}"
+                                                Visibility="Collapsed" />
+                </StackPanel>
+                <controls:Toolbar x:Name="QuickLaunchToolbar"
+                                  Visibility="Collapsed"
+                                  Path="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchPath}"
+                                  Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+            </controls:AdaptiveStartQuickPanel>
             <controls:ShowDesktopButton x:Name="ShowDesktopButtonTray"
                                         TasksService="{Binding TasksService}"
                                         Visibility="Collapsed">

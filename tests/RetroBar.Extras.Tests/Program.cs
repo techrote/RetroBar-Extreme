@@ -78,6 +78,7 @@ internal static partial class Program
             ("Quick Launch hotkeys ignore hidden or unloaded folders", HiddenQuickLaunchHotkeys),
             ("Disposed hotkey managers detach and cannot register again", HotkeyDisposal),
             ("Overlapping row aliases apply alignment once", OverlappingRowAlignment),
+            ("Side-taskbar Quick Launch packing and stacked fallback", SideQuickLaunchPacking),
             ("Thirty-two taskbar rows, legacy caps and last-row navigation", ThirtyTwoRowCapacity),
             ("Constrained rows survive real WPF infinite-width ScrollViewer measure", ConstrainedRowOverflowRed),
             ("Explicit/relative/exclusive/end-app overflow retains WPF row ownership", ConstrainedRowRouting),

@@ -150,6 +150,8 @@
     <system:String x:Key="uxui_quick_show">Show quick launch</system:String>
     <system:String x:Key="uxui_quick_first">Put it before the Start button</system:String>
     <system:String x:Key="uxui_quick_first_tip">Swaps the quick launch area and the Start button area. The Show desktop button stays with the Start button.</system:String>
+    <system:String x:Key="uxui_quick_pack_side">Pack beside Start on side taskbars when space allows</system:String>
+    <system:String x:Key="uxui_quick_pack_side_tip">Only for left/right taskbars. When the complete Quick Launch toolbar does not fit beside Start and Show Desktop, it stays on the next full-width row.</system:String>
     <system:String x:Key="uxui_quick_align_h">Icons, across:</system:String>
     <system:String x:Key="uxui_quick_align_v">Icons, up and down:</system:String>
     <system:String x:Key="uxui_quick_length">Length (px, 0 = automatic):</system:String>

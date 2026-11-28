@@ -36,6 +36,7 @@ namespace RetroBar
             nameof(Settings.ClockOrientation),
             nameof(Settings.QuickLaunchLength),
             nameof(Settings.QuickLaunchFirst),
+            nameof(Settings.PackQuickLaunchBesideStart),
             nameof(Settings.ShowQuickLaunch),
             nameof(Settings.QuickLaunchButtonFill),
             nameof(Settings.ClockCustomMargin),
@@ -66,7 +67,7 @@ namespace RetroBar
             };
 
             // The Start button fills the taskbar's height, so follow changes to it (rows, scale, lock).
-            if (StartArea.Parent is FrameworkElement bar)
+            if (TaskbarMainDock is FrameworkElement bar)
             {
                 bar.SizeChanged += (s, e) =>
                 {
@@ -144,23 +145,7 @@ namespace RetroBar
             _quickLaunchDragLength = 0;
         }
 
-        // The quick launch area before or after the Start button area (which keeps the Show desktop button).
-        private void ApplySectionOrder(bool quickFirst)
-        {
-            if (!(StartArea.Parent is DockPanel panel))
-            {
-                return;
-            }
-
-            int start = panel.Children.IndexOf(StartArea), quick = panel.Children.IndexOf(QuickLaunchToolbar);
-            if (start < 0 || quick < 0 || (quick < start) == quickFirst)
-            {
-                return;
-            }
-
-            panel.Children.Remove(QuickLaunchToolbar);
-            panel.Children.Insert(quickFirst ? panel.Children.IndexOf(StartArea) : panel.Children.IndexOf(StartArea) + 1, QuickLaunchToolbar);
-        }
+        // Visual ordering is handled by AdaptiveStartQuickPanel without reparenting either child.
 
         private void UpdateShowDesktopPlacement()
         {
@@ -183,7 +168,7 @@ namespace RetroBar
                 bool horizontal = Orientation == Orientation.Horizontal;
 
                 UpdateShowDesktopPlacement();
-                ApplySectionOrder(s.QuickLaunchFirst);
+                // QuickLaunchFirst and adaptive packing are bound directly to the stable host.
                 UpdateLayout();
                 TextureAlign.Apply(this); // nested theme borders share one texture phase
 
@@ -212,7 +197,9 @@ namespace RetroBar
                     _ => new Thickness(0),
                 };
 
-                double barHeight = (StartArea.Parent as FrameworkElement)?.ActualHeight ?? 0;
+                // The new leading host's height is only the packed/stacked region. Use the
+                // full root taskbar height for rotated and customised Start button sizing.
+                double barHeight = TaskbarMainDock.ActualHeight;
                 _layoutBarHeight = barHeight;
 
                 // A small gap between the Start button and a tucked Show desktop button.
@@ -275,6 +262,8 @@ namespace RetroBar
                     QuickLaunchToolbar.ClearValue(WidthProperty);
                     QuickLaunchToolbar.ClearValue(HeightProperty);
                 }
+
+                StartQuickHost.InvalidateMeasure(); // Start image/size and Quick length may have changed.
 
                 // A turned clock's size is rarely a whole number of pixels, so centring it in the
                 // bar put it on half pixels: off-centre by one, and blurred. Rounding keeps it on whole ones.

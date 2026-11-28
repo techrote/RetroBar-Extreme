@@ -12,3 +12,10 @@ no display, bundle, 32-row, packing or Plasma changes admitted.
 - Review remains incomplete: explicit export dialogs, hardlinks, concurrent filesystem manipulation,
   other native shell actions, physical Windows startup/recovery and full integration are outside this checkpoint's proof.
 - M001 remains Draft/HOLD until new CI and independent safety review; owner physical acceptance is required before production integration.
+
+## M002 cumulative layout checkpoint
+
+- #38 (655b30e55f8e2745111b976f2af650c84fe46929) admitted via a real second-parent integration commit 8694409d393172aec15f5edbe2ac506f04992bc8. Retains rule-constrained row navigation, finite viewport, hysteresis prevention, fixed widths, compatibility and 32-row contracts. The earlier #38 provenance workflow is superseded by M001's stricter provenance/package checks.
+- #47 (5ccac3cdc0818d7b2cb9a04ac88838965dac01de) admitted via a separate second-parent integration commit. Retains actual wrapping panel tests, opt-in side packing, stable visual parenting and horizontal layout behaviour.
+- M001 settings, private Quick Launch and evaluator tests retained; shared Settings, LayoutStrings and Extras registration reconciled without dropping source contracts.
+- Integrated Windows qualification and owner acceptance remain HOLD; this candidate is still single global taskbar configuration, not per-display profiles. #44 and #39 are not included.
