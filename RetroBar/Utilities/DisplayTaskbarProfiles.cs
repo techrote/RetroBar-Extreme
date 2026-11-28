@@ -13,7 +13,12 @@ namespace RetroBar.Utilities
         public bool Enabled { get; set; } = true;
         public AppBarEdge Edge { get; set; } = AppBarEdge.Bottom;
         public bool AutoHide { get; set; } = false;
-        public int Rows { get; set; } = 1;
+        private int _rows = 1;
+        public int Rows
+        {
+            get => _rows;
+            set => _rows = Math.Clamp(value, 1, Settings.MaximumTaskbarRows);
+        }
         public int Width { get; set; } = 1;
         public bool ShowStart { get; set; } = true;
         public bool ShowQuickLaunch { get; set; } = true;

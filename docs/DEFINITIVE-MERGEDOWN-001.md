@@ -19,3 +19,11 @@ no display, bundle, 32-row, packing or Plasma changes admitted.
 - #47 (5ccac3cdc0818d7b2cb9a04ac88838965dac01de) admitted via a separate second-parent integration commit. Retains actual wrapping panel tests, opt-in side packing, stable visual parenting and horizontal layout behaviour.
 - M001 settings, private Quick Launch and evaluator tests retained; shared Settings, LayoutStrings and Extras registration reconciled without dropping source contracts.
 - Integrated Windows qualification and owner acceptance remain HOLD; this candidate is still single global taskbar configuration, not per-display profiles. #44 and #39 are not included.
+
+## M003 taskbar-management convergence — source candidate
+
+- Admits #44's combined head (9b7d7a5ceab5fa86d524137853bedf6d40f8a3ee) with complete ancestry and retains M002 (#38/#47) ancestry. Prior stage descriptions referencing a five-row limit are historical, not the cumulative candidate's envelope.
+- Preserve #38's navigation template, fixed task widths, and arrow-hysteresis algorithm; both ordinary and bundle panels bind finite and outer viewports and host row count. Horizontal access is admitted for rule-constrained rows OR expanded Inline, only on horizontal hosts.
+- Independent display profiles clamp to 1–32 rows. Actual host orientation drives wrapping and icon columns; Quick Launch hotkeys follow the designated shell host.
+- Preserve M001 evaluator safeguards, #47 stable Start/Quick panel, task affinity, bundle rendering and per-window rectangle ownership. Added mixed-edge converter, profile capacity and projection transition contracts; run full Windows CI before physical owner testing.
+- Draft/HOLD. No production merge, release, or shell launch. #39 and #45 remain excluded.

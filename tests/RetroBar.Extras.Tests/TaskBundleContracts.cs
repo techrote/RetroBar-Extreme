@@ -371,8 +371,20 @@ internal static partial class Program
             header.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
             Layout(230);
             Check(children.Visibility == Visibility.Collapsed &&
-                  scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
-                "Real bundle-header click collapses children and restores nonhorizontal scroll mode.");
+                  scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Auto,
+                "Real bundle-header click collapses children but active row rules retain horizontal access.");
+            Check(rowPanel.GetBindingExpression(TaskRowPanel.OuterViewportWidthProperty) != null &&
+                  rowPanel.OuterViewportWidth > 0 &&
+                  rowPanel.GetBindingExpression(TaskRowPanel.HostRowsProperty) != null,
+                "Projected task panel binds both viewport widths and per-host row count.");
+            settings.Set("TaskRowRules", new List<TaskRowRule>());
+            list.SetBundleExpanded(firefox.Key, false);
+            Layout(230);
+            Check(scroll.HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled,
+                "Collapsing Inline with no remaining row constraints restores normal wrapping.");
+            settings.Set("TaskRowRules", new List<TaskRowRule> {
+                new TaskRowRule { Row = 2, Apps = "firefox", OnlyListed = true }
+            });
 
             // Side-docked Inline must subtract the 8-DIP indentation even when a
             // per-app override requests full taskbar width.

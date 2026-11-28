@@ -24,6 +24,20 @@ internal static partial class Program
         };
         var copy = p.Clone();
         Check(copy.DeviceName == p.DeviceName && copy.Edge == AppBarEdge.Right && copy.Width == 4, "Profile clone preserves dimensions.");
+        Check(new DisplayTaskbarProfile { Rows = 32 }.Clone().Rows == 32 &&
+              new DisplayTaskbarProfile { Rows = 33 }.Rows == 32 &&
+              new DisplayTaskbarProfile { Rows = 0 }.Rows == 1,
+              "Display profiles share the global 1–32 row bounds.");
+        var edgeConverter = new RetroBar.Converters.EdgeOrientationConverter();
+        var icons = new RetroBar.Converters.IconListOrientation();
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        Check((Orientation)edgeConverter.Convert(Orientation.Vertical, typeof(Orientation), null, culture) == Orientation.Vertical &&
+              (Orientation)edgeConverter.Convert(Orientation.Horizontal, typeof(Orientation), null, culture) == Orientation.Horizontal,
+              "Task list wrapping follows each actual host orientation.");
+        Check((Orientation)icons.Convert(new object[] { Orientation.Horizontal, 32 }, typeof(Orientation), null, culture) == Orientation.Vertical &&
+              (Orientation)icons.Convert(new object[] { Orientation.Vertical, 32 }, typeof(Orientation), null, culture) == Orientation.Horizontal &&
+              (Orientation)icons.Convert(new object[] { Orientation.Horizontal, 1 }, typeof(Orientation), null, culture) == Orientation.Horizontal,
+              "Quick Launch and tray wrap according to actual host edge and rows.");
         copy.Width = 5;
         Check(p.Width == 4, "Clone cannot mutate original.");
         Check(DisplayTaskbarProfiles.Find(new List<DisplayTaskbarProfile> { p }, @"\\.\display3") == p,

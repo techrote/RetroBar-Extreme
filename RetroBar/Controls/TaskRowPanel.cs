@@ -46,6 +46,17 @@ namespace RetroBar.Controls
             set => SetValue(OuterViewportWidthProperty, value);
         }
 
+        // An explicit per-host row-count binding invalidates layout when a
+        // display profile changes even if its allocated rectangle does not.
+        public static readonly DependencyProperty HostRowsProperty = DependencyProperty.Register(
+            nameof(HostRows), typeof(int), typeof(TaskRowPanel),
+            new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public int HostRows
+        {
+            get => (int)GetValue(HostRowsProperty);
+            set => SetValue(HostRowsProperty, value);
+        }
+
         public TaskRowPanel()
         {
             Loaded += (s, e) => Settings.Instance.PropertyChanged += Settings_PropertyChanged;
@@ -115,7 +126,8 @@ namespace RetroBar.Controls
             // Taskbar always provides authoritative Rows. Unhosted WPF ScrollViewer fixtures
             // use the configured count, while direct-panel tests retain their height fallback.
             ScrollViewer scrollHost = FindScrollViewer();
-            int rows = Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
+            int rows = HostRows > 0 ? Math.Clamp(HostRows, 1, Settings.MaximumTaskbarRows)
+                : Window.GetWindow(this) is Taskbar bar ? Math.Max(1, bar.Rows)
                 : scrollHost != null ? Math.Max(1, Settings.Instance.RowCount)
                 : double.IsInfinity(constraint.Height) ? Math.Max(1, Settings.Instance.RowCount)
                 : Math.Max(1, (int)Math.Floor(constraint.Height / rowHeight + 1e-6));
@@ -274,10 +286,11 @@ namespace RetroBar.Controls
         // The app a button stands for: its exe name (lower case, no extension), and for Store apps its AppUserModelID.
         private static (string stem, string aumid) KeyOf(UIElement child)
         {
-            if (!(child is FrameworkElement element) || !(element.DataContext is ApplicationWindow window))
-            {
-                return ("", "");
-            }
+            if (!(child is FrameworkElement element)) return ("", "");
+            ApplicationWindow window = element.DataContext as ApplicationWindow;
+            if (window == null && element.DataContext is TaskBundleEntry entry)
+                window = entry.Representative;
+            if (window == null) return ("", "");
 
             string file = TaskButtonRules.AppKey(window) ?? "";
             string stem = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();

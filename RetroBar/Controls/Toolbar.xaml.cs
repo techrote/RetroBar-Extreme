@@ -377,7 +377,7 @@ namespace RetroBar.Controls
             // A collapsed toolbar remains loaded and subscribed to hotkeys, but its folder has
             // already been disposed. Ignore shortcuts until the visible toolbar has a source again.
             if (Folder == null || !IsVisible || Host == null ||
-                Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.InvokeQuickLaunch || !Host.Screen.Primary)
+                Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.InvokeQuickLaunch || !Host.IsShellHost)
             {
                 return;
             }

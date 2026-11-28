@@ -14,6 +14,7 @@
             <converters:ThumbOverlayConverter x:Key="thumbOverlayConverter" />
             <converters:EdgeOrientationConverter x:Key="orientationConverter" />
             <converters:TaskButtonWidthConverter x:Key="taskButtonWidthConverter" />
+            <converters:TaskBundleEntryWidthConverter x:Key="bundleEntryWidthConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <DockPanel>
@@ -49,6 +50,7 @@
                       SizeChanged="TasksScrollViewer_SizeChanged"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Disabled">
+            <Grid>
             <ItemsControl x:Name="TasksList"
                           Focusable="False"
                           HorizontalAlignment="Stretch"
@@ -59,7 +61,8 @@
                     <ItemsPanelTemplate>
                         <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}"
                                             ViewportWidth="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}"
-                                            OuterViewportWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}">
+                                            OuterViewportWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}"
+                                            HostRows="{Binding Host.Rows, RelativeSource={RelativeSource AncestorType=local:TaskList}, FallbackValue=0}">
                             <WrapPanel.Orientation>
                                 <Binding Converter="{StaticResource orientationConverter}"
                                          Path="Orientation"
@@ -83,12 +86,46 @@
                                     <Binding Path="ButtonMarginTotal" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                     <Binding Path="IconOnlyWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                     <Binding Path="DefaultWidthWithMargin" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                    <Binding Path="Host.AppBarEdge" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
                                 </MultiBinding>
                             </local:TaskButton.Width>
                         </local:TaskButton>
                     </ItemContainerTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <!-- A separate projected view only for Bundle/Hybrid, leaving legacy task items unchanged. -->
+            <ItemsControl x:Name="BundledTasksList" Focusable="False"
+                          HorizontalAlignment="Stretch" Visibility="Collapsed"
+                          SizeChanged="BundledTasksList_SizeChanged">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <local:TaskRowPanel Style="{DynamicResource TaskListWrapPanel}"
+                                            ViewportWidth="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}"
+                                            OuterViewportWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ScrollViewer}}}"
+                                            HostRows="{Binding Host.Rows, RelativeSource={RelativeSource AncestorType=local:TaskList}, FallbackValue=0}">
+                            <WrapPanel.Orientation>
+                                <Binding Converter="{StaticResource orientationConverter}"
+                                         Path="Orientation"
+                                         RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                            </WrapPanel.Orientation>
+                        </local:TaskRowPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:TaskBundleEntryView
+                            Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}}">
+                            <local:TaskBundleEntryView.Width>
+                                <MultiBinding Converter="{StaticResource bundleEntryWidthConverter}">
+                                    <Binding Path="Host.Orientation" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" FallbackValue="Horizontal" />
+                                    <Binding Path="ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                </MultiBinding>
+                            </local:TaskBundleEntryView.Width>
+                        </local:TaskBundleEntryView>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            </Grid>
         </ScrollViewer>
     </DockPanel>
 </UserControl>
