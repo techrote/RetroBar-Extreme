@@ -1,0 +1,76 @@
+<UserControl x:Class="RetroBar.Controls.TaskOrganisationEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="Editor_Loaded">
+    <StackPanel Width="620">
+        <TextBlock Text="Application affinity and window presentation" FontSize="14" FontWeight="Bold"/>
+        <TextBlock Text="Arrange windows by application without combining them, or choose per-application bundle policies. Display overrides apply only to the selected taskbar."
+                   TextWrapping="Wrap" Margin="0,3,0,9"/>
+        <Grid Margin="0,0,0,7">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <TextBlock Text="Policy scope" VerticalAlignment="Center"/>
+            <ComboBox x:Name="ScopeCombo" Grid.Column="1" SelectionChanged="Scope_Changed"/>
+        </Grid>
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <TextBlock Text="Button arrangement" VerticalAlignment="Center"/>
+            <ComboBox x:Name="ModeCombo" Grid.Column="1"/>
+        </Grid>
+        <TextBlock Text="Separate: original order · Affinity: same apps adjacent, distinct buttons · Bundle: one button per app · Hybrid: per-app behaviour. Bundles use flyout or inline expansion."
+                   TextWrapping="Wrap" FontSize="11" Margin="0,0,0,8"/>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <GroupBox Header="Ordered application families" Grid.Column="0" Padding="7">
+                <StackPanel>
+                    <TextBlock Text="Application families affect affinity order; groups may include multiple executables." TextWrapping="Wrap" FontSize="11"/>
+                    <ListBox x:Name="GroupList" Height="105" DisplayMemberPath="Name"
+                             SelectionChanged="Group_Changed" Margin="0,6,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button Content="Add" Click="AddGroup_Click" Padding="9,2"/>
+                        <Button Content="Remove" Click="RemoveGroup_Click" Padding="9,2"/>
+                        <Button Content="Up" Click="UpGroup_Click" Padding="9,2"/>
+                        <Button Content="Down" Click="DownGroup_Click" Padding="9,2"/>
+                    </StackPanel>
+                    <TextBlock Text="Family name"/>
+                    <TextBox x:Name="GroupName" Margin="0,2,0,5"/>
+                    <TextBlock Text="Executables (comma-separated), or 'terminals'"/>
+                    <TextBox x:Name="GroupApps" Margin="0,2,0,5"/>
+                    <Button Content="Update selected family" Click="SaveGroup_Click" Padding="7,2"/>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Individual application policies" Grid.Column="2" Padding="7">
+                <StackPanel>
+                    <TextBlock Text="Hybrid overrides. Expansion preference also applies in Bundle mode." TextWrapping="Wrap" FontSize="11"/>
+                    <ListBox x:Name="PolicyList" Height="105" DisplayMemberPath="Apps"
+                             SelectionChanged="Policy_Changed" Margin="0,6,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button Content="Add" Click="AddPolicy_Click" Padding="9,2"/>
+                        <Button Content="Remove" Click="RemovePolicy_Click" Padding="9,2"/>
+                    </StackPanel>
+                    <TextBlock Text="Application(s) or family"/>
+                    <TextBox x:Name="PolicyApps" Margin="0,2,0,3"/>
+                    <ComboBox x:Name="RunningApps" IsEditable="True" IsTextSearchEnabled="True"
+                              ToolTip="Select a running executable to fill the application field"
+                              SelectionChanged="RunningApps_Changed" Margin="0,0,0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Presentation" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="PresentationCombo" Grid.Column="1"/>
+                    </Grid>
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Bundle expand" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="ExpansionCombo" Grid.Column="1"/>
+                    </Grid>
+                    <Button Content="Update selected policy" Click="SavePolicy_Click" Padding="7,2" Margin="0,6,0,0"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Load example families" Click="Examples_Click" Padding="8,3" Margin="0,0,8,0"/>
+            <Button Content="Apply organisation settings" Click="Apply_Click" Padding="12,3"/>
+        </StackPanel>
+        <TextBlock Text="Existing taskbar behaviour remains unchanged until an arrangement mode is selected. Save groups and policies, then Apply. Fullscreen taskbar mode is not included."
+                   TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0"/>
+    </StackPanel>
+</UserControl>

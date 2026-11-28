@@ -21,6 +21,8 @@ namespace RetroBar
     public partial class App : Application
     {
         private bool _errorVisible;
+        private bool _evaluationShutdownRequested;
+        private bool _evaluationCleanupCompleted;
         private ManagedShellLogger _logger;
         private WindowManager _windowManager;
 
@@ -46,8 +48,27 @@ namespace RetroBar
 
         public void ExitGracefully()
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                RequestEvaluationShutdown(0);
+                return;
+            }
             _shellManager.AppBarManager.SignalGracefulShutdown();
             Current.Shutdown();
+        }
+
+        // Evaluator failures must never re-enter the normal FailFast/restart path.
+        // Restore Explorer even if WindowManager construction failed after hiding it,
+        // and attempt shutdown independently of individual shell-service failures.
+        private void RequestEvaluationShutdown(int exitCode)
+        {
+            if (_evaluationShutdownRequested) return;
+            _evaluationShutdownRequested = true;
+            EvaluationSession.RunRecoverySteps(
+                ex => Trace.TraceError("Evaluator recovery: " + ex),
+                () => _shellManager?.AppBarManager.SignalGracefulShutdown(),
+                () => { if (_shellManager != null) _shellManager.ExplorerHelper.HideExplorerTaskbar = false; },
+                () => Shutdown(exitCode));
         }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
@@ -144,6 +165,15 @@ namespace RetroBar
 
         public void RestartApp()
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                // Crash/restart recovery must never restart as a production
+                // instance or race the running shell-owner mutex. Exit and
+                // require a deliberate fresh launch from the evaluation ZIP.
+                ShellLogger.Warning("Evaluation restart suppressed: close and launch the isolated evaluator again.");
+                ExitGracefully();
+                return;
+            }
             try
             {
                 // run the program again
@@ -160,6 +190,27 @@ namespace RetroBar
 
         private void ExitApp()
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                if (_evaluationCleanupCompleted) return;
+                _evaluationCleanupCompleted = true;
+                // A startup failure may leave the WindowManager unset. Restore the
+                // native taskbar directly before disposing services; one failed
+                // disposal must not prevent the rest of the cleanup sequence.
+                EvaluationSession.RunRecoverySteps(
+                    ex => Trace.TraceError("Evaluator cleanup: " + ex),
+                    () => { if (_shellManager != null) _shellManager.ExplorerHelper.HideExplorerTaskbar = false; },
+                    () => Settings.Instance.PropertyChanged -= Settings_PropertyChanged,
+                    () => _explorerMonitor?.Dispose(),
+                    () => _windowManager?.Dispose(),
+                    () => _dictionaryManager?.Dispose(),
+                    () => _shellManager?.Dispose(),
+                    () => _startMenuMonitor?.Dispose(),
+                    () => _updater?.Dispose(),
+                    () => _hotkeyManager?.Dispose(),
+                    () => _logger?.Dispose());
+                return;
+            }
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
 
             _explorerMonitor.Dispose();
@@ -174,9 +225,24 @@ namespace RetroBar
 
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                // No automatic relaunch or FailFast in the guarded evaluator.
+                // Logging itself may fail (including a damaged rendering thread),
+                // but it must not suppress the recovery attempt.
+                e.Handled = true;
+                EvaluationSession.RunRecoverySteps(
+                    ex => Trace.TraceError("Evaluator exception logging: " + ex),
+                    () => ShellLogger.Error("Isolated evaluation failed; attempting graceful Explorer recovery.", e.Exception));
+                RequestEvaluationShutdown(1);
+                return;
+            }
+
             Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string version = fvi.FileVersion;
+            // Single-file portable builds have an empty Assembly.Location.
+            string version = string.IsNullOrEmpty(assembly.Location)
+                ? assembly.GetName().Version?.ToString() ?? "unknown"
+                : FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
 
             string inner = "";
             if (e.Exception.InnerException != null)

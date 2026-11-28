@@ -150,6 +150,19 @@ namespace RetroBar.Controls
 
         private void SetupFolder(string path)
         {
+            if (EvaluationSession.IsEnabled)
+            {
+                if (!EvaluationSession.IsAllowedQuickLaunchWriteFolder(path))
+                {
+                    ShellLogger.Warning("Evaluation mode blocked a toolbar outside its private Quick Launch.");
+                    UnloadFolder();
+                    ToolbarItems.ItemsSource = null;
+                    return;
+                }
+                string privateFolder = Environment.ExpandEnvironmentVariables(path);
+                System.IO.Directory.CreateDirectory(privateFolder);
+                EvaluationSession.RequireSafeProfilePath(privateFolder);
+            }
             Folder?.Dispose();
             Folder = new ShellFolder(Environment.ExpandEnvironmentVariables(path), IntPtr.Zero, true);
         }
@@ -226,6 +239,28 @@ namespace RetroBar.Controls
         public void AddDropped(List<ShellDrop.Dropped> items)
         {
             string sourcePath = Environment.ExpandEnvironmentVariables(Path);
+            if (EvaluationSession.IsEnabled)
+            {
+                // Additional toolbars can point at any path. An evaluator
+                // may write shortcuts only into its own private Quick Launch.
+                if (!EvaluationSession.IsAllowedQuickLaunchWriteFolder(sourcePath))
+                {
+                    ShellLogger.Warning("Evaluation mode blocked a shortcut write outside its isolated Quick Launch.");
+                    foreach (ShellDrop.Dropped item in items) ShellDrop.Free(item);
+                    return;
+                }
+                try
+                {
+                    System.IO.Directory.CreateDirectory(sourcePath);
+                    EvaluationSession.RequireSafeProfilePath(sourcePath);
+                }
+                catch (Exception ex)
+                {
+                    ShellLogger.Warning($"Evaluation mode could not open private Quick Launch: {ex.Message}");
+                    foreach (ShellDrop.Dropped item in items) ShellDrop.Free(item);
+                    return;
+                }
+            }
 
             foreach (ShellDrop.Dropped item in items)
             {
@@ -245,6 +280,7 @@ namespace RetroBar.Controls
                         destinationPath = System.IO.Path.Combine(sourcePath, $"{destinationFileName} ({dupCount}).lnk");
                     }
 
+                    EvaluationSession.RequireSafeProfilePath(destinationPath);
                     if (item.Path == null)
                     {
                         ShellDrop.SaveShortcut(item.IdList, destinationPath);
@@ -341,7 +377,7 @@ namespace RetroBar.Controls
             // A collapsed toolbar remains loaded and subscribed to hotkeys, but its folder has
             // already been disposed. Ignore shortcuts until the visible toolbar has a source again.
             if (Folder == null || !IsVisible || Host == null ||
-                Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.InvokeQuickLaunch || !Host.Screen.Primary)
+                Settings.Instance.WinNumHotkeysAction != WinNumHotkeysOption.InvokeQuickLaunch || !Host.IsShellHost)
             {
                 return;
             }

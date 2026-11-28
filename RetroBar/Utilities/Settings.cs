@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace RetroBar.Utilities
 {
@@ -90,6 +91,53 @@ namespace RetroBar.Utilities
                 value = value.FindAll(item => item is not null);
             }
             Set(ref field, value, propertyName);
+        }
+
+        // TASKBAR-MANAGEMENT-001: opt-in per-monitor taskbars; legacy settings remain authoritative until enabled.
+        private bool _useDisplayProfiles = false;
+        public bool UseDisplayProfiles
+        {
+            get => _useDisplayProfiles;
+            set => Set(ref _useDisplayProfiles, value);
+        }
+
+        private List<DisplayTaskbarProfile> _displayTaskbarProfiles = new();
+        public List<DisplayTaskbarProfile> DisplayTaskbarProfiles
+        {
+            get => _displayTaskbarProfiles;
+            set => SetList(ref _displayTaskbarProfiles, value ?? new List<DisplayTaskbarProfile>());
+        }
+
+        public void SaveDisplayTaskbarProfile(DisplayTaskbarProfile profile)
+        {
+            if (profile == null || string.IsNullOrWhiteSpace(profile.DeviceName)) return;
+            var profiles = (DisplayTaskbarProfiles ?? new List<DisplayTaskbarProfile>())
+                .Where(p => p != null && !string.Equals(p.DeviceName, profile.DeviceName, StringComparison.OrdinalIgnoreCase))
+                .Select(p => p.Clone()).ToList();
+            profiles.Add(profile.Clone());
+            DisplayTaskbarProfiles = profiles;
+        }
+
+        // TASKBAR-MANAGEMENT-002: global affinity/presentation defaults, overridable per display and app.
+        private TaskArrangementMode _taskArrangement = TaskArrangementMode.Separate;
+        public TaskArrangementMode TaskArrangement
+        {
+            get => _taskArrangement;
+            set => SetEnum(ref _taskArrangement, value);
+        }
+
+        private List<TaskAffinityGroupRule> _taskAffinityGroups = new();
+        public List<TaskAffinityGroupRule> TaskAffinityGroups
+        {
+            get => _taskAffinityGroups;
+            set => SetList(ref _taskAffinityGroups, value ?? new List<TaskAffinityGroupRule>());
+        }
+
+        private List<TaskApplicationPolicy> _taskApplicationPolicies = new();
+        public List<TaskApplicationPolicy> TaskApplicationPolicies
+        {
+            get => _taskApplicationPolicies;
+            set => SetList(ref _taskApplicationPolicies, value ?? new List<TaskApplicationPolicy>());
         }
 
         #region Properties
@@ -237,8 +285,14 @@ namespace RetroBar.Utilities
         private string _quickLaunchPath = "%appdata%\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar";
         public string QuickLaunchPath
         {
-            get => _quickLaunchPath;
-            set => Set(ref _quickLaunchPath, value);
+            // Evaluation must not read from or deposit shortcuts into the
+            // owner's shared Windows Quick Launch directory. Even a saved
+            // evaluator JSON edited to contain a different folder is ignored.
+            get => EvaluationSession.IsEnabled ? EvaluationSession.QuickLaunchDirectory : _quickLaunchPath;
+            set
+            {
+                if (!EvaluationSession.IsEnabled) Set(ref _quickLaunchPath, value);
+            }
         }
 
         private bool _collapseNotifyIcons = false;
@@ -320,18 +374,24 @@ namespace RetroBar.Utilities
             set => SetEnum(ref _edge, value);
         }
 
+        // The maximum is part of the supported taskbar layout, not a per-profile cap.
+        // Older settings.json files saved RowLimit=5; honouring that stored default
+        // would prevent existing installations from selecting the new row range.
+        internal const int MaximumTaskbarRows = 32;
+
         private int _rowCount = 1;
         public int RowCount
         {
             get => _rowCount;
-            set => Set(ref _rowCount, value);
+            set => Set(ref _rowCount, Math.Clamp(value, 1, MaximumTaskbarRows));
         }
 
-        private int _rowLimit = 5;
+        // Keep the JSON property for backward compatibility, but no longer let a
+        // legacy five-row cap restrict the Properties picker or drag resizing.
         public int RowLimit
         {
-            get => _rowLimit;
-            set => Set(ref _rowLimit, value);
+            get => MaximumTaskbarRows;
+            set { }
         }
 
         private int _taskbarWidth = 1;
@@ -657,6 +717,14 @@ namespace RetroBar.Utilities
         {
             get => _quickLaunchFirst;
             set => Set(ref _quickLaunchFirst, value);
+        }
+
+        // Side-taskbar-only, opt-in: pack the complete Quick Launch group beside Start if it fits.
+        private bool _packQuickLaunchBesideStart = false;
+        public bool PackQuickLaunchBesideStart
+        {
+            get => _packQuickLaunchBesideStart;
+            set => Set(ref _packQuickLaunchBesideStart, value);
         }
 
         private TaskButtonAlignOption _quickLaunchAlignH = TaskButtonAlignOption.Left;

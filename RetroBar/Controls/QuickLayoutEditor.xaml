@@ -48,6 +48,10 @@
                       ToolTip="{DynamicResource uxui_quick_first_tip}">
                 <Label Content="{DynamicResource uxui_quick_first}" />
             </CheckBox>
+            <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=PackQuickLaunchBesideStart, UpdateSourceTrigger=PropertyChanged}"
+                      ToolTip="{DynamicResource uxui_quick_pack_side_tip}">
+                <Label Content="{DynamicResource uxui_quick_pack_side}" />
+            </CheckBox>
             <CheckBox IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=QuickLaunchButtonFill, UpdateSourceTrigger=PropertyChanged}">
                 <Label Content="{DynamicResource uxui_icons_ql_fill}" />
             </CheckBox>
