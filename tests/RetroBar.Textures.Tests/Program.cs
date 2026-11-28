@@ -43,6 +43,7 @@ internal static partial class Program
             ("Gradient numeric safety and finite-angle rendering", GradientSafety),
             ("Complete part reset preserves neighbouring parts and palettes", StylePartReset),
             ("LUT pixels, alpha, contrast and bounded immutable cache", Pixels),
+            ("PlasmaTerm native field, independent reference pixels and bounded size", Plasma),
             ("Bounded custom PNG decoding, replacement and fail-open", CustomPng),
             ("Real WPF tiling at fractional DPI, texture and legacy scales", Tiling),
             ("All part mappings, vertical brushes and per-property isolation", Resources),

@@ -54,6 +54,9 @@
                             CenterX="0"
                             CenterY="0" />
         </ContentControl.LayoutTransform>
+        <Grid ClipToBounds="True">
+            <!-- PLASMA-M0: optional background layer; not hit-testable or a layout input. -->
+            <Border x:Name="PlasmaBackgroundSurface" IsHitTestVisible="False" />
         <DockPanel>
             <Button Visibility="Collapsed" x:Name="FocusDummyButton" />
             <!-- UXUI-Extreme (UX-012): Start area — the Start button, plus the Show desktop button
@@ -145,6 +148,7 @@
                                Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                Tasks="{Binding Tasks}"></controls:TaskList>
         </DockPanel>
+        </Grid>
     </ContentControl>
     <appbar:AppBarWindow.ContextMenu>
         <ContextMenu Opened="ContextMenu_Opened">
