@@ -17,8 +17,9 @@ package. No changes to ordinary RetroBar startup defaults are required.
   Selecting other folders or dropping shortcuts to other toolbar destinations
   is blocked; installed Windows pinned shortcuts remain untouched.
 - Windows auto-start registry modification is disabled for the evaluator.
-  Automatic restart is suppressed, preventing a silent switch into default
-  settings on process recreation.
+  Automatic restart is suppressed. The evaluator's unhandled dispatcher
+  exception path attempts Explorer restoration and WPF shutdown without
+  invoking the production automatic-restart/FailFast path.
 - The existing named mutex `RetroBar` prevents coexistence with installed or
   generic-portable RetroBar; the evaluator checks known RetroBar process names
   as well. It **refuses immediately before shell initialization** if another
@@ -49,9 +50,12 @@ the acceptance record; use the current exact-tree package only.
    circumvent the evaluator launch guard.
 3. Extract the entire **RetroBar Isolated Evaluation 64-bit** artifact into a
    fresh folder, including `RetroBar-Evaluation.marker`.
-4. Run `RUN-ISOLATED-EVALUATION.cmd` or the marked `RetroBar.exe` directly.
-5. Confirm the evaluator uses private settings. Follow the current milestone-specific acceptance checklist;
-   capture PASS/FAIL, screenshots and logs.
+4. Run `RUN-ISOLATED-EVALUATION.cmd` (recommended). Do not launch an EXE
+   separated from its marker. The launcher supplies the explicit isolation flag.
+5. Confirm the evaluator uses private settings. Follow
+   `ACCEPTANCE-MERGEDOWN-001.md` in this package; capture PASS/FAIL,
+   screenshots and logs. An error-triggered exit is a failed acceptance test,
+   even if Explorer recovery succeeds.
 6. Exit normally, verify Explorer's native taskbar returns, and confirm
    `%LOCALAPPDATA%\RetroBar\settings.json` is unchanged.
 
@@ -65,6 +69,10 @@ shutdown, so recovery may require manual action.
 
 ## Limits
 
-Not approved for production use. The standalone M001 candidate is based on
-master; #38, #44, #47 and #39 are not incorporated. Fullscreen is out of scope.
-Draft/HOLD, no merge. See issue #48 for the integrated acceptance gates.
+Not approved for production use. This cumulative candidate includes the
+evaluator, #38, #47 and #41–44 taskbar-management stack. Plasma (#39)
+and fullscreen (#45) remain excluded. Display names (DISPLAYn) can be
+renumbered after monitor topology changes; verify mappings after reconnect.
+32 rows is a configured capacity, not a guarantee that every scale and screen
+height can display all rows comfortably. Draft/HOLD until explicit owner
+acceptance and integration authorization. See mission issue #48.

@@ -90,6 +90,25 @@ internal static partial class Program
             if (Directory.Exists(fixture)) Directory.Delete(fixture, true);
         }
 
+        // A recovery step and its diagnostic callback may each fail, but
+        // subsequent Explorer restoration, shutdown and cleanup must still run.
+        var order = new System.Collections.Generic.List<string>();
+        int reportedFailures = 0;
+        EvaluationSession.RunRecoverySteps(ex =>
+        {
+            reportedFailures++;
+            throw new IOException("diagnostic unavailable");
+        },
+            () => { order.Add("signal"); throw new InvalidOperationException("shell signal failed"); },
+            () => order.Add("restore"),
+            () => { order.Add("dispose"); throw new IOException("service disposal failed"); },
+            () => order.Add("shutdown"));
+        Check(string.Join(",", order) == "signal,restore,dispose,shutdown" && reportedFailures == 2,
+            "Recovery attempts remaining steps even when shell service and diagnostics fail.");
+        bool normalRecovery = false;
+        EvaluationSession.RunRecoverySteps(null, () => normalRecovery = true);
+        Check(normalRecovery, "Recovery helper also executes the successful path.");
+
         // Spawn a *shell-free child test process* to prove Settings' real static
         // initializer resolves the isolated path before any settings are loaded.
         // Do not call EvaluationSession.Configure in this parent test process.

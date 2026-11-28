@@ -27,3 +27,9 @@ no display, bundle, 32-row, packing or Plasma changes admitted.
 - Independent display profiles clamp to 1–32 rows. Actual host orientation drives wrapping and icon columns; Quick Launch hotkeys follow the designated shell host.
 - Preserve M001 evaluator safeguards, #47 stable Start/Quick panel, task affinity, bundle rendering and per-window rectangle ownership. Added mixed-edge converter, profile capacity and projection transition contracts; run full Windows CI before physical owner testing.
 - Draft/HOLD. No production merge, release, or shell launch. #39 and #45 remain excluded.
+
+## M004 delivery/recovery finisher
+
+M003 source 8b28e15 passed 19/19 Windows jobs; both Extras runs recorded 1,000 assertions / zero failed groups. Actual artifact 15241825869 (7,667,666 bytes) was downloaded, CRC-checked, and SHA-256 matched against GitHub metadata; embedded source and tested tree were identical (858a932e8bc17227f03faafd9473ec07a6be478c), and the executable matched its internal digest. This is historical evidence after the finisher changes source.
+
+Review found inherited dispatcher FailFast could bypass evaluator graceful shutdown, and single-file Assembly.Location could be empty in the error handler. Evaluator now attempts explicit shell restoration, shutdown and independent cleanup without automatic relaunch or FailFast; shell-free tests cover recovery-step/diagnostic failure. Physical Explorer recovery remains unverified. Package README now reflects cumulative scope and includes the source-pinned owner acceptance card. Fresh exact-tree CI and artifact verification required before the next evaluator is designated for owner testing.

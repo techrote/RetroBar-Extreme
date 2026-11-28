@@ -151,6 +151,22 @@ namespace RetroBar.Utilities
                 throw new InvalidOperationException("Evaluator storage path is outside the private profile or contains an unsafe filesystem alias.");
         }
 
+        // Keep error recovery independent of WPF and ManagedShell so its
+        // ordering and failure behaviour can be exercised without shell takeover.
+        // Diagnostics are best-effort as well: a failed log must not stop recovery.
+        public static void RunRecoverySteps(Action<Exception> onFailure, params Action[] steps)
+        {
+            foreach (Action step in steps)
+            {
+                try { step(); }
+                catch (Exception ex)
+                {
+                    try { onFailure?.Invoke(ex); }
+                    catch (Exception) { /* Continue attempting the remaining recovery steps. */ }
+                }
+            }
+        }
+
         public static void Configure(bool evaluation)
         {
             if (_configured)
