@@ -91,7 +91,7 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:ShowDesktopButton>
-            <GroupBox Style="{DynamicResource Tray}">
+            <GroupBox x:Name="NotificationAreaHost" Style="{DynamicResource Tray}">
                 <GroupBox.ContextMenu>
                     <ContextMenu>
                         <TextOptions.TextRenderingMode>
@@ -121,11 +121,11 @@
                                  Path="Orientation"
                                  RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                     </StackPanel.Orientation>
-                    <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
+                    <controls:NotifyIconList x:Name="TaskbarNotifyIcons" NotificationArea="{Binding NotificationArea}" />
                     <!-- UXUI-Extreme (UX-012): turned by its host, so the clock fitter sees the turned room -->
                     <Border x:Name="ClockHost"
                             VerticalAlignment="Center">
-                        <controls:Clock VerticalAlignment="Center" />
+                        <controls:Clock x:Name="TaskbarClock" VerticalAlignment="Center" />
                     </Border>
                 </StackPanel>
             </GroupBox>
@@ -139,7 +139,7 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:InputLanguage>
-            <controls:TaskList VerticalAlignment="Stretch"
+            <controls:TaskList x:Name="TaskButtonsHost" VerticalAlignment="Stretch"
                                Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                Tasks="{Binding Tasks}"></controls:TaskList>
         </DockPanel>

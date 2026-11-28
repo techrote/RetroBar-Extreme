@@ -1,0 +1,89 @@
+<UserControl x:Class="RetroBar.Controls.TaskBundleEntryView"
+             x:Name="Root"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:RetroBar.Controls"
+             xmlns:converters="clr-namespace:RetroBar.Converters"
+             xmlns:utilities="clr-namespace:RetroBar.Utilities"
+             Loaded="Entry_Loaded"
+             Unloaded="Entry_Unloaded"
+             DataContextChanged="Entry_DataContextChanged">
+    <UserControl.Resources>
+        <converters:TaskBundleButtonWidthConverter x:Key="bundleWidthConverter" />
+    </UserControl.Resources>
+    <StackPanel x:Name="EntryStack" Orientation="{Binding Path=Host.Host.Orientation, ElementName=Root, FallbackValue=Horizontal}">
+        <Grid>
+            <local:TaskButton x:Name="SingleButton"
+                              Host="{Binding ElementName=Root, Path=Host}"
+                              DataContext="{Binding SingleWindow}">
+                <local:TaskButton.Width>
+                    <MultiBinding Converter="{StaticResource bundleWidthConverter}">
+                    <Binding />
+                    <Binding Path="Host.ButtonWidth" ElementName="Root" />
+                    <Binding Path="Host.ExtraWidthCount" ElementName="Root" />
+                    <Binding Path="Host.ButtonsPerRow" ElementName="Root" />
+                    <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskButtonAppRules" />
+                    <Binding Path="Host.ButtonMarginTotal" ElementName="Root" />
+                    <Binding Path="Host.IconOnlyWidth" ElementName="Root" />
+                    <Binding Path="Host.DefaultWidthWithMargin" ElementName="Root" />
+                    <Binding Path="Host.Host.AppBarEdge" ElementName="Root" />
+                </MultiBinding>
+                </local:TaskButton.Width>
+            </local:TaskButton>
+            <Button x:Name="GroupButton" Visibility="Collapsed"
+                    Style="{DynamicResource TaskButton}"
+                    Click="GroupButton_Click"
+                    ToolTip="{Binding DisplayName}">
+                <Button.Width>
+                    <MultiBinding Converter="{StaticResource bundleWidthConverter}">
+                    <Binding />
+                    <Binding Path="Host.ButtonWidth" ElementName="Root" />
+                    <Binding Path="Host.ExtraWidthCount" ElementName="Root" />
+                    <Binding Path="Host.ButtonsPerRow" ElementName="Root" />
+                    <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskButtonAppRules" />
+                    <Binding Path="Host.ButtonMarginTotal" ElementName="Root" />
+                    <Binding Path="Host.IconOnlyWidth" ElementName="Root" />
+                    <Binding Path="Host.DefaultWidthWithMargin" ElementName="Root" />
+                    <Binding Path="Host.Host.AppBarEdge" ElementName="Root" />
+                </MultiBinding>
+                </Button.Width>
+                <DockPanel>
+                    <Image Source="{Binding Representative.Icon}" Style="{DynamicResource TaskIcon}" DockPanel.Dock="Left" />
+                    <TextBlock Text="{Binding WindowCount}" DockPanel.Dock="Right"
+                               FontWeight="Bold" Margin="4,0,2,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName}" Style="{DynamicResource TaskLabel}"
+                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Button>
+        </Grid>
+        <ItemsControl x:Name="ExpandedWindows" ItemsSource="{Binding Windows}"
+                      Visibility="Collapsed" Margin="8,1,0,3">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="{Binding Path=Host.Host.Orientation,
+                        RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}, FallbackValue=Horizontal}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <local:TaskButton
+                        Host="{Binding Path=Host, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}}">
+                        <local:TaskButton.Width>
+                            <MultiBinding Converter="{StaticResource bundleWidthConverter}" ConverterParameter="InlineChild">
+                    <Binding />
+                    <Binding Path="Host.ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Path="Host.ExtraWidthCount" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Path="Host.ButtonsPerRow" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Source="{x:Static utilities:Settings.Instance}" Path="TaskButtonAppRules" />
+                    <Binding Path="Host.ButtonMarginTotal" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Path="Host.IconOnlyWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Path="Host.DefaultWidthWithMargin" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                    <Binding Path="Host.Host.AppBarEdge" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:TaskBundleEntryView}}" />
+                </MultiBinding>
+                        </local:TaskButton.Width>
+                    </local:TaskButton>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

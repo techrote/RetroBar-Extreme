@@ -27,10 +27,61 @@ namespace RetroBar
         private double _unlockedMargin;
         public double DesiredRowHeight { get; private set; }
 
+        // Null means legacy/global settings; advanced profiles never alter legacy values.
+        public DisplayTaskbarProfile DisplayProfile { get; private set; }
+        public bool IsShellHost => windowManager?.IsShellHost(Screen) ?? Screen.Primary;
         public int Rows
         {
-            get => Settings.Instance.RowCount;
-            set => Settings.Instance.RowCount = value;
+            get => Math.Clamp(DisplayProfile?.Rows ?? Settings.Instance.RowCount, 1, Settings.Instance.RowLimit);
+            set
+            {
+                if (DisplayProfile == null) Settings.Instance.RowCount = value;
+                else
+                {
+                    var copy = DisplayProfile.Clone();
+                    copy.Rows = Math.Clamp(value, 1, Settings.Instance.RowLimit);
+                    Settings.Instance.SaveDisplayTaskbarProfile(copy);
+                }
+            }
+        }
+        public int WidthUnits
+        {
+            get => Math.Clamp(DisplayProfile?.Width ?? Settings.Instance.TaskbarWidth, 1, Settings.Instance.TaskbarWidthLimit);
+            set
+            {
+                if (DisplayProfile == null) Settings.Instance.TaskbarWidth = value;
+                else
+                {
+                    var copy = DisplayProfile.Clone();
+                    copy.Width = Math.Clamp(value, 1, Settings.Instance.TaskbarWidthLimit);
+                    Settings.Instance.SaveDisplayTaskbarProfile(copy);
+                }
+            }
+        }
+        public bool HasQuickLaunch => DisplayProfile?.ShowQuickLaunch ?? Settings.Instance.ShowQuickLaunch;
+
+        // Non-topology updates are applied live. In particular, a resize must not tear down
+        // the AppBar window that is holding the drag hook.
+        public void ApplyDisplayProfile(DisplayTaskbarProfile next)
+        {
+            if (DisplayProfile == null || next == null) return;
+            var oldEdge = AppBarEdge;
+            DisplayProfile = next.Clone();
+            if (AppBarEdge != next.Edge) AppBarEdge = next.Edge;
+
+            QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
+            TaskbarNotifyIcons.Visibility = next.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
+            ClockHost.Visibility = next.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+            TaskbarClock.DisplayClockOverride = next.ShowClock;
+            NotificationAreaHost.Visibility = next.ShowTray || IsShellHost || next.ShowClock
+                ? Visibility.Visible : Visibility.Collapsed;
+            UpdateStartButton();
+            UpdateShowDesktopPlacement();
+            RecalculateSize();
+            if (oldEdge != AppBarEdge) UpdatePosition();
+            OnPropertyChanged(nameof(Rows));
+            ScheduleLayoutOptions();
+            TaskButtonsHost.ApplyProfileRefresh();
         }
 
         private bool _startMenuOpen;
@@ -47,9 +98,10 @@ namespace RetroBar
         public WindowManager windowManager;
         public HotkeyManager hotkeyManager;
 
-        public Taskbar(WindowManager windowManager, DictionaryManager dictionaryManager, ShellManager shellManager, StartMenuMonitor startMenuMonitor, Updater updater, HotkeyManager hotkeyManager, AppBarScreen screen, AppBarEdge edge, AppBarMode mode)
+        public Taskbar(WindowManager windowManager, DictionaryManager dictionaryManager, ShellManager shellManager, StartMenuMonitor startMenuMonitor, Updater updater, HotkeyManager hotkeyManager, AppBarScreen screen, AppBarEdge edge, AppBarMode mode, DisplayTaskbarProfile displayProfile = null)
             : base(shellManager.AppBarManager, shellManager.ExplorerHelper, shellManager.FullScreenHelper, screen, edge, mode, 0)
         {
+            DisplayProfile = displayProfile;
             _dictionaryManager = dictionaryManager;
             _shellManager = shellManager;
             _startMenuMonitor = startMenuMonitor;
@@ -58,6 +110,7 @@ namespace RetroBar
             this.hotkeyManager = hotkeyManager;
 
             InitializeComponent();
+            TaskbarClock.DisplayClockOverride = DisplayProfile?.ShowClock;
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
 
@@ -69,9 +122,13 @@ namespace RetroBar
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
 
-            if (Settings.Instance.ShowQuickLaunch)
+            QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
+            if (DisplayProfile != null)
             {
-                QuickLaunchToolbar.Visibility = Visibility.Visible;
+                TaskbarNotifyIcons.Visibility = DisplayProfile.ShowTray || IsShellHost ? Visibility.Visible : Visibility.Collapsed;
+                ClockHost.Visibility = DisplayProfile.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+                NotificationAreaHost.Visibility = DisplayProfile.ShowTray || IsShellHost || DisplayProfile.ShowClock
+                    ? Visibility.Visible : Visibility.Collapsed;
             }
 
             InitLayoutOptions(); // UXUI-Extreme (UX-012): also places the Show desktop button
@@ -129,7 +186,7 @@ namespace RetroBar
             {
                 bool newTransparency = AppBarMode == AppBarMode.AutoHide || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
 
-                if (AllowsTransparency != newTransparency && Screen.Primary)
+                if (AllowsTransparency != newTransparency && IsShellHost)
                 {
                     // Transparency cannot be changed on an open window.
                     windowManager.ReopenTaskbars();
@@ -142,26 +199,22 @@ namespace RetroBar
             }
             else if (e.PropertyName == nameof(Settings.ShowQuickLaunch))
             {
-                if (Settings.Instance.ShowQuickLaunch)
-                {
-                    QuickLaunchToolbar.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    QuickLaunchToolbar.Visibility = Visibility.Collapsed;
-                }
+                QuickLaunchToolbar.Visibility = HasQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
             }
             else if (e.PropertyName == nameof(Settings.Edge))
             {
-                PeekDuringAutoHide();
-                AppBarEdge = Settings.Instance.Edge;
-                UpdatePosition();
+                if (DisplayProfile == null)
+                {
+                    PeekDuringAutoHide();
+                    AppBarEdge = Settings.Instance.Edge;
+                    UpdatePosition();
+                }
             }
             else if (e.PropertyName == nameof(Settings.Language))
             {
                 FlowDirection newFlowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
 
-                if (FlowDirection != newFlowDirection && Screen.Primary)
+                if (FlowDirection != newFlowDirection && IsShellHost)
                 {
                     // It is necessary to reopen the taskbars to refresh menu sizes.
                     windowManager.ReopenTaskbars();
@@ -191,13 +244,14 @@ namespace RetroBar
             }
             else if (e.PropertyName == nameof(Settings.AutoHide))
             {
-                bool newTransparency = Settings.Instance.AutoHide || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
+                bool newTransparency = (DisplayProfile?.AutoHide ?? Settings.Instance.AutoHide) || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
 
                 if (AllowsTransparency == newTransparency)
                 {
-                    AppBarMode = Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal;
+                    if (DisplayProfile == null)
+                        AppBarMode = Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal;
                 }
-                else if (Screen.Primary)
+                else if (IsShellHost)
                 {
                     // Auto hide requires transparency
                     // Transparency cannot be changed on an open window.
@@ -258,7 +312,7 @@ namespace RetroBar
                 // If the color scheme changes, re-apply the current theme to get updated colors.
                 _dictionaryManager.SetThemeFromSettings();
             }
-            else if (msg == (int)NativeMethods.WM.SETTINGCHANGE && wParam == (IntPtr)NativeMethods.SPI.SETWORKAREA && Settings.Instance.ShowMultiMon)
+            else if (msg == (int)NativeMethods.WM.SETTINGCHANGE && wParam == (IntPtr)NativeMethods.SPI.SETWORKAREA && (Settings.Instance.ShowMultiMon || Settings.Instance.UseDisplayProfiles))
             {
                 windowManager.NotifyWorkAreaChange();
             }
@@ -288,7 +342,7 @@ namespace RetroBar
                 return;
             }
 
-            if (Settings.Instance.ShowMultiMon)
+            if (Settings.Instance.ShowMultiMon || Settings.Instance.UseDisplayProfiles)
             {
                 // Re-create RetroBar windows based on new screen setup
                 windowManager.NotifyDisplayChange(reason);
@@ -302,7 +356,7 @@ namespace RetroBar
 
         protected override bool ShouldAllowAutoHide()
         {
-            return (!_startMenuOpen || !Screen.Primary) && _openMenus < 1 && base.ShouldAllowAutoHide();
+            return (!_startMenuOpen || !IsShellHost) && _openMenus < 1 && base.ShouldAllowAutoHide();
         }
 
         protected override void OnAutoHideAnimationBegin(bool isHiding)
@@ -408,7 +462,7 @@ namespace RetroBar
 
         private void CustomizeNotificationsMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
-            PropertiesWindow propWindow = PropertiesWindow.Open(_shellManager.NotificationArea, _dictionaryManager, Screen, DpiScale, Orientation == Orientation.Horizontal ? DesiredHeight : DesiredWidth);
+            PropertiesWindow propWindow = PropertiesWindow.Open(_shellManager.NotificationArea, _dictionaryManager, Screen, DpiScale, Orientation == Orientation.Horizontal ? DesiredHeight : DesiredWidth, AppBarEdge);
             propWindow.OpenCustomizeNotifications();
         }
 
@@ -430,7 +484,7 @@ namespace RetroBar
 
         private void PropertiesMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
-            PropertiesWindow.Open(_shellManager.NotificationArea, _dictionaryManager, Screen, DpiScale, Orientation == Orientation.Horizontal ? DesiredHeight : DesiredWidth);
+            PropertiesWindow.Open(_shellManager.NotificationArea, _dictionaryManager, Screen, DpiScale, Orientation == Orientation.Horizontal ? DesiredHeight : DesiredWidth, AppBarEdge);
         }
 
         private void ExitMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -453,7 +507,7 @@ namespace RetroBar
             double themeRowHeight = ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarRowHeight") as double? ?? 0);
             extraRowHeight = Math.Max(extraRowHeight, 8 - themeRowHeight); // UX-007: a negative adjust never collapses a row below 8px
             DesiredRowHeight = themeRowHeight + extraRowHeight;
-            double newWidth = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarWidth") as double? ?? 0)) + DesiredRowHeight * (Settings.Instance.TaskbarWidth - 1);
+            double newWidth = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarWidth") as double? ?? 0)) + DesiredRowHeight * (WidthUnits - 1);
             double newHeight = (ScaleModel.TransformScale * (Application.Current.FindResource("TaskbarHeight") as double? ?? 0)) + extraRowHeight + DesiredRowHeight * (Rows - 1);
 
             if (AppBarMode == AppBarMode.AutoHide || !Settings.Instance.LockTaskbar)
@@ -547,7 +601,7 @@ namespace RetroBar
 
         private void UpdateTrayPosition()
         {
-            if (Screen.Primary)
+            if (IsShellHost)
             {
                 SetTrayHost();
             }
@@ -555,6 +609,11 @@ namespace RetroBar
 
         private void UpdateStartButton()
         {
+            if (DisplayProfile != null)
+            {
+                StartButton.Visibility = DisplayProfile.ShowStart ? Visibility.Visible : Visibility.Collapsed;
+                return;
+            }
             if (!Screen.Primary && !Settings.Instance.ShowStartButtonMultiMon)
             {
                 StartButton.Visibility = Visibility.Collapsed;
@@ -685,17 +744,17 @@ namespace RetroBar
                                 double taskbarEdge = AppBarEdge == AppBarEdge.Top ? Screen.Bounds.Top + (DesiredHeight * DpiScale) : Screen.Bounds.Bottom - (DesiredHeight * DpiScale);
                                 if ((AppBarEdge == AppBarEdge.Top && mouseY < taskbarEdge - SystemParameters.MinimumVerticalDragDistance ||
                                      AppBarEdge == AppBarEdge.Bottom && mouseY > taskbarEdge + SystemParameters.MinimumVerticalDragDistance) &&
-                                     Settings.Instance.RowCount > 1)
+                                     Rows > 1)
                                 {
                                     // If mouse is inside the taskbar and more than the minimum drag distance away, decrement size
-                                    Settings.Instance.RowCount -= 1;
+                                    Rows -= 1;
                                 }
                                 else if ((AppBarEdge == AppBarEdge.Top && mouseY >= taskbarEdge + scaledRowHeight ||
                                           AppBarEdge == AppBarEdge.Bottom && mouseY <= taskbarEdge - scaledRowHeight) &&
-                                          Settings.Instance.RowCount < Settings.Instance.RowLimit)
+                                          Rows < Settings.Instance.RowLimit)
                                 {
                                     // If mouse is outside the taskbar and at least one row height away, increment size
-                                    Settings.Instance.RowCount += 1;
+                                    Rows += 1;
                                 }
                             }
                             else
@@ -703,15 +762,15 @@ namespace RetroBar
                                 double taskbarEdge = AppBarEdge == AppBarEdge.Left ? Screen.Bounds.Left + (DesiredWidth * DpiScale) : Screen.Bounds.Right - (DesiredWidth * DpiScale);
                                 if ((AppBarEdge == AppBarEdge.Left && mouseX > taskbarEdge + scaledRowHeight ||
                                      AppBarEdge == AppBarEdge.Right && mouseX < taskbarEdge - scaledRowHeight) &&
-                                    Settings.Instance.TaskbarWidth < Settings.Instance.TaskbarWidthLimit)
+                                    WidthUnits < Settings.Instance.TaskbarWidthLimit)
                                 {
-                                    Settings.Instance.TaskbarWidth += 1;
+                                    WidthUnits += 1;
                                 }
                                 else if ((AppBarEdge == AppBarEdge.Left && mouseX < taskbarEdge - SystemParameters.MinimumHorizontalDragDistance ||
                                           AppBarEdge == AppBarEdge.Right && mouseX > taskbarEdge + SystemParameters.MinimumHorizontalDragDistance) &&
-                                    Settings.Instance.TaskbarWidth > 1)
+                                    WidthUnits > 1)
                                 {
-                                    Settings.Instance.TaskbarWidth -= 1;
+                                    WidthUnits -= 1;
                                 }
                             }
                         });
@@ -727,7 +786,8 @@ namespace RetroBar
                     AppBarEdge newEdge = DragCoordsToScreenEdge(e.HookStruct.pt.X, e.HookStruct.pt.Y);
                     if (newEdge != AppBarEdge)
                     {
-                        Settings.Instance.Edge = newEdge;
+                        if (DisplayProfile == null) Settings.Instance.Edge = newEdge;
+                        else { var copy = DisplayProfile.Clone(); copy.Edge = newEdge; Settings.Instance.SaveDisplayTaskbarProfile(copy); }
                     }
                     break;
                 case NativeMethods.WM.LBUTTONUP:

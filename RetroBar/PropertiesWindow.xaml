@@ -685,6 +685,12 @@
                 </Grid>
             </TabItem>
             <!-- UXUI-Extreme: Clock tab (moved from Layout) -->
+            <TabItem Header="Applications">
+                <controls:TaskOrganisationEditor Margin="10" />
+            </TabItem>
+            <TabItem Header="Displays">
+                <controls:DisplayProfilesEditor Margin="10" />
+            </TabItem>
             <TabItem Header="{DynamicResource uxui_clock_tab}">
                 <controls:ClockEditor Margin="8" />
             </TabItem>

@@ -151,13 +151,14 @@ namespace RetroBar
         {
             var s = Settings.Instance;
             bool atEnd = s.ShowDesktopPosition == ShowDesktopPositionOption.TaskbarEnd;
+            bool showDesktop = DisplayProfile?.ShowDesktop ?? s.ShowDesktopButton;
             // Beside, or inside, the quick launch area (when that is showing; otherwise it stays beside Start).
-            bool besideQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.BesideQuickLaunch && s.ShowQuickLaunch;
-            bool inQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.InQuickLaunch && s.ShowQuickLaunch;
-            ShowDesktopButtonTray.Visibility = s.ShowDesktopButton && atEnd ? Visibility.Visible : Visibility.Collapsed;
-            ShowDesktopButtonStart.Visibility = s.ShowDesktopButton && !atEnd && !besideQuick && !inQuick ? Visibility.Visible : Visibility.Collapsed;
-            QuickLaunchToolbar.SetDesktopCell(s.ShowDesktopButton && besideQuick, ShowDesktopButtonStart.TasksService);
-            QuickLaunchToolbar.SetDesktopItem(s.ShowDesktopButton && inQuick);
+            bool besideQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.BesideQuickLaunch && HasQuickLaunch;
+            bool inQuick = s.ShowDesktopPosition == ShowDesktopPositionOption.InQuickLaunch && HasQuickLaunch;
+            ShowDesktopButtonTray.Visibility = showDesktop && atEnd ? Visibility.Visible : Visibility.Collapsed;
+            ShowDesktopButtonStart.Visibility = showDesktop && !atEnd && !besideQuick && !inQuick ? Visibility.Visible : Visibility.Collapsed;
+            QuickLaunchToolbar.SetDesktopCell(showDesktop && besideQuick, ShowDesktopButtonStart.TasksService);
+            QuickLaunchToolbar.SetDesktopItem(showDesktop && inQuick);
         }
 
         private void ApplyLayoutOptions()
