@@ -9,14 +9,14 @@ Optional, adaptive packing of the **entire** Quick Launch toolbar beside the Sta
 ## Implementation
 
 - `AdaptiveStartQuickPanel` owns the two existing visual children for their entire lifetime. Reordering or switching from packed to stacked does not reparent, unload or recreate the Toolbar.
-- Its side-taskbar measure pass first requests natural widths. It chooses packed mode only when both controls are visible and their combined width plus a 4-DIP gutter and 2-DIP rounding reserve fits.
-- Packed mode gives Quick Launch a finite remaining width; stacked mode measures against the full sidebar width, retaining existing icon wrapping.
+- When packing is enabled and both controls are visible, the side-taskbar measure pass requests natural widths. It chooses packed mode only when both sections have nonzero content and their complete combined width plus a 4-DIP gutter and 2-DIP rounding reserve fits, and the row fits the available height.
+- Packed mode gives Quick Launch a finite remaining width. Horizontal and stacked modes preserve the old DockPanel's finite remaining-space constraints, in visual order; stacked mode gives Quick Launch the full sidebar width for wrapping. Opt-out skips the natural-width probe entirely.
 - Layout remains entirely WPF-driven; there is no timer, screen-resolution guess, fixed-width shortcut assumption or OS-level taskbar mutation.
 - The full taskbar root remains the height source for custom Start-button layout; the new leading host is not substituted for the root.
 
 ## Automated regression coverage
 
-`tests/RetroBar.Extras.Tests/SideQuickLaunchContracts.cs` exercises fit thresholds, resize transitions, stable parentage, reversed order, opt-out, hidden sections, horizontal layout and a changed Start-button width. Run the existing Windows Extras contracts on **net6.0-windows** and **net10.0-windows**, and the normal package/CI workflows.
+`tests/RetroBar.Extras.Tests/SideQuickLaunchContracts.cs` exercises fit thresholds, resize transitions, stable parentage, reversed order, opt-out, hidden sections, horizontal layout and a changed Start-button width. Independent review follow-up adds constrained DockPanel-equivalence cases, actual QuickLaunchPanel wrapping, insufficient available height and the visible-but-empty StartArea case. Run the existing Windows Extras contracts on **net6.0-windows** and **net10.0-windows**, and the normal package/CI workflows.
 
 ## Manual Windows acceptance (required before merge)
 

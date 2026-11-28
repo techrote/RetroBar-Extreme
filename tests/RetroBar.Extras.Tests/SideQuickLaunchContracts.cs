@@ -84,5 +84,103 @@ internal static partial class Program
         Check(Near(Y(quick), 0), "Start image resize still packs if it fits");
         Layout(200);
         Check(Near(Y(quick), 28), "Start image resize triggers a safe full-width fallback");
+
+        // In ordinary (horizontal and disabled) modes, constrain the first section
+        // just as the old DockPanel did, then constrain the second to what remains.
+        // Also exercise reversed ordering and a failed natural-width packing probe.
+        var constraints = new AdaptiveStartQuickPanel();
+        var firstProbe = new SideQuickMeasureProbe(80, 30);
+        var secondProbe = new SideQuickMeasureProbe(70, 40);
+        constraints.Children.Add(firstProbe);
+        constraints.Children.Add(secondProbe);
+        constraints.Measure(new Size(100, 50));
+        Check(firstProbe.LastConstraint == new Size(100, 50) &&
+              secondProbe.LastConstraint == new Size(20, 50) &&
+              constraints.DesiredSize == new Size(100, 40),
+            "horizontal measurement respects remaining Dock.Left width");
+        constraints.Orientation = Orientation.Vertical;
+        constraints.Measure(new Size(100, 50));
+        Check(firstProbe.LastConstraint == new Size(100, 50) &&
+              secondProbe.LastConstraint == new Size(100, 20) &&
+              constraints.DesiredSize == new Size(80, 50),
+            "opt-out respects remaining Dock.Top height");
+        constraints.QuickLaunchFirst = true;
+        constraints.Measure(new Size(100, 50));
+        Check(secondProbe.LastConstraint == new Size(100, 50) &&
+              firstProbe.LastConstraint == new Size(100, 10),
+            "reversed opt-out constrains the second section in visual order");
+        constraints.PackBesideStart = true;
+        constraints.Measure(new Size(100, 50));
+        Check(secondProbe.LastConstraint == new Size(100, 50) &&
+              firstProbe.LastConstraint == new Size(100, 10),
+            "failed packing probe restores constrained stacked measurement");
+        constraints.QuickLaunchFirst = false;
+        constraints.Measure(new Size(200, 25));
+        Check(firstProbe.LastConstraint == new Size(200, 25) &&
+              secondProbe.LastConstraint == new Size(200, 0),
+            "a row that exceeds available height is not admitted as packed");
+
+        // Use the actual wrapping panel and the same nested Start shape as Taskbar.xaml.
+        // A secondary taskbar may hide both StartArea children without collapsing StartArea.
+        var realWrapHost = new AdaptiveStartQuickPanel
+        {
+            Orientation = Orientation.Vertical,
+            PackBesideStart = true,
+        };
+        var startGroup = new StackPanel { Orientation = Orientation.Horizontal };
+        var startCell = new Border { Width = 30, Height = 28 };
+        startGroup.Children.Add(startCell);
+        var wrap = new QuickLaunchPanel { Orientation = Orientation.Horizontal, ItemWidth = 30, ItemHeight = 20 };
+        for (int i = 0; i < 4; i++) wrap.Children.Add(new Border());
+        realWrapHost.Children.Add(startGroup);
+        realWrapHost.Children.Add(wrap);
+
+        void LayoutWrap(double width)
+        {
+            realWrapHost.Measure(new Size(width, 500));
+            realWrapHost.Arrange(new Rect(0, 0, width, realWrapHost.DesiredSize.Height));
+        }
+
+        LayoutWrap(156);
+        Check(Near(X(wrap), 34) && Near(Y(wrap), 0) &&
+              Near(realWrapHost.DesiredSize.Height, 28),
+            "real QuickLaunchPanel packs all four cells at the exact threshold");
+        LayoutWrap(155);
+        Check(Near(X(wrap), 0) && Near(Y(wrap), 28),
+            "real QuickLaunchPanel returns to a complete full-width row");
+        LayoutWrap(65);
+        Check(Near(Y(wrap), 28) && Near(realWrapHost.DesiredSize.Height, 68) &&
+              Near(Y(wrap.Children[2]), 20) && Near(X(wrap.Children[2]), 0),
+            "narrow fallback wraps actual cells across two rows");
+
+        startCell.Visibility = Visibility.Collapsed;
+        LayoutWrap(156);
+        Check(startGroup.Visibility == Visibility.Visible &&
+              Near(X(wrap), 0) && Near(Y(wrap), 0) &&
+              Near(realWrapHost.DesiredSize.Height, 20),
+            "visible StartArea with collapsed descendants creates no phantom gutter or band");
+        realWrapHost.QuickLaunchFirst = true;
+        LayoutWrap(156);
+        Check(Near(X(wrap), 0) && Near(Y(wrap), 0) &&
+              Near(realWrapHost.DesiredSize.Height, 20),
+            "empty StartArea creates no phantom gutter in reverse order either");
+    }
+
+    private sealed class SideQuickMeasureProbe : FrameworkElement
+    {
+        private readonly Size _natural;
+        public Size LastConstraint { get; private set; }
+
+        public SideQuickMeasureProbe(double width, double height)
+        {
+            _natural = new Size(width, height);
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            LastConstraint = availableSize;
+            return new Size(Math.Min(_natural.Width, availableSize.Width),
+                Math.Min(_natural.Height, availableSize.Height));
+        }
     }
 }

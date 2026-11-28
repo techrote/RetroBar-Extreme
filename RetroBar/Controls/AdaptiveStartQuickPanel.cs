@@ -67,47 +67,56 @@ namespace RetroBar.Controls
                 return Size.Empty;
             }
 
+            // Preserve the old DockPanel constraints exactly for horizontal and opt-out
+            // layouts. Only probe unbounded natural widths when side packing is eligible.
+            if (Orientation == Orientation.Horizontal ||
+                !PackBesideStart || double.IsInfinity(availableSize.Width) ||
+                Start.Visibility != Visibility.Visible || Quick.Visibility != Visibility.Visible)
+            {
+                return MeasureSequential(availableSize);
+            }
+
+            Start.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Quick.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Size startNatural = Start.DesiredSize;
+            Size quickNatural = Quick.DesiredSize;
+
+            // A visible StartArea can contain only collapsed controls (e.g. on a secondary
+            // monitor). Do not reserve a phantom gutter for a zero-sized section.
+            if (startNatural.Width > 0 && startNatural.Height > 0 &&
+                quickNatural.Width > 0 && quickNatural.Height > 0 &&
+                startNatural.Width + quickNatural.Width + PackedGap + FitReserve <= availableSize.Width &&
+                Math.Max(startNatural.Height, quickNatural.Height) <= availableSize.Height)
+            {
+                Start.Measure(new Size(startNatural.Width, availableSize.Height));
+                double remaining = Math.Max(0, availableSize.Width - Start.DesiredSize.Width - PackedGap);
+                Quick.Measure(new Size(remaining, availableSize.Height));
+                _packed = true;
+                return new Size(Start.DesiredSize.Width + PackedGap + Quick.DesiredSize.Width,
+                    Math.Max(Start.DesiredSize.Height, Quick.DesiredSize.Height));
+            }
+
+            return MeasureSequential(availableSize);
+        }
+
+        // Match the legacy sequential Dock.Left/Dock.Top measure pass. The first
+        // section sees the available rectangle, and the second sees its remainder.
+        // In particular, a side toolbar still has the full width for icon wrapping.
+        private Size MeasureSequential(Size availableSize)
+        {
+            First.Measure(availableSize);
             if (Orientation == Orientation.Horizontal)
             {
-                // Matches two separate Dock.Left sections. The first gets its natural width;
-                // the following section sees the remaining space. Keep the taskbar's full height.
-                First.Measure(new Size(double.PositiveInfinity, availableSize.Height));
-                double remaining = double.IsInfinity(availableSize.Width)
-                    ? double.PositiveInfinity
-                    : Math.Max(0, availableSize.Width - First.DesiredSize.Width);
-                Second.Measure(new Size(remaining, availableSize.Height));
+                Second.Measure(new Size(Math.Max(0, availableSize.Width - First.DesiredSize.Width),
+                    availableSize.Height));
                 return new Size(First.DesiredSize.Width + Second.DesiredSize.Width,
                     Math.Max(First.DesiredSize.Height, Second.DesiredSize.Height));
             }
 
-            // First measure at natural width, rather than letting the toolbar wrap prematurely:
-            // it must qualify as a complete group before being placed beside Start.
-            Start.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Quick.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            double startWidth = Start.DesiredSize.Width;
-            double quickWidth = Quick.DesiredSize.Width;
-            _packed = PackBesideStart &&
-                Start.Visibility != Visibility.Collapsed &&
-                Quick.Visibility != Visibility.Collapsed &&
-                !double.IsInfinity(availableSize.Width) &&
-                startWidth + quickWidth + PackedGap + FitReserve <= availableSize.Width;
-
-            if (_packed)
-            {
-                // Give Quick a finite width even in packed mode. This keeps its own internal
-                // layout constraints intact and preserves explicit toolbar size settings.
-                double remaining = Math.Max(0, availableSize.Width - startWidth - PackedGap);
-                Quick.Measure(new Size(remaining, double.PositiveInfinity));
-                return new Size(startWidth + PackedGap + Quick.DesiredSize.Width,
-                    Math.Max(Start.DesiredSize.Height, Quick.DesiredSize.Height));
-            }
-
-            // A finite *full-sidebar* width is essential here: QuickLaunchPanel can then
-            // wrap shortcuts across rows instead of spilling past the side taskbar boundary.
-            Start.Measure(new Size(availableSize.Width, double.PositiveInfinity));
-            Quick.Measure(new Size(availableSize.Width, double.PositiveInfinity));
-            return new Size(Math.Max(Start.DesiredSize.Width, Quick.DesiredSize.Width),
-                Start.DesiredSize.Height + Quick.DesiredSize.Height);
+            Second.Measure(new Size(availableSize.Width,
+                Math.Max(0, availableSize.Height - First.DesiredSize.Height)));
+            return new Size(Math.Max(First.DesiredSize.Width, Second.DesiredSize.Width),
+                First.DesiredSize.Height + Second.DesiredSize.Height);
         }
 
         protected override Size ArrangeOverride(Size finalSize)
